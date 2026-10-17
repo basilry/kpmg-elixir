@@ -8,6 +8,7 @@ defmodule Tickmark.LedgerFixtures do
   """
   import ExUnit.Callbacks, only: [on_exit: 1]
 
+  alias Tickmark.Ledger
   alias Tickmark.Ledger.CsvParser
 
   @doc "One CSV row with synthetic defaults. Values are strings, as in a file."
@@ -83,6 +84,25 @@ defmodule Tickmark.LedgerFixtures do
     File.write!(path, content)
     on_exit(fn -> File.rm(path) end)
     path
+  end
+
+  @doc """
+  Registers `csv` as an upload through `Tickmark.Ledger.create_import/3`.
+  The stored copy is removed when the test ends. Returns the pending import.
+  """
+  def ledger_import_fixture(scope, engagement, csv) do
+    path = write_csv!(csv)
+
+    {:ok, ledger_import} =
+      Ledger.create_import(scope, engagement, %{path: path, filename: "gl.csv"})
+
+    on_exit(fn -> File.rm(stored_path(ledger_import)) end)
+    ledger_import
+  end
+
+  @doc "Where the import's copy is kept."
+  def stored_path(ledger_import) do
+    Path.join(Application.fetch_env!(:tickmark, :import_dir), ledger_import.stored_filename)
   end
 
   defp encode_row(row, columns) do
