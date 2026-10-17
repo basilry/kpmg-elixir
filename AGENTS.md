@@ -128,7 +128,7 @@ docs/
 
 ## 6. 코딩 규칙 (Elixir)
 
-- **필독**: Elixir/Phoenix 코드를 쓰거나 고치기 전에 [refs/phoenix-guidelines.md](refs/phoenix-guidelines.md)를 반드시 읽는다. `mix phx.new`(1.8)가 만든 LLM용 가이드라인 원문이다. 매 턴 불러오지 않도록 이 파일에 합치지 않고 따로 두었다.
+- **필독**: Elixir/Phoenix 코드를 쓰거나 고치기 전에 [refs/phoenix-guidelines.md](refs/phoenix-guidelines.md)를 반드시 읽는다. `mix phx.new`(1.8)가 만든 LLM용 가이드라인 원문이다. 매 턴 불러오지 않도록 이 파일에 합치지 않고 따로 두었다. `mix phx.gen.*` 생성기가 AGENTS.md에 가이드라인을 주입하면, 메인 세션이 그 블록을 refs 파일로 옮기고 AGENTS.md는 원래대로 되돌린다.
 - **파일명**: Elixir 관례대로 snake_case를 쓴다 (`lib/tickmark/ledger/journal_entry.ex`). 하이픈 파일명 규칙은 Elixir 코드에 적용하지 않고, 문서는 3.2절을 따른다.
 - **경계**: Phoenix context로 도메인 경계를 나눈다. context 이름과 공개 함수는 `docs/architecture/` 계약을 따른다.
 - **테스트**: 새 기능에는 ExUnit 테스트를 함께 쓴다. LiveView는 `Phoenix.LiveViewTest`로 검증한다.
