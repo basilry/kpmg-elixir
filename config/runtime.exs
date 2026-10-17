@@ -23,6 +23,23 @@ end
 config :tickmark, TickmarkWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+# Uploaded and generated GL files. The DB stores only names relative to this.
+config :tickmark,
+       :import_dir,
+       System.get_env("TICKMARK_IMPORT_DIR") ||
+         Path.join(System.tmp_dir!(), "tickmark_imports")
+
+# The API key is read only here. Tests never pick it up, so a key in the
+# developer's shell cannot make the test suite call the real API.
+if config_env() != :test do
+  if api_key = System.get_env("ANTHROPIC_API_KEY") do
+    config :tickmark, Tickmark.AI,
+      client: Tickmark.AI.Anthropic,
+      api_key: api_key,
+      model: System.get_env("ANTHROPIC_MODEL", "claude-opus-5-5")
+  end
+end
+
 if config_env() == :dev do
   # Reload browser tabs when matching files change.
   config :tickmark, TickmarkWeb.Endpoint,
