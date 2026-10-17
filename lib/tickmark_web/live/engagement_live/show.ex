@@ -10,6 +10,7 @@ defmodule TickmarkWeb.EngagementLive.Show do
   import TickmarkWeb.EngagementLive.Components
 
   alias Tickmark.Engagements
+  alias Tickmark.Ledger
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -32,7 +33,8 @@ defmodule TickmarkWeb.EngagementLive.Show do
      |> assign(:can_import, role == :preparer)
      |> assign(:can_manage_members, engagement.created_by_id == scope.user.id)
      |> assign(:member_form, new_member_form())
-     |> stream(:members, Engagements.list_members(scope, engagement))}
+     |> stream(:members, Engagements.list_members(scope, engagement))
+     |> stream(:imports, Ledger.list_imports(scope, engagement.id))}
   end
 
   @impl true
@@ -63,11 +65,16 @@ defmodule TickmarkWeb.EngagementLive.Show do
     end
   end
 
-  # The four engagement topic messages (architecture doc 6). The import and
-  # test run lists are wired up after the Ledger and Testing contexts land, so
-  # for now every message is accepted without changing the screen.
+  # The four engagement topic messages (architecture doc 6). The message
+  # carries only a few fields, so the import is read again. stream_insert/4
+  # updates a row already on screen in place and puts a new one on top. The
+  # other three wait for the Testing and Review contexts.
   @impl true
-  def handle_info({:import_updated, _payload}, socket), do: {:noreply, socket}
+  def handle_info({:import_updated, %{import_id: import_id}}, socket) do
+    ledger_import = Ledger.get_import!(socket.assigns.current_scope, import_id)
+    {:noreply, stream_insert(socket, :imports, ledger_import, at: 0)}
+  end
+
   def handle_info({:test_run_updated, _payload}, socket), do: {:noreply, socket}
   def handle_info({:finding_updated, _payload}, socket), do: {:noreply, socket}
   def handle_info({:audit_appended, _payload}, socket), do: {:noreply, socket}
@@ -187,12 +194,55 @@ defmodule TickmarkWeb.EngagementLive.Show do
 
       <section id="imports-section" aria-labelledby="imports-title" class="mb-8">
         <h2 id="imports-title" class="mb-2 font-semibold">GL 적재</h2>
-        <p
-          id="imports-empty"
-          class="rounded-box border border-base-300 bg-base-100 p-4 text-sm text-base-content/70"
-        >
-          아직 불러온 GL이 없습니다.
-        </p>
+        <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+          <table class="table tk-table">
+            <caption class="sr-only">GL 적재 목록</caption>
+            <thead>
+              <tr>
+                <th scope="col">출처</th>
+                <th scope="col">상태</th>
+                <th scope="col" class="text-right">전표</th>
+                <th scope="col" class="text-right">라인</th>
+                <th scope="col" class="text-right">차변 합계(원)</th>
+                <th scope="col" class="text-right">대변 합계(원)</th>
+                <th scope="col" class="text-right">오류</th>
+                <th scope="col" class="text-right">경고</th>
+                <th scope="col">해시</th>
+                <th scope="col">적재 시각 (KST)</th>
+              </tr>
+            </thead>
+            <tbody id="imports" phx-update="stream">
+              <%!-- Shown by CSS only while the stream is empty (streams cannot be counted). --%>
+              <tr id="imports-empty" class="hidden only:table-row">
+                <td colspan="10" class="text-sm text-base-content/70">아직 불러온 GL이 없습니다.</td>
+              </tr>
+              <tr :for={{dom_id, ledger_import} <- @streams.imports} id={dom_id}>
+                <td class={[ledger_import.source_kind == :upload && "font-mono text-sm"]}>
+                  {import_source(ledger_import)}
+                </td>
+                <td><.import_status status={ledger_import.status} /></td>
+                <%= if ledger_import.status == :succeeded do %>
+                  <td class="text-right tabular-nums">{format_count(ledger_import.entry_count)}</td>
+                  <td class="text-right tabular-nums">{format_count(ledger_import.line_count)}</td>
+                  <td class="text-right tabular-nums">{format_krw(ledger_import.total_debit)}</td>
+                  <td class="text-right tabular-nums">{format_krw(ledger_import.total_credit)}</td>
+                <% else %>
+                  <td :for={_ <- 1..4} class="text-right text-base-content/70">
+                    -<span class="sr-only">없음</span>
+                  </td>
+                <% end %>
+                <td class={["text-right tabular-nums", ledger_import.error_count > 0 && "text-error"]}>
+                  {format_count(ledger_import.error_count)}
+                </td>
+                <td class="text-right tabular-nums">{format_count(ledger_import.warning_count)}</td>
+                <td class="font-mono text-sm slashed-zero" title={ledger_import.sha256}>
+                  {String.slice(ledger_import.sha256, 0, 8)}
+                </td>
+                <td><.kst_time at={ledger_import.inserted_at} /></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section id="test-runs-section" aria-labelledby="test-runs-title">

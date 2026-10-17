@@ -4,8 +4,12 @@ defmodule TickmarkWeb.EngagementLiveTest do
   import Phoenix.LiveViewTest
   import Tickmark.AccountsFixtures
   import Tickmark.EngagementsFixtures
+  import Tickmark.LedgerFixtures
 
   alias Tickmark.Engagements
+  alias Tickmark.Ledger
+  alias Tickmark.Ledger.LedgerImport
+  alias TickmarkWeb.EngagementLive.Components
 
   setup :register_and_log_in_user
 
@@ -131,6 +135,45 @@ defmodule TickmarkWeb.EngagementLiveTest do
       assert has_element?(view, "#test-runs-empty", "아직 테스트 실행이 없습니다.")
     end
 
+    test "lists GL imports and updates a row when its load finishes", %{conn: conn, scope: scope} do
+      engagement = engagement_fixture(scope)
+      csv = gl_csv(gl_entry("JE-0001", "1500000") ++ gl_entry("JE-0002", "2500000"))
+      ledger_import = ledger_import_fixture(scope, engagement, csv)
+      row = "#imports-#{ledger_import.id}"
+
+      {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}")
+
+      assert has_element?(view, row, "gl.csv")
+      assert has_element?(view, row, "대기")
+      assert has_element?(view, row, String.slice(ledger_import.sha256, 0, 8))
+
+      # The worker's broadcasts reach the open screen without a reload.
+      assert {:ok, %{status: :succeeded}} = Ledger.process_import(ledger_import.id)
+
+      assert has_element?(view, row, "완료")
+      assert has_element?(view, row, "4,000,000")
+      refute has_element?(view, row, "대기")
+    end
+
+    test "a new import appears on top while the screen is open", %{conn: conn, scope: scope} do
+      engagement = engagement_fixture(scope)
+      older = ledger_import_fixture(scope, engagement, gl_csv(gl_entry("JE-0001")))
+
+      {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}")
+      newer = ledger_import_fixture(scope, engagement, gl_csv(gl_entry("JE-0002")))
+
+      assert view |> element("#imports-#{newer.id}") |> has_element?()
+
+      ids =
+        view
+        |> render()
+        |> LazyHTML.from_fragment()
+        |> LazyHTML.query("#imports tr[id^='imports-']:not(#imports-empty)")
+        |> LazyHTML.attribute("id")
+
+      assert ids == ["imports-#{newer.id}", "imports-#{older.id}"]
+    end
+
     test "a non-member gets Ecto.NoResultsError", %{conn: conn} do
       engagement = engagement_fixture(user_scope_fixture())
 
@@ -231,17 +274,12 @@ defmodule TickmarkWeb.EngagementLiveTest do
       assert length(Engagements.list_members(creator, engagement)) == 2
     end
 
-    test "engagement topic messages keep the screen running", %{conn: conn, scope: scope} do
+    # :import_updated is covered by the GL import tests above.
+    test "the other topic messages keep the screen running", %{conn: conn, scope: scope} do
       engagement = engagement_fixture(scope)
       {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}")
 
       id = Ecto.UUID.generate()
-
-      :ok =
-        Engagements.broadcast(
-          engagement.id,
-          {:import_updated, %{import_id: id, status: :completed, entry_count: 10, error_count: 0}}
-        )
 
       :ok =
         Engagements.broadcast(
@@ -263,6 +301,25 @@ defmodule TickmarkWeb.EngagementLiveTest do
 
       assert render(view) =~ engagement.client_name
       assert Process.alive?(view.pid)
+    end
+  end
+
+  describe "Components" do
+    test "import_source/1 names the upload or the generator seed" do
+      assert Components.import_source(%LedgerImport{
+               source_kind: :upload,
+               original_filename: "gl-2025.csv"
+             }) == "gl-2025.csv"
+
+      assert Components.import_source(%LedgerImport{
+               source_kind: :generated,
+               original_filename: "synthetic-gl-seed-20251231.csv"
+             }) == "합성 GL, 시드 20251231"
+    end
+
+    test "format_kst/1 shows UTC as KST, across the date line" do
+      assert Components.format_kst(~U[2025-12-31 15:42:10Z]) == "2026-01-01 00:42"
+      assert Components.format_count(19_804) == "19,804"
     end
   end
 end
