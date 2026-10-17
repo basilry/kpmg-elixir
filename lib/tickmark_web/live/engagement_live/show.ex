@@ -111,17 +111,19 @@ defmodule TickmarkWeb.EngagementLive.Show do
             </span>
           </span>
         </:subtitle>
-        <:actions :if={@can_import}>
+        <:actions>
           <div class="flex gap-2">
+            <%!-- The audit log is read-only (:view), so every member gets the link. --%>
             <.button id="audit-log-link" navigate={~p"/engagements/#{@engagement}/audit"} class="btn">
               감사 로그
             </.button>
             <.button
+              :if={@can_import}
               id="import-link"
               navigate={~p"/engagements/#{@engagement}/imports/new"}
               class="btn btn-primary"
             >
-              <.icon name="hero-arrow-up-tray" /> GL 업로드
+              <.icon name="hero-arrow-up-tray" /> GL 불러오기
             </.button>
           </div>
         </:actions>

@@ -122,7 +122,7 @@ defmodule TickmarkWeb.EngagementLiveTest do
       assert has_element?(
                view,
                "#import-link[href='#{~p"/engagements/#{engagement}/imports/new"}']",
-               "GL 업로드"
+               "GL 불러오기"
              )
 
       assert has_element?(view, "#audit-log-link[href='#{~p"/engagements/#{engagement}/audit"}']")
@@ -180,7 +180,7 @@ defmodule TickmarkWeb.EngagementLiveTest do
       assert length(Engagements.list_members(scope, engagement)) == 2
     end
 
-    test "a reviewer sees the members but no member form, GL upload or audit log link", %{
+    test "a reviewer sees the members and the audit log link but no member form or GL import", %{
       conn: conn,
       scope: scope
     } do
@@ -194,10 +194,10 @@ defmodule TickmarkWeb.EngagementLiveTest do
       assert has_element?(view, "#members", scope.user.email)
       refute has_element?(view, "#member-form")
       refute has_element?(view, "#import-link")
-      refute has_element?(view, "#audit-log-link")
+      assert has_element?(view, "#audit-log-link")
     end
 
-    test "a preparer who is not the creator gets the GL upload link but no member form", %{
+    test "a preparer who is not the creator gets the GL import link but no member form", %{
       conn: conn,
       scope: scope
     } do
