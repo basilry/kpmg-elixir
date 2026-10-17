@@ -1,0 +1,1717 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tickmark 디자인 시안</title>
+<meta name="description" content="Tickmark 디자인 시스템 시안: 색, 타이포그래피, 컴포넌트 상태, 화면 6종 (라이트/다크). 데이터는 모두 합성 값이다.">
+<script>
+  // 저장된 테마를 먼저 적용해 깜빡임을 막는다. 저장소를 못 쓰면(사설 창 등) 시스템 설정을 따른다.
+  (function () {
+    try {
+      var t = localStorage.getItem("tk:theme");
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+<style>
+/* ===== 토큰: 디자인 문서 2.3, 3.1과 같은 값. daisyUI 토큰 이름을 그대로 쓴다 ===== */
+:root {
+  --font-sans: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace;
+  --radius-box: .375rem; --radius-field: .25rem; --radius-selector: .25rem;
+}
+:root, .tk-light {
+  color-scheme: light;
+  --color-base-100: #FFFFFF; --color-base-200: #F3F5F8; --color-base-300: #DDE2E9; --color-base-content: #18202B;
+  --color-primary: #1F5AA6; --color-primary-content: #FFFFFF;
+  --color-secondary: #475467; --color-secondary-content: #FFFFFF;
+  --color-accent: #6B3FC0; --color-accent-content: #FFFFFF;
+  --color-neutral: #475467; --color-neutral-content: #FFFFFF;
+  --color-info: #1F5AA6; --color-info-content: #FFFFFF;
+  --color-success: #116D40; --color-success-content: #FFFFFF;
+  --color-warning: #8A5000; --color-warning-content: #FFFFFF;
+  --color-error: #B42318; --color-error-content: #FFFFFF;
+  --tk-muted: #556070; --tk-line-strong: #7C8796;
+  --tk-shadow-sm: 0 1px 2px rgb(16 24 40 / .06), 0 1px 3px rgb(16 24 40 / .08);
+  --tk-shadow-md: 0 6px 12px -2px rgb(16 24 40 / .12), 0 3px 6px -3px rgb(16 24 40 / .08);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-base-100: #161D27; --color-base-200: #0E131A; --color-base-300: #2B3544; --color-base-content: #E5E9EF;
+    --color-primary: #7AA7F2; --color-primary-content: #0B1426;
+    --color-secondary: #A9B4C3; --color-secondary-content: #0E131A;
+    --color-accent: #B79CF5; --color-accent-content: #1B0E3A;
+    --color-neutral: #A9B4C3; --color-neutral-content: #0E131A;
+    --color-info: #7AA7F2; --color-info-content: #0B1426;
+    --color-success: #5CC38A; --color-success-content: #06210F;
+    --color-warning: #EDB257; --color-warning-content: #2A1A00;
+    --color-error: #F28B82; --color-error-content: #2B0907;
+    --tk-muted: #9AA6B6; --tk-line-strong: #6F7B8D;
+    --tk-shadow-sm: 0 1px 2px rgb(0 0 0 / .4);
+    --tk-shadow-md: 0 6px 16px -2px rgb(0 0 0 / .55);
+  }
+}
+:root[data-theme="dark"], .tk-dark {
+  color-scheme: dark;
+  --color-base-100: #161D27; --color-base-200: #0E131A; --color-base-300: #2B3544; --color-base-content: #E5E9EF;
+  --color-primary: #7AA7F2; --color-primary-content: #0B1426;
+  --color-secondary: #A9B4C3; --color-secondary-content: #0E131A;
+  --color-accent: #B79CF5; --color-accent-content: #1B0E3A;
+  --color-neutral: #A9B4C3; --color-neutral-content: #0E131A;
+  --color-info: #7AA7F2; --color-info-content: #0B1426;
+  --color-success: #5CC38A; --color-success-content: #06210F;
+  --color-warning: #EDB257; --color-warning-content: #2A1A00;
+  --color-error: #F28B82; --color-error-content: #2B0907;
+  --tk-muted: #9AA6B6; --tk-line-strong: #6F7B8D;
+  --tk-shadow-sm: 0 1px 2px rgb(0 0 0 / .4);
+  --tk-shadow-md: 0 6px 16px -2px rgb(0 0 0 / .55);
+}
+
+/* ===== 기본 ===== */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: 7rem; }
+body {
+  margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 20px;
+  background: var(--color-base-200); color: var(--color-base-content);
+  -webkit-font-smoothing: antialiased; overflow-wrap: anywhere;
+}
+.tk-light, .tk-dark { background: var(--color-base-100); color: var(--color-base-content); }
+h1, h2, h3, h4, p, ul, ol, dl, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, .mono { font-family: var(--font-mono); font-variant-numeric: slashed-zero; }
+code { font-size: .92em; }
+.mono { white-space: nowrap; overflow-wrap: normal; }
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible,
+.is-focus { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.ic { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+.ic-xs { width: 12px; height: 12px; stroke-width: 2; vertical-align: -1px; }
+.ic-lg { width: 20px; height: 20px; }
+
+/* 유틸리티 (Tailwind 클래스 이름과 1:1이 아니다. 시안 전용) */
+.muted { color: var(--tk-muted); }
+.xs { font-size: 12px; line-height: 16px; }
+.sm { font-size: 14px; line-height: 20px; }
+.base { font-size: 16px; line-height: 24px; }
+.semibold { font-weight: 600; }
+.medium { font-weight: 500; }
+.num { font-variant-numeric: tabular-nums; }
+.right { text-align: right; }
+.nowrap { white-space: nowrap; overflow-wrap: normal; }
+.t-error { color: var(--color-error); } .t-warning { color: var(--color-warning); }
+.t-success { color: var(--color-success); } .t-accent { color: var(--color-accent); }
+.t-primary { color: var(--color-primary); } .t-neutral { color: var(--color-neutral); }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.row-nw { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.gap-1-5 { gap: 6px; } .gap-3 { gap: 12px; } .gap-4 { gap: 16px; }
+.between { justify-content: space-between; }
+.grow { flex: 1 1 auto; min-width: 0; }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+.stack-3 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
+.stack-4 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
+.stack-6 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; min-width: 0; }
+.prose { line-height: 24px; max-width: 72ch; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===== 문서 레이아웃 ===== */
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 640px) { .wrap { padding: 0 24px; } }
+@media (min-width: 1024px) { .wrap { padding: 0 32px; } }
+.doc-head { position: sticky; top: 0; z-index: 30; background: var(--color-base-100); border-bottom: 1px solid var(--color-base-300); box-shadow: var(--tk-shadow-sm); }
+.doc-head-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 0; }
+.doc-title { display: flex; align-items: center; gap: 8px; font-size: 16px; line-height: 24px; font-weight: 600; }
+.doc-nav { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; }
+.doc-nav a { flex: none; padding: 4px 10px; border-radius: var(--radius-field); color: var(--tk-muted); font-weight: 500; white-space: nowrap; }
+.doc-nav a:hover { background: var(--color-base-200); color: var(--color-base-content); text-decoration: none; }
+.seg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid var(--color-base-300); border-radius: 999px; background: var(--color-base-200); }
+.seg button { display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px; border: 0; border-radius: 999px; background: transparent; color: var(--tk-muted); font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--color-base-100); color: var(--color-base-content); box-shadow: var(--tk-shadow-sm); }
+.intro { padding: 32px 0 8px; display: grid; gap: 12px; }
+.intro h1 { font-size: 20px; line-height: 28px; font-weight: 600; }
+.doc-sec { padding: 32px 0; border-bottom: 1px solid var(--color-base-300); }
+.sec-title { font-size: 20px; line-height: 28px; font-weight: 600; margin-bottom: 4px; }
+.sub { font-size: 16px; line-height: 24px; font-weight: 600; margin: 28px 0 8px; }
+.sub:first-of-type { margin-top: 16px; }
+.lead { color: var(--tk-muted); max-width: 80ch; margin-bottom: 12px; }
+.note { font-size: 12px; line-height: 16px; color: var(--tk-muted); margin-top: 8px; }
+.spec { border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: var(--color-base-100); margin-bottom: 12px; min-width: 0; }
+.spec-head { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 10px 16px; border-bottom: 1px solid var(--color-base-300); }
+.spec-head code { font-weight: 600; font-size: 14px; }
+.spec-body { padding: 16px; display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: flex-start; min-width: 0; }
+.spec-body.col { display: grid; gap: 16px; }
+.demo { display: grid; gap: 6px; align-content: start; min-width: 0; max-width: 100%; }
+.cap { font-size: 12px; line-height: 16px; color: var(--tk-muted); }
+.grid-2 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+.grid-auto { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+.doc-foot { padding: 32px 0 48px; color: var(--tk-muted); font-size: 12px; line-height: 18px; display: grid; gap: 4px; }
+
+/* 색 견본 */
+.sw { border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: var(--color-base-100); overflow: hidden; }
+.sw-chips { display: grid; grid-template-columns: 1fr 1fr; }
+.chip { height: 64px; padding: 8px 10px; display: flex; flex-direction: column; justify-content: space-between; font-size: 12px; line-height: 16px; }
+.chip b { font-size: 16px; line-height: 20px; }
+.chip code { font-size: 11px; }
+.sw-meta { padding: 8px 10px; display: grid; gap: 2px; border-top: 1px solid var(--color-base-300); }
+.theme-pair { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); }
+.theme-panel { border: 1px solid var(--color-base-300); border-radius: var(--radius-box); padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.theme-panel > .cap { font-weight: 600; }
+.map-row { display: grid; grid-template-columns: 96px 1fr; gap: 8px; align-items: center; }
+@media (max-width: 480px) { .map-row { grid-template-columns: 1fr; gap: 4px; } }
+
+/* 타이포 */
+.type-row { display: grid; grid-template-columns: minmax(0, 200px) 1fr; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-base-300); align-items: baseline; }
+.type-row:last-child { border-bottom: 0; }
+@media (max-width: 560px) { .type-row { grid-template-columns: 1fr; gap: 4px; } }
+
+/* 간격, 깊이 */
+.space-bar { height: 12px; background: color-mix(in oklab, var(--color-primary) 35%, var(--color-base-100)); border-radius: 2px; }
+.depth-card { height: 72px; width: 160px; border-radius: var(--radius-box); background: var(--color-base-100); display: grid; place-items: center; font-size: 12px; color: var(--tk-muted); }
+.radius-card { width: 88px; height: 56px; border: 1px solid var(--tk-line-strong); background: var(--color-base-100); display: grid; place-items: center; font-size: 12px; }
+
+/* ===== 프리미티브 (daisyUI 클래스 이름을 따른다) ===== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 12px; border: 1px solid var(--color-base-300); border-radius: var(--radius-field);
+  background: var(--color-base-200); color: var(--color-base-content);
+  font: inherit; font-size: 14px; font-weight: 600; line-height: 1; white-space: nowrap; cursor: pointer; text-decoration: none;
+}
+.btn:hover { text-decoration: none; background-image: linear-gradient(rgb(0 0 0 / .06), rgb(0 0 0 / .06)); }
+.btn-sm { height: 26px; padding: 0 10px; font-size: 12px; gap: 4px; }
+.btn-primary { background: var(--color-primary); color: var(--color-primary-content); border-color: var(--color-primary); }
+.btn-success { background: var(--color-success); color: var(--color-success-content); border-color: var(--color-success); }
+.btn-error { background: var(--color-error); color: var(--color-error-content); border-color: var(--color-error); }
+.btn-soft { background: color-mix(in oklab, var(--color-primary) 8%, var(--color-base-100)); color: var(--color-primary); border-color: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100)); }
+.btn-outline { background: transparent; border-color: var(--tk-line-strong); }
+.btn-outline.btn-error { background: transparent; color: var(--color-error); border-color: var(--color-error); }
+.btn-ghost { background: transparent; border-color: transparent; }
+.btn-active { background: var(--color-base-300); }
+.btn:disabled, .btn.btn-disabled { background: var(--color-base-200); border-color: var(--color-base-200); color: color-mix(in oklab, var(--color-base-content) 42%, var(--color-base-200)); cursor: not-allowed; background-image: none; }
+.join { display: inline-flex; flex-wrap: wrap; }
+.join > .btn { border-radius: 0; margin-left: -1px; background: var(--color-base-100); border-color: var(--tk-line-strong); font-weight: 500; }
+.join > .btn:first-child { border-radius: var(--radius-field) 0 0 var(--radius-field); margin-left: 0; }
+.join > .btn:last-child { border-radius: 0 var(--radius-field) var(--radius-field) 0; }
+.join > .btn[aria-pressed="true"] { background: var(--color-base-300); font-weight: 600; position: relative; }
+
+.badge {
+  --c: var(--color-base-content); --cc: var(--color-base-100);
+  display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px;
+  border: 1px solid var(--color-base-300); border-radius: var(--radius-selector);
+  background: var(--color-base-100); color: var(--color-base-content);
+  font-size: 12px; line-height: 16px; font-weight: 500; white-space: nowrap; vertical-align: middle;
+}
+.badge-sm { height: 18px; padding: 0 6px; gap: 4px; }
+.badge .ic { width: 12px; height: 12px; stroke-width: 2; }
+.badge-neutral { --c: var(--color-neutral); --cc: var(--color-neutral-content); }
+.badge-success { --c: var(--color-success); --cc: var(--color-success-content); }
+.badge-warning { --c: var(--color-warning); --cc: var(--color-warning-content); }
+.badge-error { --c: var(--color-error); --cc: var(--color-error-content); }
+.badge-accent { --c: var(--color-accent); --cc: var(--color-accent-content); }
+.badge-primary { --c: var(--color-primary); --cc: var(--color-primary-content); }
+.badge-neutral, .badge-success, .badge-warning, .badge-error, .badge-accent, .badge-primary { background: var(--c); color: var(--cc); border-color: var(--c); }
+.badge-soft { background: color-mix(in oklab, var(--c) 8%, var(--color-base-100)); color: var(--c); border-color: color-mix(in oklab, var(--c) 12%, var(--color-base-100)); }
+.badge-outline { background: transparent; color: var(--c); border-color: currentColor; }
+.badge-dash { background: transparent; color: var(--c); border-color: currentColor; border-style: dashed; }
+.badge-ghost { background: var(--color-base-200); color: var(--color-base-content); border-color: var(--color-base-200); }
+.badge-count { height: 18px; padding: 0 6px; background: var(--color-base-200); border-color: var(--color-base-200); color: var(--tk-muted); font-variant-numeric: tabular-nums; }
+
+.field { display: grid; gap: 4px; min-width: 0; }
+.label { font-size: 12px; line-height: 16px; font-weight: 600; color: var(--tk-muted); }
+.input, .select, .textarea {
+  width: 100%; height: 32px; padding: 0 10px; border: 1px solid var(--tk-line-strong); border-radius: var(--radius-field);
+  background: var(--color-base-100); color: var(--color-base-content); font: inherit; font-size: 14px;
+}
+.textarea { height: auto; min-height: 84px; padding: 6px 10px; line-height: 20px; resize: vertical; display: block; }
+.input::placeholder, .textarea::placeholder { color: var(--tk-muted); opacity: 1; }
+.input:focus, .select:focus, .textarea:focus { outline: 2px solid var(--color-primary); outline-offset: 2px; border-color: var(--color-primary); }
+.input-error, .textarea-error, .select-error { border-color: var(--color-error); }
+.input:disabled, .textarea:disabled, .select:disabled { background: var(--color-base-200); border-color: var(--color-base-300); color: var(--tk-muted); cursor: not-allowed; }
+.help { font-size: 12px; line-height: 16px; color: var(--tk-muted); }
+.err { font-size: 12px; line-height: 16px; color: var(--color-error); display: flex; gap: 4px; align-items: center; }
+.radio { width: 16px; height: 16px; margin: 0; accent-color: var(--color-primary); flex: none; }
+.drop { border: 1px dashed var(--tk-line-strong); border-radius: var(--radius-box); padding: 20px; display: grid; justify-items: center; gap: 6px; text-align: center; background: var(--color-base-100); }
+
+.tabs { display: flex; gap: 4px; box-shadow: inset 0 -1px 0 var(--color-base-300); overflow-x: auto; overflow-y: hidden; }
+.tab { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-bottom: 2px solid transparent; color: var(--tk-muted); font-weight: 500; white-space: nowrap; }
+.tab:hover { color: var(--color-base-content); text-decoration: none; }
+.tab-active { color: var(--color-base-content); border-bottom-color: var(--color-primary); font-weight: 600; }
+
+progress.progress { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 8px; border: 0; border-radius: 999px; background: var(--color-base-300); color: var(--c, var(--color-primary)); overflow: hidden; }
+progress.progress::-webkit-progress-bar { background: var(--color-base-300); border-radius: 999px; }
+progress.progress::-webkit-progress-value { background: var(--c, var(--color-primary)); border-radius: 999px; }
+progress.progress::-moz-progress-bar { background: var(--c, var(--color-primary)); border-radius: 999px; }
+.progress-primary { --c: var(--color-primary); } .progress-success { --c: var(--color-success); } .progress-warning { --c: var(--color-warning); }
+
+.alert { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--c); border-radius: var(--radius-box); background: color-mix(in oklab, var(--c) 8%, var(--color-base-100)); color: var(--color-base-content); min-width: 0; }
+.alert > .ic { color: var(--c); margin-top: 2px; }
+.alert-info { --c: var(--color-info); } .alert-error { --c: var(--color-error); } .alert-warning { --c: var(--color-warning); } .alert-success { --c: var(--color-success); }
+.flash { box-shadow: var(--tk-shadow-md); max-width: 380px; background: var(--color-base-100); }
+
+.skeleton { display: block; background: var(--color-base-300); border-radius: var(--radius-field); height: 12px; }
+.loading-dots { display: inline-flex; gap: 3px; align-items: center; }
+.loading-dots i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .35; }
+@media (prefers-reduced-motion: no-preference) {
+  .loading-dots i { animation: tk-dot 1.2s infinite ease-in-out; }
+  .loading-dots i:nth-child(2) { animation-delay: .15s; } .loading-dots i:nth-child(3) { animation-delay: .3s; }
+  .spin { animation: tk-spin 1.2s linear infinite; transform-origin: 50% 50%; }
+  .skeleton { animation: tk-pulse 1.6s ease-in-out infinite; }
+  .ev-new { animation: tk-hl 1.5s ease-out 1; }
+}
+@keyframes tk-dot { 0%, 80%, 100% { opacity: .35; } 40% { opacity: 1; } }
+@keyframes tk-spin { to { transform: rotate(360deg); } }
+@keyframes tk-pulse { 50% { opacity: .55; } }
+@keyframes tk-hl { from { background: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100)); } to { background: transparent; } }
+
+[data-tip] { position: relative; }
+[data-tip]:hover::after, [data-tip]:focus-visible::after {
+  content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%); z-index: 40;
+  padding: 4px 8px; border-radius: var(--radius-field); background: var(--color-neutral); color: var(--color-neutral-content);
+  font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 500; white-space: nowrap; box-shadow: var(--tk-shadow-md); pointer-events: none;
+}
+.card { background: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: var(--radius-box); padding: 16px; min-width: 0; }
+.card-dense { padding: 12px; }
+.card-title { font-size: 16px; line-height: 24px; font-weight: 600; }
+details > summary { cursor: pointer; color: var(--tk-muted); font-size: 12px; line-height: 16px; list-style: none; display: inline-flex; align-items: center; gap: 4px; border-radius: var(--radius-field); }
+details > summary::-webkit-details-marker { display: none; }
+details > summary .ic { transition: transform .12s; }
+details[open] > summary .chev { transform: rotate(90deg); }
+.kv { display: grid; grid-template-columns: minmax(0, max-content) minmax(0, 1fr); gap: 2px 12px; margin-top: 6px; font-size: 12px; line-height: 16px; }
+.kv dt { font-family: var(--font-mono); overflow-wrap: anywhere; color: var(--tk-muted); }
+.kv dd { margin: 0; font-variant-numeric: tabular-nums slashed-zero; min-width: 0; }
+.kv dd.mono { white-space: normal; overflow-wrap: anywhere; }
+</style>
+<style>
+/* ===== 도메인 표시 요소 ===== */
+.logo-mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: var(--radius-field); background: var(--color-primary); color: var(--color-primary-content); flex: none; }
+.logo-mark .ic { width: 14px; height: 14px; stroke-width: 2.5; vertical-align: 0; }
+.score { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.score b { width: 28px; text-align: right; font-weight: 600; }
+.cells { display: inline-flex; gap: 2px; }
+.cells i { width: 6px; height: 10px; border-radius: 1px; background: var(--color-base-300); }
+.cells i.on { background: var(--color-base-content); }
+.st { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; font-weight: 500; white-space: nowrap; }
+.st-primary { color: var(--color-primary); } .st-success { color: var(--color-success); } .st-warning { color: var(--color-warning); }
+.st-error { color: var(--color-error); } .st-neutral { color: var(--color-neutral); }
+.run-mini { display: inline-grid; gap: 4px; width: 112px; }
+.money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kbd { font-family: var(--font-mono); font-size: 11px; line-height: 14px; padding: 0 4px; border: 1px solid var(--color-base-300); border-bottom-width: 2px; border-radius: 3px; background: var(--color-base-200); }
+
+/* data_table */
+.tbl-wrap { position: relative; overflow: auto; max-width: 100%; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: var(--color-base-100); }
+table.tk-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.tk-table caption { text-align: left; }
+.tk-table th { position: sticky; top: 0; z-index: 1; background: var(--color-base-100); text-align: left; font-size: 12px; line-height: 16px; font-weight: 600; color: var(--tk-muted); padding: 8px 12px; border-bottom: 1px solid var(--color-base-300); white-space: nowrap; }
+.tk-table td { padding: 6px 12px; border-bottom: 1px solid var(--color-base-300); vertical-align: middle; }
+.tk-table tbody tr:last-child td { border-bottom: 0; }
+.tk-table tbody tr:hover td { background: var(--color-base-200); }
+.tk-table tr.is-selected td, .tk-table tr[aria-current] td { background: color-mix(in oklab, var(--color-primary) 10%, var(--color-base-100)); }
+.tk-table tr.is-hl td:first-child { box-shadow: inset 4px 0 0 var(--color-warning); }
+.tk-table tfoot td { position: sticky; bottom: 0; font-weight: 600; background: var(--color-base-200); border-top: 1px solid var(--tk-line-strong); border-bottom: 0; }
+.tk-table .right { text-align: right; }
+.tk-table td.right, .tk-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tbl-more { display: flex; justify-content: center; padding: 8px; border-top: 1px solid var(--color-base-300); }
+.empty { display: grid; justify-items: center; gap: 8px; padding: 28px 16px; text-align: center; color: var(--tk-muted); }
+.empty .ic { width: 24px; height: 24px; }
+
+/* presence */
+.avatars { display: inline-flex; align-items: center; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--color-neutral); color: var(--color-neutral-content); font-size: 12px; line-height: 1; font-weight: 600; border: 2px solid var(--color-base-100); margin-left: -8px; flex: none; }
+.avatar:first-child { margin-left: 0; }
+.avatar-self { background: var(--color-base-300); color: var(--color-base-content); }
+.avatar-more { background: var(--color-base-200); color: var(--color-base-content); }
+
+/* stat_row, test_progress */
+.stats { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.stat { border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: var(--color-base-100); padding: 12px; display: grid; gap: 2px; min-width: 0; align-content: start; }
+.stat-v { font-size: 24px; line-height: 32px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat-v small { font-size: 14px; font-weight: 400; color: var(--tk-muted); margin-left: 2px; }
+.tp { display: grid; gap: 10px; min-width: 0; }
+.tp-rules { display: grid; gap: 6px 12px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.tp-rule { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; line-height: 16px; padding: 6px 8px; border: 1px solid var(--color-base-300); border-radius: var(--radius-field); background: var(--color-base-100); }
+.tp-rule .name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-base-content); font-weight: 400; }
+.tp-rule .cnt { font-variant-numeric: tabular-nums; color: var(--tk-muted); white-space: nowrap; }
+
+/* 근거, AI, 사람 */
+.hits { display: grid; }
+.hit { display: grid; grid-template-columns: 44px 1fr; gap: 2px 12px; padding: 10px 0; border-bottom: 1px solid var(--color-base-300); }
+.hit:first-child { padding-top: 0; }
+.hit-w { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+.hit-sum { padding-top: 10px; display: flex; justify-content: flex-end; gap: 8px; font-variant-numeric: tabular-nums; }
+.ai-box { border: 1px dashed var(--color-accent); border-radius: var(--radius-box); background: color-mix(in oklab, var(--color-accent) 5%, var(--color-base-100)); padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.human-box { border: 1px solid var(--tk-line-strong); border-radius: var(--radius-box); background: var(--color-base-100); padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.box-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ai-note { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; line-height: 16px; color: var(--tk-muted); }
+.proc { display: grid; gap: 10px; counter-reset: proc; }
+.proc li { display: grid; grid-template-columns: 18px 1fr; gap: 2px 6px; }
+.proc li::before { counter-increment: proc; content: counter(proc) "."; grid-row: span 2; color: var(--tk-muted); font-variant-numeric: tabular-nums; }
+.bullets { display: grid; gap: 4px; }
+.bullets li { padding-left: 14px; position: relative; }
+.bullets li::before { content: ""; position: absolute; left: 3px; top: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--tk-muted); }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend { padding: 0; margin-bottom: 8px; font-size: 16px; line-height: 24px; font-weight: 600; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.opt { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.form-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.reason { border-left: 3px solid var(--color-error); padding: 8px 12px; background: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100)); border-radius: 0 var(--radius-field) var(--radius-field) 0; display: grid; gap: 4px; }
+.signoff { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; padding: 10px 16px; background: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: var(--radius-box); box-shadow: var(--tk-shadow-sm); min-width: 0; }
+.signoff-stuck { position: sticky; bottom: 0; z-index: 2; border-radius: 0; border-width: 1px 0 0; }
+.signoff-panel { display: grid; gap: 8px; width: 100%; }
+.hist { display: grid; }
+.hist li { display: grid; grid-template-columns: 26px 1fr; gap: 2px 10px; padding: 10px 0; border-bottom: 1px solid var(--color-base-300); }
+.hist li:last-child { border-bottom: 0; }
+
+/* audit_event_item */
+.ev-list { display: grid; }
+.ev { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--color-base-300); min-width: 0; }
+.ev:last-child { border-bottom: 0; }
+.ev-ic { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; flex: none; }
+.ev-ic .ic { width: 14px; height: 14px; vertical-align: 0; }
+.ev-user { background: color-mix(in oklab, var(--color-primary) 10%, var(--color-base-100)); color: var(--color-primary); }
+.ev-agent { background: color-mix(in oklab, var(--color-accent) 10%, var(--color-base-100)); color: var(--color-accent); }
+.ev-system { background: var(--color-base-300); color: var(--color-base-content); }
+.ev-body { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.ev-top { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; }
+.ev-seq { font-family: var(--font-mono); font-size: 12px; color: var(--tk-muted); font-variant-numeric: tabular-nums slashed-zero; }
+
+/* ===== 화면 시안 프레임 ===== */
+.frame { margin: 12px 0 8px; border: 1px solid var(--tk-line-strong); border-radius: var(--radius-box); overflow: hidden; background: var(--color-base-100); min-width: 0; }
+.frame-bar { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 6px 12px; background: var(--color-base-300); font-size: 12px; line-height: 16px; color: var(--color-base-content); }
+.frame-bar .dots { display: inline-flex; gap: 4px; } .frame-bar .dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--tk-line-strong); }
+.frame-scroll { position: relative; overflow-x: auto; }
+.frame-canvas { min-width: 1024px; background: var(--color-base-200); position: relative; }
+.app-bar { position: sticky; top: 0; z-index: 3; height: 48px; display: flex; align-items: center; gap: 16px; padding: 0 24px; background: var(--color-base-100); border-bottom: 1px solid var(--color-base-300); box-shadow: var(--tk-shadow-sm); }
+.app-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: var(--color-base-content); }
+.app-nav { display: flex; gap: 4px; align-items: center; }
+.app-nav a { padding: 4px 8px; border-radius: var(--radius-field); color: var(--tk-muted); font-weight: 500; white-space: nowrap; }
+.app-nav a[aria-current="page"] { color: var(--color-base-content); background: var(--color-base-200); }
+.app-tools { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.tt { display: inline-flex; border: 1px solid var(--color-base-300); border-radius: 999px; padding: 2px; gap: 2px; }
+.tt span { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; color: var(--tk-muted); }
+.tt span.on { background: var(--color-base-200); color: var(--color-base-content); }
+.tt .ic { width: 14px; height: 14px; vertical-align: 0; }
+.user-menu { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--tk-muted); }
+.app-main { padding: 24px 32px 32px; display: grid; gap: 24px; }
+.crumb { font-size: 12px; line-height: 16px; color: var(--tk-muted); display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.crumb a { color: var(--tk-muted); }
+.page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.page-title { font-size: 20px; line-height: 28px; font-weight: 600; }
+.sec-h { font-size: 16px; line-height: 24px; font-weight: 600; }
+.panel { border: 1px solid var(--tk-line-strong); border-radius: var(--radius-box); background: var(--color-base-100); padding: 16px; display: grid; gap: 12px; }
+.form-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.s5-grid { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 24px; align-items: start; }
+.queue { position: sticky; top: 72px; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background: var(--color-base-100); overflow: hidden; }
+.queue-head { padding: 10px 12px; border-bottom: 1px solid var(--color-base-300); display: grid; gap: 2px; }
+.queue a { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 8px 12px; border-bottom: 1px solid var(--color-base-300); color: inherit; }
+.queue a:hover { background: var(--color-base-200); text-decoration: none; }
+.queue a[aria-current="page"] { background: color-mix(in oklab, var(--color-primary) 10%, var(--color-base-100)); box-shadow: inset 2px 0 0 var(--color-primary); }
+.queue-foot { padding: 10px 12px; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 24px; }
+.facts dt { font-size: 12px; line-height: 16px; font-weight: 600; color: var(--tk-muted); }
+.facts dd { margin: 2px 0 0; }
+.facts .wide { grid-column: 1 / -1; }
+.frame-note { font-size: 12px; line-height: 16px; color: var(--tk-muted); margin-bottom: 24px; }
+</style>
+</head>
+<body>
+<!-- 아이콘: Heroicons v2 outline 24px (MIT). 앱에서는 hero-* 클래스로 쓴다 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.5 12.75l6 6 9-13.5"/></symbol>
+  <symbol id="i-x-mark" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4.5v15m7.5-7.5h-15"/></symbol>
+  <symbol id="i-minus-circle" viewBox="0 0 24 24"><path d="M15 12H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24"><path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></symbol>
+  <symbol id="i-x-circle" viewBox="0 0 24 24"><path d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></symbol>
+  <symbol id="i-exclamation-circle" viewBox="0 0 24 24"><path d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></symbol>
+  <symbol id="i-exclamation-triangle" viewBox="0 0 24 24"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/></symbol>
+  <symbol id="i-question-mark-circle" viewBox="0 0 24 24"><path d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/></symbol>
+  <symbol id="i-information-circle" viewBox="0 0 24 24"><path d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><path d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></symbol>
+  <symbol id="i-arrow-path" viewBox="0 0 24 24"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/></symbol>
+  <symbol id="i-arrow-uturn-left" viewBox="0 0 24 24"><path d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M3 3v1.5M3 21v-6m0 0 2.77-.693a9 9 0 0 1 6.208.682l.108.054a9 9 0 0 0 6.086.71l3.114-.732a48.524 48.524 0 0 1-.005-10.499l-3.11.732a9 9 0 0 1-6.085-.711l-.108-.054a9 9 0 0 0-6.208-.682L3 4.5M3 15V4.5"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z"/></symbol>
+  <symbol id="i-pencil-square" viewBox="0 0 24 24"><path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></symbol>
+  <symbol id="i-check-badge" viewBox="0 0 24 24"><path d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z"/></symbol>
+  <symbol id="i-lock-closed" viewBox="0 0 24 24"><path d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></symbol>
+  <symbol id="i-user-circle" viewBox="0 0 24 24"><path d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></symbol>
+  <symbol id="i-cog-6-tooth" viewBox="0 0 24 24"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><path d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></symbol>
+  <symbol id="i-computer-desktop" viewBox="0 0 24 24"><path d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25"/></symbol>
+  <symbol id="i-arrow-up-tray" viewBox="0 0 24 24"><path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5"/></symbol>
+  <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m8.25 4.5 7.5 7.5-7.5 7.5"/></symbol>
+  <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m19.5 8.25-7.5 7.5-7.5-7.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z"/></symbol>
+  <symbol id="i-document-text" viewBox="0 0 24 24"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></symbol>
+  <symbol id="i-magnifying-glass" viewBox="0 0 24 24"><path d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M2.25 13.5h3.86a2.25 2.25 0 0 1 2.012 1.244l.256.512a2.25 2.25 0 0 0 2.013 1.244h3.218a2.25 2.25 0 0 0 2.013-1.244l.256-.512a2.25 2.25 0 0 1 2.013-1.244h3.859m-19.5.338V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H6.911a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661Z"/></symbol>
+</svg>
+
+<a class="sr-only" href="#main">본문으로 건너뛰기</a>
+<header class="doc-head">
+  <div class="wrap">
+    <div class="doc-head-top">
+      <div class="doc-title"><span class="logo-mark" aria-hidden="true"><svg class="ic ic-xs"><use href="#i-check"/></svg></span>Tickmark 디자인 시스템 시안</div>
+      <div class="seg" role="group" aria-label="테마">
+        <button type="button" data-theme-set="system" aria-pressed="true"><svg class="ic ic-xs"><use href="#i-computer-desktop"/></svg>시스템</button>
+        <button type="button" data-theme-set="light" aria-pressed="false"><svg class="ic ic-xs"><use href="#i-sun"/></svg>라이트</button>
+        <button type="button" data-theme-set="dark" aria-pressed="false"><svg class="ic ic-xs"><use href="#i-moon"/></svg>다크</button>
+      </div>
+    </div>
+    <nav class="doc-nav" aria-label="섹션">
+      <a href="#color">1 색</a><a href="#type">2 타이포그래피</a><a href="#space">3 간격, 반경, 깊이</a>
+      <a href="#primitives">4.0 프리미티브</a><a href="#small">4.1 표시 컴포넌트</a><a href="#composite">4.2 복합 컴포넌트</a>
+      <a href="#s1">S1</a><a href="#s2">S2</a><a href="#s3">S3</a><a href="#s4">S4</a><a href="#s5">S5</a><a href="#s6">S6</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <div class="intro">
+    <h1>디자인 시스템 시안</h1>
+    <p class="lead prose">감사인이 전표, 룰 적중, AI 제안, 결론, 감사 로그를 오래 보는 화면이다. 밀도 우선, 추적 가능성, AI와 사람의 구분, 상태 명료성을 원칙으로 한다. 기준 문서는 <a href="2026-10-17-5-디자인-시스템.md">디자인 시스템 (md)</a>이고, 이 시안과 어긋나면 md가 우선이다. 위의 테마 버튼으로 라이트/다크를 바꾼다. 모든 회사, 사람, 금액, 전표는 합성 데이터다.</p>
+  </div>
+
+  <!-- ===================== 1. 색 ===================== -->
+  <section class="doc-sec" id="color" aria-labelledby="color-t">
+    <h2 class="sec-title" id="color-t">1. 색</h2>
+    <p class="lead">daisyUI 토큰 이름을 그대로 쓴다. 각 견본의 왼쪽이 라이트, 오른쪽이 다크다. 다크는 표면이 밝을수록 위(elevation)다.</p>
+
+    <h3 class="sub">1.1 역할별 토큰</h3>
+    <div class="grid-auto">
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#F3F5F8;color:#18202B"><span>Light</span><code>#F3F5F8</code></div><div class="chip" style="background:#0E131A;color:#E5E9EF"><span>Dark</span><code>#0E131A</code></div></div><div class="sw-meta"><b>페이지 배경</b><code class="xs muted">base-200</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#FFFFFF;color:#18202B"><span>Light</span><code>#FFFFFF</code></div><div class="chip" style="background:#161D27;color:#E5E9EF"><span>Dark</span><code>#161D27</code></div></div><div class="sw-meta"><b>표면 (카드, 테이블, 입력)</b><code class="xs muted">base-100</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#DDE2E9;color:#18202B"><span>Light</span><code>#DDE2E9</code></div><div class="chip" style="background:#2B3544;color:#E5E9EF"><span>Dark</span><code>#2B3544</code></div></div><div class="sw-meta"><b>구분선, 행 hover, 비활성</b><code class="xs muted">base-300</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#FFFFFF;color:#18202B"><b>본문 Aa</b><code>#18202B</code></div><div class="chip" style="background:#161D27;color:#E5E9EF"><b>본문 Aa</b><code>#E5E9EF</code></div></div><div class="sw-meta"><b>본문 텍스트</b><code class="xs muted">base-content</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#FFFFFF;color:#556070"><b>보조 Aa</b><code>#556070</code></div><div class="chip" style="background:#161D27;color:#9AA6B6"><b>보조 Aa</b><code>#9AA6B6</code></div></div><div class="sw-meta"><b>보조 텍스트 (추가)</b><code class="xs muted">muted / text-muted</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#FFFFFF;color:#18202B;box-shadow:inset 0 0 0 2px #7C8796"><span>입력 경계</span><code>#7C8796</code></div><div class="chip" style="background:#161D27;color:#E5E9EF;box-shadow:inset 0 0 0 2px #6F7B8D"><span>입력 경계</span><code>#6F7B8D</code></div></div><div class="sw-meta"><b>입력 경계 (UI 3:1, 추가)</b><code class="xs muted">line-strong / border-line-strong</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#1F5AA6;color:#FFFFFF"><b>Aa</b><code>#1F5AA6 / #FFFFFF</code></div><div class="chip" style="background:#7AA7F2;color:#0B1426"><b>Aa</b><code>#7AA7F2 / #0B1426</code></div></div><div class="sw-meta"><b>Primary (링크, 주 버튼, 포커스), Info</b><code class="xs muted">primary + primary-content</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#6B3FC0;color:#FFFFFF"><b>Aa</b><code>#6B3FC0 / #FFFFFF</code></div><div class="chip" style="background:#B79CF5;color:#1B0E3A"><b>Aa</b><code>#B79CF5 / #1B0E3A</code></div></div><div class="sw-meta"><b>AI 표식</b><code class="xs muted">accent + accent-content</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#B42318;color:#FFFFFF"><b>Aa</b><code>#B42318 / #FFFFFF</code></div><div class="chip" style="background:#F28B82;color:#2B0907"><b>Aa</b><code>#F28B82 / #2B0907</code></div></div><div class="sw-meta"><b>Error</b><code class="xs muted">error + error-content</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#8A5000;color:#FFFFFF"><b>Aa</b><code>#8A5000 / #FFFFFF</code></div><div class="chip" style="background:#EDB257;color:#2A1A00"><b>Aa</b><code>#EDB257 / #2A1A00</code></div></div><div class="sw-meta"><b>Warning</b><code class="xs muted">warning + warning-content</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#116D40;color:#FFFFFF"><b>Aa</b><code>#116D40 / #FFFFFF</code></div><div class="chip" style="background:#5CC38A;color:#06210F"><b>Aa</b><code>#5CC38A / #06210F</code></div></div><div class="sw-meta"><b>Success</b><code class="xs muted">success + success-content</code></div></div>
+      <div class="sw"><div class="sw-chips"><div class="chip" style="background:#475467;color:#FFFFFF"><b>Aa</b><code>#475467 / #FFFFFF</code></div><div class="chip" style="background:#A9B4C3;color:#0E131A"><b>Aa</b><code>#A9B4C3 / #0E131A</code></div></div><div class="sw-meta"><b>Neutral, Secondary</b><code class="xs muted">neutral + neutral-content</code></div></div>
+    </div>
+
+    <h3 class="sub">1.2 도메인 의미 매핑 (라이트와 다크 동시 비교)</h3>
+    <p class="lead">위험도는 soft, 작성자 판단은 outline, 검토 상태는 solid로 모양이 다르다. 위험도 낮음은 녹색이 아니다(녹색은 사람의 결론과 시스템 작업 완료에만 쓴다). 점수는 색을 쓰지 않는다.</p>
+    <div class="theme-pair">
+      <div class="theme-panel tk-light" id="map-src">
+        <p class="cap">Light</p>
+        <div class="map-row"><span class="cap">위험도 (AI)</span><div class="row gap-1-5">
+          <span class="badge badge-soft badge-error"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>높음</span>
+          <span class="badge badge-soft badge-warning"><svg class="ic"><use href="#i-exclamation-circle"/></svg>중간</span>
+          <span class="badge badge-soft badge-neutral"><svg class="ic"><use href="#i-minus-circle"/></svg>낮음</span>
+        </div></div>
+        <div class="map-row"><span class="cap">트리아지 상태</span><div class="row gap-3">
+          <span class="muted">-<span class="sr-only">AI 미요청</span></span>
+          <span class="row-nw gap-1-5 t-accent xs medium"><span class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></span>분석 중</span>
+          <span class="badge badge-ghost"><svg class="ic t-error"><use href="#i-exclamation-circle"/></svg>AI 실패</span>
+        </div></div>
+        <div class="map-row"><span class="cap">작성자 판단</span><div class="row gap-1-5">
+          <span class="badge badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span>
+          <span class="badge badge-outline badge-warning"><svg class="ic"><use href="#i-question-mark-circle"/></svg>추가 확인 필요</span>
+          <span class="badge badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span>
+          <span class="badge badge-dash badge-neutral"><svg class="ic"><use href="#i-pencil-square"/></svg>미판단</span>
+        </div></div>
+        <div class="map-row"><span class="cap">검토 상태</span><div class="row gap-1-5">
+          <span class="muted" title="검토 전">-<span class="sr-only">검토 전</span></span>
+          <span class="badge badge-neutral"><svg class="ic"><use href="#i-clock"/></svg>검토 대기</span>
+          <span class="badge badge-success"><svg class="ic"><use href="#i-check-badge"/></svg>승인</span>
+          <span class="badge badge-error"><svg class="ic"><use href="#i-arrow-uturn-left"/></svg>반려</span>
+        </div></div>
+        <div class="map-row"><span class="cap">AI 산출물</span><div class="row"><span class="badge badge-soft badge-accent"><svg class="ic"><use href="#i-sparkles"/></svg>AI 제안</span></div></div>
+        <div class="map-row"><span class="cap">점수 (색 없음)</span><div class="row gap-3">
+          <span class="score"><b class="num">10</b><span class="cells" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="xs muted">경미</span></span>
+          <span class="score"><b class="num">25</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="xs muted">중</span></span>
+          <span class="score"><b class="num">55</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span>
+          <span class="score"><b class="num">80</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="xs muted">최상</span></span>
+        </div></div>
+        <div class="map-row"><span class="cap">테스트 실행</span><div class="row gap-3">
+          <span class="run-mini"><progress class="progress progress-primary" value="62" max="100"></progress><span class="st st-primary"><svg class="ic spin"><use href="#i-arrow-path"/></svg>실행 중</span></span>
+          <span class="run-mini"><progress class="progress progress-success" value="100" max="100"></progress><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span></span>
+          <span class="run-mini"><progress class="progress progress-warning" value="100" max="100"></progress><span class="st st-warning"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>일부 실패</span></span>
+        </div></div>
+        <div class="map-row"><span class="cap">룰 실행</span><div class="row gap-3">
+          <span class="st st-neutral"><svg class="ic"><use href="#i-clock"/></svg>대기</span>
+          <span class="st st-primary"><svg class="ic spin"><use href="#i-arrow-path"/></svg>실행 중</span>
+          <span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span>
+          <span class="st st-neutral"><svg class="ic"><use href="#i-minus-circle"/></svg>미실행</span>
+          <span class="st st-error"><svg class="ic"><use href="#i-x-circle"/></svg>실패</span>
+        </div></div>
+        <div class="map-row"><span class="cap">GL 적재</span><div class="row gap-3">
+          <span class="st st-neutral"><svg class="ic"><use href="#i-clock"/></svg>대기</span>
+          <span class="st st-primary"><svg class="ic spin"><use href="#i-arrow-path"/></svg>적재 중</span>
+          <span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span>
+          <span class="st st-error"><svg class="ic"><use href="#i-x-circle"/></svg>실패</span>
+        </div></div>
+      </div>
+      <div class="theme-panel tk-dark" data-clone-of="map-src" data-clone-label="Dark" aria-hidden="true"></div>
+    </div>
+
+    <h3 class="sub">1.3 대비 검증 (WCAG 2.x, 디자인 문서 3.3)</h3>
+    <div class="tbl-wrap">
+      <table class="tk-table">
+        <caption class="sr-only">색 쌍별 대비</caption>
+        <thead><tr><th scope="col">쌍</th><th scope="col" class="right">Light</th><th scope="col" class="right">Dark</th><th scope="col" class="right">기준</th></tr></thead>
+        <tbody class="num">
+          <tr><td>본문 on base-100 / base-200</td><td class="right">16.40 / 15.02</td><td class="right">13.91 / 15.30</td><td class="right">4.5</td></tr>
+          <tr><td>muted on base-100 / base-200 / base-300</td><td class="right">6.38 / 5.84 / 4.90</td><td class="right">6.86 / 7.55 / 5.02</td><td class="right">4.5</td></tr>
+          <tr><td>primary 텍스트 on base-100 / base-200</td><td class="right">6.84 / 6.26</td><td class="right">6.97 / 7.67</td><td class="right">4.5</td></tr>
+          <tr><td>primary-content on primary</td><td class="right">6.84</td><td class="right">7.56</td><td class="right">4.5</td></tr>
+          <tr><td>error on base-100 / soft</td><td class="right">6.57 / 5.82</td><td class="right">7.09 / 6.34</td><td class="right">4.5</td></tr>
+          <tr><td>warning on base-100 / soft</td><td class="right">6.51 / 5.76</td><td class="right">8.96 / 7.84</td><td class="right">4.5</td></tr>
+          <tr><td>success on base-100 / soft</td><td class="right">6.39 / 5.68</td><td class="right">7.77 / 6.91</td><td class="right">4.5</td></tr>
+          <tr><td>neutral on base-100 / soft</td><td class="right">7.69 / 6.74</td><td class="right">8.07 / 7.16</td><td class="right">4.5</td></tr>
+          <tr><td>accent on base-100 / soft</td><td class="right">6.78 / 6.02</td><td class="right">7.33 / 6.52</td><td class="right">4.5</td></tr>
+          <tr><td>*-content on solid (error, warning, success, neutral, accent)</td><td class="right">6.57, 6.51, 6.39, 7.69, 6.78</td><td class="right">7.68, 8.91, 7.81, 8.88, 7.76</td><td class="right">4.5</td></tr>
+          <tr><td>본문 / muted on AI 박스 틴트</td><td class="right">14.55 / 5.66</td><td class="right">12.37 / 6.10</td><td class="right">4.5</td></tr>
+          <tr><td>line-strong vs base-100 / base-200</td><td class="right">3.64 / 3.34</td><td class="right">3.95 / 4.34</td><td class="right">3.0</td></tr>
+          <tr><td>포커스 링(primary) vs base-100 / base-200</td><td class="right">6.84 / 6.26</td><td class="right">6.97 / 7.67</td><td class="right">3.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">soft 배경은 역할색 8%를 base-100과 oklab 혼합한 근사값으로 계산했다. 이 시안은 같은 혼합(<code>color-mix(in oklab, ...)</code>)으로 그리므로 실제 렌더 색을 여기서 확인할 수 있다. base-300 구분선(1.30 / 1.37)은 의도적으로 3:1 미만이며 정보를 전달하지 않는다.</p>
+  </section>
+
+  <!-- ===================== 2. 타이포그래피 ===================== -->
+  <section class="doc-sec" id="type" aria-labelledby="type-t">
+    <h2 class="sec-title" id="type-t">2. 타이포그래피</h2>
+    <p class="lead">시스템 폰트만 쓴다(외부 폰트 링크 없음). 금액, 날짜, 건수는 <code>tabular-nums</code>, ID와 코드는 mono + <code>slashed-zero</code>로 자르지 않는다.</p>
+    <div class="grid-2">
+      <div class="card stack">
+        <span class="cap">sans: <code>system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif</code></span>
+        <p class="base">누리정밀 주식회사 FY2025 분개 테스트</p>
+        <p>작성자 판단과 검토자 승인은 화면에서 분리된다. 0123456789</p>
+      </div>
+      <div class="card stack">
+        <span class="cap">mono: <code>ui-monospace, "SF Mono", Menlo, "Cascadia Mono", Consolas, monospace</code></span>
+        <p class="mono base" style="white-space:normal">JE-000123 L2</p>
+        <p class="mono" style="white-space:normal;overflow-wrap:anywhere">4110 approval_control_gap 3f9a0c7e claude-opus-5-5 0O 1l</p>
+      </div>
+    </div>
+
+    <h3 class="sub">2.1 크기와 굵기</h3>
+    <div class="card">
+      <div class="type-row"><span class="cap">페이지 제목<br><code>text-xl</code> 20/28 semibold</span><span style="font-size:20px;line-height:28px;font-weight:600">JE-000123 전표 검토</span></div>
+      <div class="type-row"><span class="cap">섹션 제목<br><code>text-base</code> 16/24 semibold</span><span class="base semibold">룰 적중</span></div>
+      <div class="type-row"><span class="cap">본문, 폼, 셀<br><code>text-sm</code> 14/20</span><span>결산일 3일 이내에 수기로 입력된 전표입니다.</span></div>
+      <div class="type-row"><span class="cap">긴 문단 (AI 근거)<br><code>text-sm leading-6</code> 14/24</span><span class="prose">결산일 이틀 전에 수기로 입력된 선급금 지급 전표이며, 입력자와 승인자가 같은 사용자로 기록되어 있습니다. 세 신호가 겹쳐 있어 추가 절차가 필요해 보입니다.</span></div>
+      <div class="type-row"><span class="cap">테이블 헤더<br><code>text-xs</code> 12/16 semibold muted</span><span class="xs semibold muted">금액(원)</span></div>
+      <div class="type-row"><span class="cap">메타, 캡션, 배지<br><code>text-xs</code> 12/16, 배지 medium</span><span class="row"><span class="xs muted">2026-10-19 10:43 KST, triage-v1</span><span class="badge badge-soft badge-accent"><svg class="ic"><use href="#i-sparkles"/></svg>AI 제안</span></span></div>
+      <div class="type-row"><span class="cap">요약 수치 (KPI)<br><code>text-2xl tabular-nums</code> 24/32 semibold</span><span class="num" style="font-size:24px;line-height:32px;font-weight:600">8,341<span class="sm muted">건</span></span></div>
+    </div>
+
+    <h3 class="sub">2.2 표기 규칙 (디자인 문서 6장)</h3>
+    <div class="tbl-wrap">
+      <table class="tk-table">
+        <caption class="sr-only">금액, 날짜, ID 표기 예</caption>
+        <thead><tr><th scope="col">대상</th><th scope="col">규칙</th><th scope="col" class="right">예</th></tr></thead>
+        <tbody>
+          <tr><td>금액 (표)</td><td>원 단위, 천 단위 쉼표, 통화 기호 없음, 열 머리에 (원), 우측 정렬</td><td class="right num">40,000,000</td></tr>
+          <tr><td>금액 (문장)</td><td>숫자 뒤에 "원"</td><td class="right num">수행중요성 225,000,000원</td></tr>
+          <tr><td>금액 (KPI)</td><td>억/만 축약 허용, 전체 값은 title</td><td class="right num"><span title="225,000,000원">2억 2,500만원</span></td></tr>
+          <tr><td>음수</td><td>hyphen-minus. 괄호와 빨간색 없음</td><td class="right num">-1,250,000</td></tr>
+          <tr><td>0 (차변/대변)</td><td><code>-</code> + sr-only "0"</td><td class="right num">-<span class="sr-only">0</span></td></tr>
+          <tr><td>소수부가 0이 아닌 금액</td><td>숨기지 않고 2자리 (데이터 오류 노출)</td><td class="right num">12,000.50</td></tr>
+          <tr><td>건수, 비율, 진행률</td><td>쉼표 + 단위, 비율 소수 1자리, 진행률 정수</td><td class="right num">8,341건, 62.5%, 62%</td></tr>
+          <tr><td>날짜</td><td><code>YYYY-MM-DD</code>, 요일 없음</td><td class="right num">2025-12-31</td></tr>
+          <tr><td>일시 (시스템 시각)</td><td>KST(UTC+9 고정). 로그와 상세는 초까지, title에 UTC 원문</td><td class="right num"><time datetime="2026-10-19T02:18:40Z" title="2026-10-19 02:18:40 UTC">2026-10-19 11:18:40</time></td></tr>
+          <tr><td>GL <code>entered_at</code></td><td>시간대 없는 KST 값 그대로 (변환 없음)</td><td class="right num">2025-12-30 17:42:10</td></tr>
+          <tr><td>전표번호, 행</td><td>mono, 선행 0 보존, 행은 muted L2</td><td class="right"><span class="mono">JE-000123</span> <span class="xs muted">L2</span></td></tr>
+          <tr><td>계정</td><td>코드 mono + 이름 sans</td><td class="right"><span class="mono">4110</span> 제품매출</td></tr>
+          <tr><td>회계연도, 기간</td><td><code>FY2025</code>, 13은 결산조정</td><td class="right num">FY2025, 13(결산조정)</td></tr>
+          <tr><td>해시, 모델 ID</td><td>해시 앞 8자 + title, 모델 ID 전체</td><td class="right"><span class="mono" title="3f9a0c7e (전체 해시)">3f9a0c7e</span> <span class="mono">claude-opus-5-5</span></td></tr>
+          <tr><td>사용자</td><td>표시 이름 우선, ID는 title과 상세에서 mono</td><td class="right"><span title="kim.writer@example.com">김작성</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== 3. 간격, 반경, 깊이 ===================== -->
+  <section class="doc-sec" id="space" aria-labelledby="space-t">
+    <h2 class="sec-title" id="space-t">3. 간격, 반경, 깊이</h2>
+    <p class="lead">4px 기준. 그림자 대신 1px 경계가 기본이고, 모달은 쓰지 않는다. 다크 모드는 그림자 대신 표면 밝기 차로 위계를 만든다.</p>
+    <div class="grid-2">
+      <div class="card stack-3">
+        <p class="card-title">간격</p>
+        <div class="stack">
+          <div class="row-nw"><span class="cap" style="width:150px">4 기준</span><span class="space-bar" style="width:4px"></span></div>
+          <div class="row-nw"><span class="cap" style="width:150px">6 배지 아이콘-텍스트</span><span class="space-bar" style="width:6px"></span></div>
+          <div class="row-nw"><span class="cap" style="width:150px">8 컨트롤 간격</span><span class="space-bar" style="width:8px"></span></div>
+          <div class="row-nw"><span class="cap" style="width:150px">12 밀집 카드 패딩</span><span class="space-bar" style="width:12px"></span></div>
+          <div class="row-nw"><span class="cap" style="width:150px">16 카드 패딩</span><span class="space-bar" style="width:16px"></span></div>
+          <div class="row-nw"><span class="cap" style="width:150px">24 섹션 간격</span><span class="space-bar" style="width:24px"></span></div>
+          <div class="row-nw"><span class="cap" style="width:150px">32 페이지 좌우 (lg)</span><span class="space-bar" style="width:32px"></span></div>
+        </div>
+        <p class="cap">테이블 셀 12 x 6 (행 약 33px), 컨트롤 높이 32, <code>btn-sm</code> 25.6</p>
+        <div class="row"><button class="btn" type="button">32px 컨트롤</button><button class="btn btn-sm" type="button">btn-sm</button><input class="input" style="width:140px" value="입력 32px" aria-label="예시 입력"></div>
+      </div>
+      <div class="card stack-3">
+        <p class="card-title">반경</p>
+        <div class="row gap-4">
+          <div class="demo"><div class="radius-card" style="border-radius:6px">6px</div><span class="cap">box (카드, 표)</span></div>
+          <div class="demo"><div class="radius-card" style="border-radius:4px">4px</div><span class="cap">field (입력, 버튼)</span></div>
+          <div class="demo"><div class="radius-card" style="border-radius:4px;width:56px">4px</div><span class="cap">selector (배지)</span></div>
+          <div class="demo"><div class="radius-card" style="border-radius:999px;width:56px">원</div><span class="cap">avatar</span></div>
+        </div>
+        <p class="card-title">깊이</p>
+        <div class="row gap-4">
+          <div class="demo"><div class="depth-card" style="border:1px solid var(--color-base-300)">0: 경계만</div><span class="cap">카드, 테이블, AI 박스</span></div>
+          <div class="demo"><div class="depth-card" style="border:1px solid var(--color-base-300);box-shadow:var(--tk-shadow-sm)">1: shadow-sm</div><span class="cap">sticky 헤더, sign-off bar</span></div>
+          <div class="demo"><div class="depth-card" style="box-shadow:var(--tk-shadow-md)">2: shadow-md</div><span class="cap">드롭다운, flash</span></div>
+        </div>
+        <p class="card-title">포커스</p>
+        <div class="row gap-4"><button class="btn btn-primary is-focus" type="button">포커스 링</button><input class="input is-focus" style="width:160px" value="2px, offset 2px" aria-label="포커스 예시"><a class="is-focus" href="#space">링크</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 4.0 프리미티브 ===================== -->
+  <section class="doc-sec" id="primitives" aria-labelledby="prim-t">
+    <h2 class="sec-title" id="prim-t">4.0 프리미티브 (daisyUI)</h2>
+    <p class="lead">daisyUI는 프리미티브에만 쓰고, 도메인 컴포넌트는 그 위에 Tailwind 유틸리티로 조합한다. 아이콘은 Heroicons(<code>hero-*</code>) 16px, 배지 안에서는 12px(<code>-micro</code>)이다.</p>
+
+    <div class="spec">
+      <div class="spec-head"><code>btn</code><span class="cap">높이 32, btn-sm 25.6. 한 화면에 primary는 하나. 색 변형은 core <code>button/1</code>에 <code>class</code>로 넘긴다</span></div>
+      <div class="spec-body">
+        <div class="demo"><button class="btn btn-primary" type="button">결론 제출</button><span class="cap">btn-primary: 주 행동</span></div>
+        <div class="demo"><button class="btn btn-soft" type="button"><svg class="ic"><use href="#i-sparkles"/></svg>AI 제안 요청</button><span class="cap">btn-soft: 보조 행동</span></div>
+        <div class="demo"><button class="btn" type="button">취소</button><span class="cap">btn: 기본</span></div>
+        <div class="demo"><button class="btn btn-success" type="button"><svg class="ic"><use href="#i-check"/></svg>승인</button><span class="cap">btn-success: 승인 전용</span></div>
+        <div class="demo"><button class="btn btn-outline btn-error" type="button"><svg class="ic"><use href="#i-arrow-uturn-left"/></svg>반려</button><span class="cap">btn-outline btn-error: 반려 전용</span></div>
+        <div class="demo"><button class="btn btn-ghost" type="button">더 보기</button><span class="cap">btn-ghost</span></div>
+        <div class="demo"><button class="btn btn-sm" type="button">열기</button><span class="cap">btn-sm: 표 안</span></div>
+        <div class="demo"><button class="btn btn-primary" type="button" disabled aria-describedby="why-off"><svg class="ic"><use href="#i-play"/></svg>테스트 실행</button><span class="cap" id="why-off">비활성: 이유를 옆에 쓰고 aria-describedby로 잇는다</span></div>
+        <div class="demo"><button class="btn btn-primary" type="button" aria-busy="true"><span class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></span>저장 중</button><span class="cap">phx-submit-loading</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>input, select, textarea, radio</code><span class="cap">경계 line-strong(3:1 이상). 라벨은 항상 위에 두고 placeholder로 대신하지 않는다</span></div>
+      <div class="spec-body">
+        <div class="demo" style="width:220px"><label class="field"><span class="label">회사명</span><input class="input" value="누리정밀 주식회사"></label><span class="cap">기본</span></div>
+        <div class="demo" style="width:220px"><label class="field"><span class="label">이메일</span><input class="input is-focus" placeholder="name@example.com" style="border-color:var(--color-primary)"></label><span class="cap">포커스</span></div>
+        <div class="demo" style="width:220px"><label class="field"><span class="label">수행중요성 (원)</span><input class="input input-error num" value="2억" aria-invalid="true" aria-describedby="err-mat"></label><span class="err" id="err-mat"><svg class="ic ic-xs"><use href="#i-exclamation-circle"/></svg>금액은 원 단위 정수여야 합니다</span><span class="cap">검증 오류</span></div>
+        <div class="demo" style="width:220px"><label class="field"><span class="label">회계연도</span><input class="input" value="FY2025" disabled></label><span class="cap">비활성</span></div>
+        <div class="demo" style="width:160px"><label class="field"><span class="label">역할</span><select class="select"><option>작성자</option><option>검토자</option></select></label><span class="cap">select</span></div>
+        <div class="demo" style="width:180px"><label class="field"><span class="label">결산일</span><input class="input num" type="date" value="2025-12-31"></label><span class="cap">date</span></div>
+        <div class="demo" style="width:min(100%,360px)"><label class="field"><span class="label">코멘트</span><textarea class="textarea" rows="3">12월 급여 미지급분 계상으로 보입니다.</textarea></label><span class="help num right">22 / 2000</span></div>
+        <div class="demo"><span class="label">라디오</span><label class="opt"><input class="radio" type="radio" name="r-demo" checked>선택됨</label><label class="opt"><input class="radio" type="radio" name="r-demo">선택 안 됨</label><span class="cap">radio-sm radio-primary</span></div>
+        <div class="demo" style="width:min(100%,300px)"><div class="drop"><svg class="ic ic-lg muted"><use href="#i-arrow-up-tray"/></svg><span class="medium">CSV 파일을 끌어 놓거나 선택</span><span class="xs muted">.csv 1개, 20MB, 100,000행까지</span></div><span class="cap">live_file_input 영역</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>tabs, join</code><span class="cap">tabs-border는 화면의 1차 구분, join은 보조 필터(aria-pressed)</span></div>
+      <div class="spec-body col">
+        <nav class="tabs" aria-label="적재 방식 예시"><a class="tab tab-active" href="#primitives" aria-current="page"><svg class="ic"><use href="#i-arrow-up-tray"/></svg>CSV 업로드</a><a class="tab" href="#primitives"><svg class="ic"><use href="#i-document-text"/></svg>합성 GL 생성</a></nav>
+        <div class="join" role="group" aria-label="검토 상태 예시">
+          <button class="btn btn-sm" type="button" aria-pressed="true">전체 <span class="num">52</span></button><button class="btn btn-sm" type="button" aria-pressed="false">미판단 <span class="num">43</span></button><button class="btn btn-sm" type="button" aria-pressed="false">검토 대기 <span class="num">4</span></button><button class="btn btn-sm" type="button" aria-pressed="false">승인 <span class="num">4</span></button><button class="btn btn-sm" type="button" aria-pressed="false">반려 <span class="num">1</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>alert</code><span class="cap">화면 안 고정 안내. 역할색 8% 틴트 + 역할색 경계, 본문은 base-content</span></div>
+      <div class="spec-body col">
+        <div class="alert alert-info" role="note"><svg class="ic"><use href="#i-information-circle"/></svg><span>1회 최대 100건까지 요청합니다. 요청하면 감사 로그에 요청자가 남습니다.</span></div>
+        <div class="alert alert-success" role="status"><svg class="ic"><use href="#i-check-circle"/></svg><span>적재가 끝났습니다. 차변 합계와 대변 합계가 같습니다.</span></div>
+        <div class="alert alert-warning" role="note"><svg class="ic"><use href="#i-exclamation-triangle"/></svg><span>경고 1건이 있습니다. 적재는 완료되었고 테스트를 실행할 수 있습니다.</span></div>
+        <div class="alert alert-error" role="alert"><svg class="ic"><use href="#i-x-circle"/></svg><span>GL을 적재하지 못했습니다. 아래 오류 4건을 고친 뒤 다시 올리세요.</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>skeleton, loading, tooltip</code><span class="cap">애니메이션은 150ms 이하이거나 반복 표시용이며 prefers-reduced-motion에서 멈춘다</span></div>
+      <div class="spec-body">
+        <div class="demo" style="width:200px"><span class="skeleton" style="width:90%"></span><span class="skeleton" style="width:70%"></span><span class="skeleton" style="width:50%"></span><span class="cap">skeleton</span></div>
+        <div class="demo"><span class="row-nw gap-1-5 t-accent xs medium"><span class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></span>분석 중</span><span class="cap">loading-dots (AI)</span></div>
+        <div class="demo"><span class="st st-primary"><svg class="ic spin"><use href="#i-arrow-path"/></svg>실행 중</span><span class="cap">회전 아이콘 (시스템 작업)</span></div>
+        <div class="demo"><span tabindex="0" data-tip="주말/공휴일 전기" style="border-bottom:1px dotted var(--tk-muted)">휴일</span><span class="cap">tooltip: 짧은 이름의 전체 이름</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 4.1 표시 컴포넌트 ===================== -->
+  <section class="doc-sec" id="small" aria-labelledby="small-t">
+    <h2 class="sec-title" id="small-t">4.1 표시 컴포넌트</h2>
+    <p class="lead"><code>TickmarkWeb.AuditComponents</code>. 모든 상태를 아이콘과 텍스트로 함께 전달하고, 색만으로 구분하지 않는다.</p>
+
+    <div class="spec">
+      <div class="spec-head"><code>money/1</code><span class="cap">value, zero :dash | :number. tabular-nums, 부모 셀 text-right</span></div>
+      <div class="spec-body">
+        <div class="demo"><span class="money">40,000,000</span><span class="cap">양수</span></div>
+        <div class="demo"><span class="money">-1,250,000</span><span class="cap">음수 (hyphen-minus)</span></div>
+        <div class="demo"><span class="money">0</span><span class="cap">0, zero: :number</span></div>
+        <div class="demo"><span class="money">-<span class="sr-only">0</span></span><span class="cap">0, zero: :dash (차변/대변)</span></div>
+        <div class="demo"><span class="money muted">-<span class="sr-only">없음</span></span><span class="cap">nil</span></div>
+        <div class="demo"><span class="money">12,000.50</span><span class="cap">소수부가 0이 아님 (오류 노출)</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>entry_ref/1</code><span class="cap">number, line, navigate. 전표번호는 자르지 않는다</span></div>
+      <div class="spec-body">
+        <div class="demo"><a class="mono" href="#s5">JE-000123</a><span class="cap">링크</span></div>
+        <div class="demo"><span><a class="mono" href="#s5">JE-000123</a> <span class="xs muted">L2</span></span><span class="cap">행 참조</span></div>
+        <div class="demo"><span class="mono">JE-000123</span><span class="cap">비링크</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>score_meter/1</code><span class="cap">score 0-100 (룰 가중치 합, 상한 100). 채움 칸 = ceil(score / 20). 색 역할 없음</span></div>
+      <div class="spec-body">
+        <div class="demo"><span class="score"><b class="num">10</b><span class="cells" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="xs muted">경미</span></span><span class="cap">0-24 경미</span></div>
+        <div class="demo"><span class="score"><b class="num">25</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="xs muted">중</span></span><span class="cap">25-49 중 (검토 큐 시작)</span></div>
+        <div class="demo"><span class="score"><b class="num">50</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span><span class="cap">50-74 상</span></div>
+        <div class="demo"><span class="score"><b class="num">55</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span><span class="cap">55 = 20 + 10 + 25</span></div>
+        <div class="demo"><span class="score"><b class="num">80</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="xs muted">최상</span></span><span class="cap">75-100 최상</span></div>
+        <div class="demo"><span class="score"><b class="num">100</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="xs muted">최상</span></span><span class="cap">상한</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>risk_badge/1</code><span class="cap">level + triage_status. soft. 낮음은 녹색이 아니다</span></div>
+      <div class="spec-body">
+        <div class="demo"><div class="row gap-1-5"><span class="badge badge-sm badge-soft badge-error"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>높음</span><span class="badge badge-sm badge-soft badge-warning"><svg class="ic"><use href="#i-exclamation-circle"/></svg>중간</span><span class="badge badge-sm badge-soft badge-neutral"><svg class="ic"><use href="#i-minus-circle"/></svg>낮음</span></div><span class="cap">succeeded, size :sm (표)</span></div>
+        <div class="demo"><span class="badge badge-soft badge-error"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>높음</span><span class="cap">size :md (S5 헤더)</span></div>
+        <div class="demo"><span class="muted">-<span class="sr-only">AI 미요청</span></span><span class="cap">none</span></div>
+        <div class="demo"><span class="row-nw gap-1-5 t-accent xs medium"><span class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></span>분석 중</span><span class="cap">queued</span></div>
+        <div class="demo"><span class="badge badge-sm badge-ghost"><svg class="ic t-error"><use href="#i-exclamation-circle"/></svg>AI 실패</span><span class="cap">failed</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>conclusion_badge/1</code><span class="cap">outcome (작성자의 최신 결론). outline</span></div>
+      <div class="spec-body">
+        <div class="demo"><span class="badge badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span><span class="cap mono">no_exception</span></div>
+        <div class="demo"><span class="badge badge-outline badge-warning"><svg class="ic"><use href="#i-question-mark-circle"/></svg>추가 확인 필요</span><span class="cap mono">needs_follow_up</span></div>
+        <div class="demo"><span class="badge badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span><span class="cap mono">exception</span></div>
+        <div class="demo"><span class="badge badge-dash badge-neutral"><svg class="ic"><use href="#i-pencil-square"/></svg>미판단</span><span class="cap mono">nil</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>review_badge/1</code><span class="cap">findings.status. solid</span></div>
+      <div class="spec-body">
+        <div class="demo"><span class="muted" title="검토 전">-<span class="sr-only">검토 전</span></span><span class="cap mono">open</span></div>
+        <div class="demo"><span class="badge badge-neutral"><svg class="ic"><use href="#i-clock"/></svg>검토 대기</span><span class="cap mono">concluded</span></div>
+        <div class="demo"><span class="badge badge-success"><svg class="ic"><use href="#i-check-badge"/></svg>승인</span><span class="cap mono">approved</span></div>
+        <div class="demo"><span class="badge badge-error"><svg class="ic"><use href="#i-arrow-uturn-left"/></svg>반려</span><span class="cap mono">rejected</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>ai_marker/1</code><span class="cap">model, prompt_version. AI가 만든 것에는 항상 붙는다</span></div>
+      <div class="spec-body">
+        <div class="demo"><span class="badge badge-soft badge-accent" tabindex="0" data-tip="claude-opus-5-5, triage-v1"><svg class="ic"><use href="#i-sparkles"/></svg>AI 제안</span><span class="cap">기본, hover/focus 시 모델과 프롬프트 버전</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>test_progress/1</code><span class="cap">status, rules, done, total. 룰은 최대 4개 동시 실행(Oban rules: 4). 요약 텍스트만 aria-live</span></div>
+      <div class="spec-body col">
+        <div class="demo">
+          <div class="tp">
+            <div class="row between"><span class="st st-primary" aria-live="polite"><svg class="ic spin"><use href="#i-arrow-path"/></svg>실행 중 <span class="num">2 / 8 룰</span></span><span class="xs muted num">25%</span></div>
+            <progress class="progress progress-primary" value="2" max="8" aria-label="룰 진행률">25%</progress>
+            <ul class="tp-rules">
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">주말/공휴일 전기</span><span class="cnt">46건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">업무시간 외 입력</span><span class="cnt">42건</span></li>
+              <li class="tp-rule"><svg class="ic t-primary spin"><use href="#i-arrow-path"/></svg><span class="sr-only">실행 중</span><span class="name">라운드 금액</span><span class="cnt">집계 중</span></li>
+              <li class="tp-rule"><svg class="ic t-primary spin"><use href="#i-arrow-path"/></svg><span class="sr-only">실행 중</span><span class="name">기말 수기 전표</span><span class="cnt">집계 중</span></li>
+              <li class="tp-rule"><svg class="ic t-primary spin"><use href="#i-arrow-path"/></svg><span class="sr-only">실행 중</span><span class="name">승인 통제 이탈</span><span class="cnt">집계 중</span></li>
+              <li class="tp-rule"><svg class="ic t-primary spin"><use href="#i-arrow-path"/></svg><span class="sr-only">실행 중</span><span class="name">증빙일 괴리</span><span class="cnt">집계 중</span></li>
+              <li class="tp-rule"><svg class="ic t-neutral"><use href="#i-clock"/></svg><span class="sr-only">대기</span><span class="name">희귀 계정 조합</span><span class="cnt">대기</span></li>
+              <li class="tp-rule"><svg class="ic t-neutral"><use href="#i-clock"/></svg><span class="sr-only">대기</span><span class="name">중복 전표 의심</span><span class="cnt">대기</span></li>
+            </ul>
+          </div>
+          <span class="cap">실행 중: 완료 2, 실행 4, 대기 2</span>
+        </div>
+        <div class="demo">
+          <div class="tp">
+            <div class="row between"><span class="st st-success" aria-live="polite"><svg class="ic"><use href="#i-check"/></svg>완료 <span class="num">8 / 8 룰, 적중 전표 265건</span></span><span class="xs muted num">100%</span></div>
+            <progress class="progress progress-success" value="8" max="8" aria-label="룰 진행률">100%</progress>
+            <ul class="tp-rules">
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">주말/공휴일 전기</span><span class="cnt">46건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">업무시간 외 입력</span><span class="cnt">42건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">라운드 금액</span><span class="cnt">68건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">기말 수기 전표</span><span class="cnt">45건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">승인 통제 이탈</span><span class="cnt">40건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">증빙일 괴리</span><span class="cnt">29건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">희귀 계정 조합</span><span class="cnt">16건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">중복 전표 의심</span><span class="cnt">15건</span></li>
+            </ul>
+          </div>
+          <span class="cap">완료: 룰별 적중 수가 남는다(한 전표가 여러 룰에 걸리므로 합계 301은 적중 전표 265보다 크다)</span>
+        </div>
+        <div class="demo">
+          <div class="tp">
+            <div class="row between"><span class="st st-warning" aria-live="polite"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>일부 실패 <span class="num">8 / 8 룰 종료, 실패 1, 미실행 1</span></span><span class="xs muted num">100%</span></div>
+            <progress class="progress progress-warning" value="8" max="8" aria-label="룰 진행률">100%</progress>
+            <ul class="tp-rules">
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">주말/공휴일 전기</span><span class="cnt">21건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">업무시간 외 입력</span><span class="cnt">30건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">라운드 금액</span><span class="cnt">44건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">기말 수기 전표</span><span class="cnt">19건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">승인 통제 이탈</span><span class="cnt">25건</span></li>
+              <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">증빙일 괴리</span><span class="cnt">12건</span></li>
+              <li class="tp-rule" title="모집단 500건 미만"><svg class="ic t-neutral"><use href="#i-minus-circle"/></svg><span class="sr-only">미실행</span><span class="name">희귀 계정 조합</span><span class="cnt">미실행</span></li>
+              <li class="tp-rule"><svg class="ic t-error"><use href="#i-x-circle"/></svg><span class="sr-only">실패</span><span class="name">중복 전표 의심</span><span class="hits t-error">실행 실패, 로그 확인</span></li>
+            </ul>
+          </div>
+          <span class="cap">completed_with_errors: 실패 룰의 오류 원문은 보이지 않는다. 미실행(skipped)은 실패가 아니며 사유를 title로 둔다</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>presence_avatars/1</code><span class="cap">users, current_user_id, max (4). neutral 원 + 이니셜, 이름은 tooltip</span></div>
+      <div class="spec-body">
+        <div class="demo"><span class="xs muted">(렌더하지 않음)</span><span class="cap">0명</span></div>
+        <div class="demo"><span class="avatars"><span class="avatar avatar-self" tabindex="0" data-tip="김작성 (나)" aria-hidden="true">김</span><span class="avatar" tabindex="0" data-tip="박검토" aria-hidden="true">박</span></span><span class="sr-only">지금 보는 사람: 김작성(나), 박검토</span><span class="cap">본인 포함 2명 (본인은 base-300)</span></div>
+        <div class="demo"><span class="avatars"><span class="avatar avatar-self" aria-hidden="true">김</span><span class="avatar" aria-hidden="true">박</span><span class="avatar avatar-more" aria-hidden="true">+1</span></span><span class="sr-only">지금 보는 사람: 김작성(나), 박검토, 이작성</span><span class="cap">초과 +N (max 2로 줄인 예)</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>filter_tabs/1</code><span class="cap">tabs, active, patch_base. 건수 badge-sm, &lt;.link patch&gt; + aria-current</span></div>
+      <div class="spec-body col">
+        <nav class="tabs" aria-label="목록 필터"><a class="tab tab-active" href="#s4" aria-current="page">검토 큐 <span class="badge badge-count">52</span></a><a class="tab" href="#s4">경미 적중 <span class="badge badge-count">213</span></a></nav>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>stat_row/1</code><span class="cap">items %{label, value, hint}. 값 있음, 로딩, 실행 없음</span></div>
+      <div class="spec-body col">
+        <div class="stats">
+          <div class="stat"><span class="label">전표</span><span class="stat-v">8,341<small>건</small></span></div>
+          <div class="stat"><span class="label">라인</span><span class="stat-v">19,794<small>건</small></span></div>
+          <div class="stat"><span class="label">검토 큐</span><span class="stat-v">52<small>건</small></span><span class="xs muted">점수 25 이상</span></div>
+          <div class="stat"><span class="label">경미 적중</span><span class="stat-v">213<small>건</small></span><span class="xs muted">점수 25 미만</span></div>
+          <div class="stat"><span class="label">승인</span><span class="stat-v">4<small>/ 52</small></span></div>
+        </div>
+        <div class="stats" aria-busy="true">
+          <div class="stat"><span class="label">전표</span><span class="skeleton" style="width:70%;height:24px;margin:4px 0"></span></div>
+          <div class="stat"><span class="label">라인</span><span class="skeleton" style="width:70%;height:24px;margin:4px 0"></span></div>
+          <div class="stat"><span class="label">검토 큐</span><span class="stat-v muted">-</span><span class="xs muted">테스트를 실행하면 채워집니다</span></div>
+        </div>
+        <span class="cap">위: 값 있음. 아래: 로딩(skeleton)과 실행 없음(-)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 4.2 복합 컴포넌트 ===================== -->
+  <section class="doc-sec" id="composite" aria-labelledby="comp-t">
+    <h2 class="sec-title" id="comp-t">4.2 복합 컴포넌트</h2>
+    <p class="lead">S5(전표 검토)는 위에서 아래로 사실, 룰 근거, AI 제안(점선), 사람 판단(실선), 서명 순서다. AI 박스와 사람 박스는 경계 모양으로 구분한다.</p>
+
+    <div class="spec">
+      <div class="spec-head"><code>data_table/1</code><span class="cap">sticky 헤더, 숫자 열 우측 정렬, 선택 행 primary 10% + aria-current, zebra 없음. 100행 이상은 stream + 더 보기</span></div>
+      <div class="spec-body col">
+        <div class="demo">
+          <div class="tbl-wrap">
+            <table class="tk-table">
+              <caption class="sr-only">검토 큐 일부</caption>
+              <thead><tr><th scope="col">전표</th><th scope="col">전기일</th><th scope="col" class="right">금액(원)</th><th scope="col">점수</th><th scope="col">판단</th></tr></thead>
+              <tbody>
+                <tr aria-current="true"><td><a class="mono" href="#s5">JE-000123</a></td><td class="num">2025-12-30</td><td class="right">40,000,000</td><td><span class="score"><b class="num">55</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span></td><td><span class="badge badge-sm badge-dash badge-neutral"><svg class="ic"><use href="#i-pencil-square"/></svg>미판단</span></td></tr>
+                <tr><td><a class="mono" href="#s5">JE-004415</a></td><td class="num">2025-12-31</td><td class="right">30,000,000</td><td><span class="score"><b class="num">55</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span></td><td><span class="badge badge-sm badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span></td></tr>
+                <tr><td><a class="mono" href="#s5">JE-002961</a></td><td class="num">2025-08-14</td><td class="right">25,000,000</td><td><span class="score"><b class="num">50</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span></td><td><span class="badge badge-sm badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <span class="cap">기본 + 선택 행(첫 줄). 행에 마우스를 올리면 base-200</span>
+        </div>
+        <div class="grid-2">
+          <div class="demo">
+            <div class="tbl-wrap" aria-busy="true">
+              <table class="tk-table">
+                <caption class="sr-only">불러오는 중</caption>
+                <thead><tr><th scope="col">전표</th><th scope="col">전기일</th><th scope="col" class="right">금액(원)</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="skeleton" style="width:80px"></span></td><td><span class="skeleton" style="width:72px"></span></td><td><span class="skeleton" style="width:88px;margin-left:auto"></span></td></tr>
+                  <tr><td><span class="skeleton" style="width:80px"></span></td><td><span class="skeleton" style="width:72px"></span></td><td><span class="skeleton" style="width:64px;margin-left:auto"></span></td></tr>
+                  <tr><td><span class="skeleton" style="width:80px"></span></td><td><span class="skeleton" style="width:72px"></span></td><td><span class="skeleton" style="width:76px;margin-left:auto"></span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <span class="cap">로딩: skeleton 행</span>
+          </div>
+          <div class="demo">
+            <div class="tbl-wrap">
+              <div class="empty"><svg class="ic"><use href="#i-magnifying-glass"/></svg><span>조건에 맞는 전표가 없습니다.</span><button class="btn btn-sm" type="button">필터 초기화</button></div>
+            </div>
+            <span class="cap">비어 있음: empty 슬롯</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>entry_lines/1</code><span class="cap">lines (GL 계약 컬럼명), highlight_lines. 합계는 컴포넌트가 계산, 0은 "-"</span></div>
+      <div class="spec-body col">
+        <div class="demo">
+          <div class="tbl-wrap">
+            <table class="tk-table">
+              <caption class="sr-only">JE-007702 전표 행</caption>
+              <thead><tr><th scope="col">행</th><th scope="col">계정</th><th scope="col">적요</th><th scope="col" class="right">차변(원)</th><th scope="col" class="right">대변(원)</th></tr></thead>
+              <tbody>
+                <tr class="is-hl"><td class="num"><svg class="ic t-warning"><use href="#i-exclamation-triangle"/></svg><span class="sr-only">룰 대상</span> L1</td><td><span class="mono">5210</span> 급여</td><td>12월 급여 미지급 계상</td><td class="right">18,350,000</td><td class="right">-<span class="sr-only">0</span></td></tr>
+                <tr class="is-hl"><td class="num"><svg class="ic t-warning"><use href="#i-exclamation-triangle"/></svg><span class="sr-only">룰 대상</span> L2</td><td><span class="mono">2120</span> 미지급금</td><td>12월 급여 미지급 계상</td><td class="right">-<span class="sr-only">0</span></td><td class="right">18,350,000</td></tr>
+              </tbody>
+              <tfoot><tr><td colspan="3"><span class="st st-success"><svg class="ic"><use href="#i-check-circle"/></svg>차대 일치</span></td><td class="right">18,350,000</td><td class="right">18,350,000</td></tr></tfoot>
+            </table>
+          </div>
+          <span class="cap">일치 + 룰 대상 행 강조 (희귀 계정 조합 5210 / 2120: 좌측 warning 4px + 아이콘)</span>
+        </div>
+        <div class="demo">
+          <div class="tbl-wrap">
+            <table class="tk-table">
+              <caption class="sr-only">차대 불일치 예</caption>
+              <thead><tr><th scope="col">행</th><th scope="col">계정</th><th scope="col" class="right">차변(원)</th><th scope="col" class="right">대변(원)</th></tr></thead>
+              <tbody>
+                <tr><td class="num">L1</td><td><span class="mono">5210</span> 급여</td><td class="right">18,350,000</td><td class="right">-<span class="sr-only">0</span></td></tr>
+                <tr><td class="num">L2</td><td><span class="mono">2120</span> 미지급금</td><td class="right">-<span class="sr-only">0</span></td><td class="right">18,340,000</td></tr>
+              </tbody>
+              <tfoot><tr><td colspan="2"><span class="st st-error"><svg class="ic"><use href="#i-x-circle"/></svg>차이 <span class="num">10,000</span></span></td><td class="right">18,350,000</td><td class="right">18,340,000</td></tr></tfoot>
+            </table>
+          </div>
+          <span class="cap">불일치: 적재 검증(unbalanced_entry)을 통과한 데이터에서는 나오지 않는다</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>rule_hit_list/1</code><span class="cap">hits %{rule_id, name, score, reason, details}. 0건이면 렌더하지 않음</span></div>
+      <div class="spec-body col">
+        <div class="demo card" style="max-width:720px">
+          <ul class="hits">
+            <li class="hit"><span class="hit-w">+20</span><div class="stack" style="gap:2px"><div class="row gap-1-5"><span class="medium">기말 수기 전표</span><code class="xs muted">period_end_manual</code></div><p>결산일(2025-12-31) 3일 이내에 수기로 입력된 전표입니다.</p><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>근거 값</summary><dl class="kv"><dt>posting_date</dt><dd>2025-12-30</dd><dt>source</dt><dd>manual</dd><dt>period_end_window_days</dt><dd>3</dd></dl></details></div></li>
+            <li class="hit"><span class="hit-w">+10</span><div class="stack" style="gap:2px"><div class="row gap-1-5"><span class="medium">라운드 금액</span><code class="xs muted">round_amount</code></div><p>금액 40,000,000이 1,000,000 단위로 떨어지고 기준(10,000,000) 이상입니다.</p><details open><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>근거 값</summary><dl class="kv"><dt>entry_amount</dt><dd>40,000,000</dd><dt>round_unit</dt><dd>1,000,000</dd><dt>round_min_amount</dt><dd>10,000,000</dd></dl></details></div></li>
+            <li class="hit"><span class="hit-w">+25</span><div class="stack" style="gap:2px"><div class="row gap-1-5"><span class="medium">승인 통제 이탈</span><code class="xs muted">approval_control_gap</code></div><p>승인자가 입력자와 같습니다 (<span class="mono">acct03</span>).</p><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>근거 값</summary><dl class="kv"><dt>entered_by</dt><dd>acct03</dd><dt>approved_by</dt><dd>acct03</dd><dt>entry_amount</dt><dd>40,000,000</dd><dt>approval_min_amount</dt><dd>1,000,000</dd></dl></details></div></li>
+          </ul>
+          <p class="hit-sum"><span class="muted">점수</span><b>55 = 20 + 10 + 25</b></p>
+        </div>
+        <span class="cap">JE-000123. 두 번째 항목은 근거 값을 펼친 상태</span>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>ai_suggestion_card/1</code><span class="cap">triage, triage_status, can_request. 점선 accent + 5% 틴트. 결론 라디오를 미리 고르지 않는다</span></div>
+      <div class="spec-body col">
+        <div class="demo">
+          <section class="ai-box" aria-label="AI 제안" style="max-width:720px">
+            <div class="box-head">
+              <div class="row gap-1-5"><span class="badge badge-soft badge-accent" tabindex="0" data-tip="claude-opus-5-5, triage-v1"><svg class="ic"><use href="#i-sparkles"/></svg>AI 제안</span><span class="badge badge-soft badge-error"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>높음</span></div>
+              <span class="xs muted num">2026-10-19 10:43</span>
+            </div>
+            <p class="ai-note"><svg class="ic ic-xs"><use href="#i-information-circle"/></svg>이 제안은 판단이 아닙니다. 결론은 작성자가 입력합니다.</p>
+            <div class="stack"><p class="semibold">근거</p><p class="prose">결산일 하루 전에 수기로 입력된 40,000,000원 선급금 지급 전표이며, 입력자와 승인자가 같은 사용자(acct03)로 기록되어 있습니다. 금액이 1,000,000원 단위로 떨어지고 수행중요성(225,000,000원)의 약 18% 수준입니다. 기말 수기 입력, 라운드 금액, 승인 통제 이탈이 겹쳐 있어 통제 우회 가능성을 배제하기 위한 추가 절차가 필요해 보입니다. 거래의 실재성과 승인 경위는 이 전표만으로 확인되지 않습니다.</p></div>
+            <div class="stack"><p class="semibold">추가 절차 제안</p>
+              <ol class="proc">
+                <li><span>자기승인 경위를 입력자와 승인 권한자에게 질문하고 승인 권한표와 대조합니다.</span><span class="xs muted">확보할 증거: 결재 문서, 승인 권한표</span></li>
+                <li><span>선급금 지급 근거를 계약 조건과 대사합니다.</span><span class="xs muted">확보할 증거: V012 계약서, 지급 요청서, 이체 확인서</span></li>
+                <li><span>기말 이후 원재료 대체 여부를 확인합니다.</span><span class="xs muted">확보할 증거: 2026년 1-2월 입고 내역, 대체 전표</span></li>
+              </ol>
+            </div>
+            <div class="stack"><p class="semibold">AI가 판단에 부족하다고 본 정보</p><ul class="bullets"><li>V012와의 계약 조건</li><li>선급금 대체 예정 시기</li></ul></div>
+            <details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>생성 정보</summary>
+              <dl class="kv"><dt>model</dt><dd class="mono">claude-opus-5-5</dd><dt>prompt_version</dt><dd class="mono">triage-v1</dd><dt>input_hash</dt><dd class="mono" title="9c41e2b7d03f5a8e61b2c94f07d8e3a5b6c1f2e40a9d7b38c5e6f1a2b3d4c5e6">9c41e2b7</dd><dt>inserted_at</dt><dd>2026-10-19 10:43:18 KST</dd></dl>
+            </details>
+          </section>
+          <span class="cap">succeeded (JE-000123). response_model이 model과 같으면 한 번만 쓴다. 근거는 600자 이하, 절차 1-4개, 부족한 정보 0-5개</span>
+        </div>
+        <div class="grid-2">
+          <div class="demo">
+            <section class="ai-box" aria-label="AI 제안">
+              <div class="box-head"><span class="badge badge-soft badge-accent"><svg class="ic"><use href="#i-sparkles"/></svg>AI 제안</span><span class="muted">-<span class="sr-only">AI 미요청</span></span></div>
+              <p class="muted">룰 근거와 전표 사실을 바탕으로 위험도, 추가 절차, 부족한 정보를 제안합니다. 결론은 내리지 않습니다.</p>
+              <div class="row"><button class="btn btn-sm btn-soft" type="button"><svg class="ic"><use href="#i-sparkles"/></svg>AI 제안 요청</button><span class="xs muted">요청자가 감사 로그에 남습니다</span></div>
+            </section>
+            <span class="cap">none (작성자에게만 버튼)</span>
+          </div>
+          <div class="demo">
+            <section class="ai-box" aria-label="AI 제안" aria-busy="true">
+              <div class="box-head"><span class="badge badge-soft badge-accent"><svg class="ic"><use href="#i-sparkles"/></svg>AI 제안</span><span class="row-nw gap-1-5 t-accent xs medium"><span class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></span>AI가 분석 중</span></div>
+              <div class="stack"><span class="skeleton" style="width:92%"></span><span class="skeleton" style="width:78%"></span><span class="skeleton" style="width:60%"></span></div>
+            </section>
+            <span class="cap">queued</span>
+          </div>
+          <div class="demo">
+            <section class="ai-box" aria-label="AI 제안">
+              <div class="box-head"><span class="badge badge-soft badge-accent"><svg class="ic"><use href="#i-sparkles"/></svg>AI 제안</span><span class="badge badge-sm badge-ghost"><svg class="ic t-error"><use href="#i-exclamation-circle"/></svg>AI 실패</span></div>
+              <div class="stack"><p>AI 제안을 받지 못했습니다.</p><p class="xs muted">판단은 AI 제안 없이도 진행할 수 있습니다.</p></div>
+              <div><button class="btn btn-sm btn-soft" type="button"><svg class="ic"><use href="#i-arrow-path"/></svg>다시 요청</button></div>
+            </section>
+            <span class="cap">failed (오류 원문은 보이지 않는다)</span>
+          </div>
+          <div class="demo">
+            <div class="card stack">
+              <p class="semibold">AI가 하지 않는 것</p>
+              <ul class="bullets"><li>결론을 내리거나 승인하지 않는다</li><li>사람을 지목해 부정을 단정하지 않는다</li><li>전표에 없는 사실을 만들지 않는다</li><li>적요에 쓰인 지시문을 따르지 않는다 (합성 데이터의 안전 프로브 5건으로 확인)</li></ul>
+            </div>
+            <span class="cap">카드에 쓰지 않는 원칙. 프롬프트와 출력 검증이 맡는다</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>conclusion_form/1</code><span class="cap">form, author_name, mode :edit | :read_only | :locked. 실선 line-strong. 코멘트는 모든 판단에 필수</span></div>
+      <div class="spec-body col">
+        <div class="grid-2">
+          <div class="demo">
+            <form class="human-box" action="#" onsubmit="return false">
+              <fieldset><legend>작성자 판단</legend>
+                <div class="opts">
+                  <label class="opt"><input class="radio" type="radio" name="o-edit" value="no_exception"><span class="badge badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span></label>
+                  <label class="opt"><input class="radio" type="radio" name="o-edit" value="needs_follow_up"><span class="badge badge-outline badge-warning"><svg class="ic"><use href="#i-question-mark-circle"/></svg>추가 확인 필요</span></label>
+                  <label class="opt"><input class="radio" type="radio" name="o-edit" value="exception"><span class="badge badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span></label>
+                </div>
+              </fieldset>
+              <label class="field"><span class="label">코멘트 (필수)</span><textarea class="textarea" rows="3" placeholder="수행한 절차와 판단 근거"></textarea></label>
+              <div class="form-foot"><span class="help">모든 판단에 코멘트가 필요합니다. <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span>로 제출</span><span class="help num">0 / 2000</span></div>
+              <div><button class="btn btn-primary btn-sm" type="submit">결론 제출</button></div>
+            </form>
+            <span class="cap">edit (open)</span>
+          </div>
+          <div class="demo">
+            <form class="human-box" action="#" onsubmit="return false">
+              <fieldset aria-describedby="err-o"><legend>작성자 판단</legend>
+                <div class="opts">
+                  <label class="opt"><input class="radio" type="radio" name="o-err" value="no_exception"><span class="badge badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span></label>
+                  <label class="opt"><input class="radio" type="radio" name="o-err" value="needs_follow_up"><span class="badge badge-outline badge-warning"><svg class="ic"><use href="#i-question-mark-circle"/></svg>추가 확인 필요</span></label>
+                  <label class="opt"><input class="radio" type="radio" name="o-err" value="exception"><span class="badge badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span></label>
+                </div>
+                <p class="err" id="err-o" style="margin-top:6px"><svg class="ic ic-xs"><use href="#i-exclamation-circle"/></svg>판단을 선택하세요</p>
+              </fieldset>
+              <label class="field"><span class="label">코멘트 (필수)</span><textarea class="textarea textarea-error" rows="3" aria-invalid="true" aria-describedby="err-c"></textarea></label>
+              <p class="err" id="err-c"><svg class="ic ic-xs"><use href="#i-exclamation-circle"/></svg>코멘트를 입력하세요 (1-2000자)</p>
+              <div><button class="btn btn-primary btn-sm" type="submit">결론 제출</button></div>
+            </form>
+            <span class="cap">검증 오류</span>
+          </div>
+          <div class="demo">
+            <div class="human-box">
+              <div class="box-head"><p class="sec-h">작성자 판단</p><span class="badge badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span></div>
+              <p class="prose">선급금 지급 결재 문서가 없고 승인자가 입력자와 같습니다. 2026년 1-2월 대체 전표도 확인되지 않아 예외로 판단합니다.</p>
+              <p class="xs muted">김작성, <time datetime="2026-10-19T02:21:07Z" title="2026-10-19 02:21:07 UTC">2026-10-19 11:21</time></p>
+            </div>
+            <span class="cap">read_only (검토자가 보는 최신 결론, JE-004415)</span>
+          </div>
+          <div class="demo">
+            <div class="human-box">
+              <div class="box-head"><p class="sec-h">작성자 판단</p><span class="badge badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span></div>
+              <p class="prose">7월 계약분의 8월 지급 전표이며 증빙일은 계약일로 입력되었습니다. 승인자 공란은 전자결재 승인 기록(mgr01)으로 확인했습니다.</p>
+              <p class="row gap-1-5 xs muted"><svg class="ic ic-xs"><use href="#i-lock-closed"/></svg>승인된 항목은 수정할 수 없습니다</p>
+            </div>
+            <span class="cap">locked (approved, JE-002961)</span>
+          </div>
+        </div>
+        <div class="demo" style="max-width:720px">
+          <form class="human-box" action="#" onsubmit="return false">
+            <div class="reason"><span class="row gap-1-5 xs semibold t-error"><svg class="ic ic-xs"><use href="#i-arrow-uturn-left"/></svg>반려 사유, 박검토, 2026-10-19 11:18</span><p>급여대장과 대사한 결과를 받은 뒤 다시 제출해 주세요. 지금 코멘트만으로는 추가 절차의 범위를 알 수 없습니다.</p></div>
+            <fieldset><legend>새 판단</legend>
+              <div class="opts">
+                <label class="opt"><input class="radio" type="radio" name="o-rej" value="no_exception"><span class="badge badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span></label>
+                <label class="opt"><input class="radio" type="radio" name="o-rej" value="needs_follow_up"><span class="badge badge-outline badge-warning"><svg class="ic"><use href="#i-question-mark-circle"/></svg>추가 확인 필요</span></label>
+                <label class="opt"><input class="radio" type="radio" name="o-rej" value="exception"><span class="badge badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span></label>
+              </div>
+            </fieldset>
+            <label class="field"><span class="label">코멘트 (필수)</span><textarea class="textarea" rows="3" placeholder="수행한 절차와 판단 근거"></textarea></label>
+            <div><button class="btn btn-primary btn-sm" type="submit">결론 제출</button></div>
+          </form>
+          <span class="cap">rejected: 반려 사유를 위에 두고 새 결론을 받는다. 이전 결론은 이력에 남는다 (JE-007702)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>sign_off_bar/1</code><span class="cap">status, can_decide, blocked_reason, last_decision. 화면 아래 sticky, 깊이 1. 항목 단위 승인. 권한은 서버가 다시 검증</span></div>
+      <div class="spec-body col">
+        <div class="demo">
+          <div class="signoff"><div class="row gap-1-5"><span class="xs muted">작성자 판단</span><span class="badge badge-sm badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span><span class="xs muted">김작성, 11:21</span></div><div class="row"><button class="btn btn-sm btn-outline btn-error" type="button"><svg class="ic"><use href="#i-arrow-uturn-left"/></svg>반려</button><button class="btn btn-sm btn-success" type="button"><svg class="ic"><use href="#i-check"/></svg>승인</button></div></div>
+          <span class="cap">결정 가능 (concluded + 검토자)</span>
+        </div>
+        <div class="demo">
+          <div class="signoff"><div class="row gap-1-5"><span class="xs muted">작성자 판단</span><span class="badge badge-sm badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span></div><div class="row"><span class="medium">승인하시겠습니까?</span><button class="btn btn-sm btn-success" type="button">확인</button><button class="btn btn-sm" type="button">취소</button></div></div>
+          <span class="cap">승인 2단계 (같은 줄에서 확인)</span>
+        </div>
+        <div class="demo">
+          <div class="signoff">
+            <div class="signoff-panel">
+              <label class="field"><span class="label">반려 사유 (필수)</span><textarea class="textarea" rows="2">급여대장과 대사한 결과를 받은 뒤 다시 제출해 주세요.</textarea></label>
+              <div class="row" style="justify-content:flex-end"><button class="btn btn-sm" type="button">취소</button><button class="btn btn-sm btn-outline btn-error" type="button">반려 확정</button></div>
+            </div>
+          </div>
+          <span class="cap">반려: 사유 입력 인라인 패널 (모달 없음)</span>
+        </div>
+        <div class="demo">
+          <div class="signoff"><p class="xs muted" id="sod-why"><svg class="ic ic-xs"><use href="#i-lock-closed"/></svg> 작성자는 승인, 반려할 수 없습니다 (직무분리)</p><div class="row"><button class="btn btn-sm" type="button" disabled aria-describedby="sod-why">반려</button><button class="btn btn-sm" type="button" disabled aria-describedby="sod-why">승인</button></div></div>
+          <span class="cap">작성자가 보는 화면. DB CHECK(reviewer_id &lt;&gt; preparer_id)로도 막힌다</span>
+        </div>
+        <div class="demo">
+          <div class="signoff"><p class="xs muted" id="open-why">작성자 결론이 제출되지 않았습니다</p><div class="row"><button class="btn btn-sm" type="button" disabled aria-describedby="open-why">반려</button><button class="btn btn-sm" type="button" disabled aria-describedby="open-why">승인</button></div></div>
+          <span class="cap">결론 전 (open)</span>
+        </div>
+        <div class="grid-2">
+          <div class="demo">
+            <div class="signoff"><div class="row gap-1-5"><span class="badge badge-success"><svg class="ic"><use href="#i-check-badge"/></svg>승인</span><span class="xs muted">박검토, <time datetime="2026-10-19T02:05:30Z" title="2026-10-19 02:05:30 UTC">2026-10-19 11:05</time></span></div></div>
+            <span class="cap">approved (읽기 전용)</span>
+          </div>
+          <div class="demo">
+            <div class="signoff"><div class="stack" style="gap:4px"><div class="row gap-1-5"><span class="badge badge-error"><svg class="ic"><use href="#i-arrow-uturn-left"/></svg>반려</span><span class="xs muted">박검토, <time datetime="2026-10-19T02:18:40Z" title="2026-10-19 02:18:40 UTC">2026-10-19 11:18</time></span></div><p class="xs">급여대장과 대사한 결과를 받은 뒤 다시 제출해 주세요.</p></div></div>
+            <span class="cap">rejected (사유 표시)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>finding_history/1</code><span class="cap">entries %{kind :conclusion | :decision, actor_name, outcome | decision, comment, inserted_at}. 시간순, append-only</span></div>
+      <div class="spec-body col">
+        <div class="demo card" style="max-width:720px">
+          <ol class="hist">
+            <li><span class="ev-ic ev-user"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="stack" style="gap:2px"><div class="row gap-1-5"><span class="medium">이작성</span><span class="xs muted">결론 제출</span><span class="badge badge-sm badge-outline badge-warning"><svg class="ic"><use href="#i-question-mark-circle"/></svg>추가 확인 필요</span><time class="xs muted num" datetime="2026-10-19T01:58:02Z" title="2026-10-19 01:58:02 UTC">2026-10-19 10:58</time></div><p>12월 급여 미지급분 계상으로 보이나 급여대장을 받지 못했습니다. 인사팀에 요청했습니다.</p></div></li>
+            <li><span class="ev-ic ev-user"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="stack" style="gap:2px"><div class="row gap-1-5"><span class="medium">박검토</span><span class="xs muted">검토</span><span class="badge badge-sm badge-error"><svg class="ic"><use href="#i-arrow-uturn-left"/></svg>반려</span><time class="xs muted num" datetime="2026-10-19T02:18:40Z" title="2026-10-19 02:18:40 UTC">2026-10-19 11:18</time></div><p>급여대장과 대사한 결과를 받은 뒤 다시 제출해 주세요. 지금 코멘트만으로는 추가 절차의 범위를 알 수 없습니다.</p></div></li>
+          </ol>
+        </div>
+        <span class="cap">JE-007702. 다시 제출하면 아래에 새 줄이 붙고 위 줄은 그대로 남는다. 비어 있으면 "아직 결론이 없습니다"</span>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>audit_event_item/1</code><span class="cap">event (audit_events 컬럼). 행위자 3종, payload 접힘, 방금 추가됨 1.5초 하이라이트. 수정/삭제 버튼 없음</span></div>
+      <div class="spec-body col">
+        <ol class="ev-list card" style="max-width:820px;padding-top:4px;padding-bottom:4px">
+          <li class="ev ev-new"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#80</span><time class="xs muted num" datetime="2026-10-19T02:21:07Z" title="2026-10-19 02:21:07 UTC">2026-10-19 11:21:07</time><span class="medium">김작성</span><span>결론 제출</span><code class="xs muted">conclusion.submitted</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-004415</a><span class="muted">예외</span></div><details open><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>payload</summary><dl class="kv"><dt>conclusion_id</dt><dd class="mono">5e0b9c7a-3d2f-4b61-9a8e-1c7f4d2b6e90</dd><dt>outcome</dt><dd class="mono">"exception"</dd></dl></details></div></li>
+          <li class="ev"><span class="ev-ic ev-agent" title="AI"><svg class="ic"><use href="#i-sparkles"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#78</span><time class="xs muted num" datetime="2026-10-19T02:20:12Z" title="2026-10-19 02:20:12 UTC">2026-10-19 11:20:12</time><span class="mono medium">triage:claude-opus-5-5</span><span>AI 제안 실패</span><code class="xs muted">ai_triage.failed</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-005590</a></div></div></li>
+          <li class="ev"><span class="ev-ic ev-system" title="시스템"><svg class="ic"><use href="#i-cog-6-tooth"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#9</span><time class="xs muted num" datetime="2026-10-19T01:02:19Z" title="2026-10-19 01:02:19 UTC">2026-10-19 10:02:19</time><span class="mono medium">testing.rule_worker</span><span>테스트 완료</span><code class="xs muted">test_run.completed</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><span>테스트 실행 2026-10-19 10:02</span><span class="muted">적중 265건, 검토 큐 52건</span></div></div></li>
+        </ol>
+        <span class="cap">사람(primary 10%), AI(accent 10%), 시스템(base-300). 첫 줄은 방금 추가된 상태와 payload 펼침</span>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>flash</code><span class="cap">깊이 2. 성공과 안내는 aria-live polite, 오류는 role alert. 저장 뒤 포커스는 버튼에 남긴다</span></div>
+      <div class="spec-body">
+        <div class="demo" style="width:min(100%,380px)"><div class="alert alert-success flash" role="status"><svg class="ic"><use href="#i-check-circle"/></svg><span class="grow">결론을 제출했습니다. 검토 대기로 표시됩니다.</span><button class="btn btn-ghost btn-sm" type="button" aria-label="닫기"><svg class="ic"><use href="#i-x-mark"/></svg></button></div><span class="cap">성공</span></div>
+        <div class="demo" style="width:min(100%,380px)"><div class="alert alert-error flash" role="alert"><svg class="ic"><use href="#i-exclamation-circle"/></svg><span class="grow">작성자는 자신의 결론을 승인하거나 반려할 수 없습니다.</span><button class="btn btn-ghost btn-sm" type="button" aria-label="닫기"><svg class="ic"><use href="#i-x-mark"/></svg></button></div><span class="cap">오류 ({:error, :self_review})</span></div>
+      </div>
+    </div>
+
+    <div class="spec">
+      <div class="spec-head"><code>빈 상태</code><span class="cap">무엇이 없는지 한 문장 + 다음 행동 하나</span></div>
+      <div class="spec-body">
+        <div class="demo card" style="width:min(100%,260px)"><div class="empty"><svg class="ic"><use href="#i-inbox"/></svg><span>감사 대상이 없습니다.</span><button class="btn btn-primary btn-sm" type="button"><svg class="ic"><use href="#i-plus"/></svg>새 감사 대상</button></div></div>
+        <div class="demo card" style="width:min(100%,260px)"><div class="empty"><svg class="ic"><use href="#i-magnifying-glass"/></svg><span>조건에 맞는 전표가 없습니다.</span></div></div>
+        <div class="demo card" style="width:min(100%,260px)"><div class="empty"><svg class="ic"><use href="#i-pencil-square"/></svg><span>아직 결론이 없습니다.</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 5. 화면 시안 ===================== -->
+  <section class="doc-sec" id="screens" aria-labelledby="scr-t">
+    <h2 class="sec-title" id="scr-t">5. 화면 시안</h2>
+    <p class="lead">데스크톱 1024px 기준이다. 좁은 화면에서는 시안 틀 안에서만 가로로 스크롤한다. 값은 도메인 문서 7장의 합성 데이터(누리정밀 주식회사, FY2025)이고, 시각은 KST로 보인다. 시안 안의 링크는 이 문서의 해당 화면으로 이동한다.</p>
+
+    <!-- S1 -->
+    <h3 class="sub" id="s1">S1 감사 대상 목록</h3>
+    <figure class="frame">
+      <figcaption class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><b>S1</b><code>/engagements/new</code><span>EngagementLive.Index :new, 김작성으로 로그인</span></figcaption>
+      <div class="frame-scroll"><div class="frame-canvas">
+        <div class="app-bar">
+          <a class="app-brand" href="#s1"><span class="logo-mark" aria-hidden="true"><svg class="ic ic-xs"><use href="#i-check"/></svg></span>Tickmark</a>
+          <div class="app-tools">
+            <span class="tt" aria-hidden="true"><span class="on"><svg class="ic"><use href="#i-computer-desktop"/></svg></span><span><svg class="ic"><use href="#i-sun"/></svg></span><span><svg class="ic"><use href="#i-moon"/></svg></span></span>
+            <span class="user-menu"><svg class="ic"><use href="#i-user-circle"/></svg>kim.writer@example.com<svg class="ic ic-xs"><use href="#i-chevron-down"/></svg></span>
+          </div>
+        </div>
+        <div class="app-main">
+          <div class="page-head"><p class="page-title">감사 대상</p><a class="btn" href="#s1" aria-expanded="true"><svg class="ic"><use href="#i-plus"/></svg>새 감사 대상</a></div>
+          <form class="panel" action="#" onsubmit="return false">
+            <p class="sec-h">새 감사 대상</p>
+            <div class="form-grid">
+              <label class="field"><span class="label">회사명</span><input class="input"></label>
+              <label class="field"><span class="label">회계연도</span><input class="input" placeholder="FY2026"></label>
+              <label class="field"><span class="label">결산일</span><input class="input num" type="date"></label>
+              <label class="field"><span class="label">수행중요성 (원)</span><input class="input num" inputmode="numeric"></label>
+            </div>
+            <p class="row gap-1-5 xs muted"><svg class="ic ic-xs"><use href="#i-information-circle"/></svg>만든 사람은 이 감사 대상의 작성자 멤버가 됩니다. 검토자는 상세 화면에서 추가합니다.</p>
+            <div class="row" style="justify-content:flex-end"><a class="btn btn-sm" href="#s1">취소</a><button class="btn btn-primary btn-sm" type="submit">만들기</button></div>
+          </form>
+          <div class="tbl-wrap">
+            <table class="tk-table">
+              <caption class="sr-only">내가 속한 감사 대상</caption>
+              <thead><tr><th scope="col">회사명</th><th scope="col">회계연도</th><th scope="col">결산일</th><th scope="col" class="right">수행중요성(원)</th><th scope="col">최근 테스트</th><th scope="col" class="right">검토 큐(건)</th><th scope="col">내 역할</th></tr></thead>
+              <tbody>
+                <tr><td><a href="#s2">누리정밀 주식회사</a></td><td>FY2025</td><td class="num">2025-12-31</td><td class="right money">225,000,000</td><td><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span></td><td class="right num">52</td><td><span class="badge badge-sm badge-outline badge-neutral">작성자</span></td></tr>
+                <tr><td><a href="#s2">한빛소재 주식회사</a></td><td>FY2025</td><td class="num">2025-12-31</td><td class="right money">410,000,000</td><td><span class="st st-primary"><svg class="ic spin"><use href="#i-arrow-path"/></svg>실행 중</span></td><td class="right muted">-<span class="sr-only">없음</span></td><td><span class="badge badge-sm badge-outline badge-neutral">검토자</span></td></tr>
+                <tr><td><a href="#s2">다온식품 주식회사</a></td><td>FY2024</td><td class="num">2024-12-31</td><td class="right money">96,000,000</td><td><span class="st st-warning"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>일부 실패</span></td><td class="right num">31</td><td><span class="badge badge-sm badge-outline badge-neutral">작성자</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div></div>
+    </figure>
+    <p class="frame-note">S1은 감사 대상이 정해지기 전이라 상단 바에 감사 대상 이름, 감사 로그, presence가 없다. "새 감사 대상"은 모달이 아니라 목록 위 인라인 패널이다. 한 화면의 primary는 "만들기" 하나다.</p>
+
+    <!-- S2 -->
+    <h3 class="sub" id="s2">S2 감사 대상 상세</h3>
+    <figure class="frame">
+      <figcaption class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><b>S2</b><code>/engagements/:id</code><span>EngagementLive.Show, 김작성(작성자, 생성자)</span></figcaption>
+      <div class="frame-scroll"><div class="frame-canvas">
+        <div class="app-bar">
+          <a class="app-brand" href="#s1"><span class="logo-mark" aria-hidden="true"><svg class="ic ic-xs"><use href="#i-check"/></svg></span>Tickmark</a>
+          <div class="app-nav"><a href="#s2" aria-current="page">누리정밀 주식회사 FY2025</a><a href="#s6">감사 로그</a></div>
+          <div class="app-tools">
+            <span class="avatars"><span class="avatar avatar-self" aria-hidden="true">김</span><span class="avatar" aria-hidden="true">박</span></span><span class="sr-only">지금 보는 사람: 김작성(나), 박검토</span>
+            <span class="tt" aria-hidden="true"><span class="on"><svg class="ic"><use href="#i-computer-desktop"/></svg></span><span><svg class="ic"><use href="#i-sun"/></svg></span><span><svg class="ic"><use href="#i-moon"/></svg></span></span>
+            <span class="user-menu"><svg class="ic"><use href="#i-user-circle"/></svg>kim.writer@example.com<svg class="ic ic-xs"><use href="#i-chevron-down"/></svg></span>
+          </div>
+        </div>
+        <div class="app-main">
+          <div class="stack" style="gap:4px">
+            <p class="crumb"><a href="#s1">감사 대상</a><span aria-hidden="true">/</span><span>누리정밀 주식회사 FY2025</span></p>
+            <div class="page-head">
+              <div class="stack" style="gap:2px"><p class="page-title">누리정밀 주식회사 <span class="muted">FY2025</span></p><p class="row xs muted"><span>결산일 <span class="num">2025-12-31</span></span><span>수행중요성 <span class="money">225,000,000</span>원</span></p></div>
+              <a class="btn btn-primary" href="#s3"><svg class="ic"><use href="#i-arrow-up-tray"/></svg>GL 불러오기</a>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat"><span class="label">전표</span><span class="stat-v">8,341<small>건</small></span></div>
+            <div class="stat"><span class="label">라인</span><span class="stat-v">19,794<small>건</small></span></div>
+            <div class="stat"><span class="label">검토 큐</span><span class="stat-v">52<small>건</small></span><span class="xs muted">점수 25 이상</span></div>
+            <div class="stat"><span class="label">경미 적중</span><span class="stat-v">213<small>건</small></span><span class="xs muted">점수 25 미만</span></div>
+            <div class="stat"><span class="label">승인</span><span class="stat-v">4<small>/ 52</small></span></div>
+          </div>
+          <div class="stack-3">
+            <p class="sec-h">멤버</p>
+            <div class="tbl-wrap">
+              <table class="tk-table">
+                <caption class="sr-only">멤버</caption>
+                <thead><tr><th scope="col">이름</th><th scope="col">이메일</th><th scope="col">역할</th></tr></thead>
+                <tbody>
+                  <tr><td>김작성 <span class="xs muted">(나)</span></td><td class="mono">kim.writer@example.com</td><td><span class="badge badge-sm badge-outline badge-neutral">작성자</span></td></tr>
+                  <tr><td>이작성</td><td class="mono">lee.writer@example.com</td><td><span class="badge badge-sm badge-outline badge-neutral">작성자</span></td></tr>
+                  <tr><td>박검토</td><td class="mono">park.reviewer@example.com</td><td><span class="badge badge-sm badge-outline badge-neutral">검토자</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <form class="row" action="#" onsubmit="return false" aria-label="멤버 추가">
+              <label class="field" style="width:260px"><span class="label">이메일</span><input class="input" type="email" placeholder="name@example.com"></label>
+              <label class="field" style="width:140px"><span class="label">역할</span><select class="select"><option>작성자</option><option>검토자</option></select></label>
+              <button class="btn btn-sm" type="submit" style="align-self:flex-end;margin-bottom:4px"><svg class="ic"><use href="#i-plus"/></svg>추가</button>
+              <span class="xs muted" style="align-self:flex-end;margin-bottom:8px">한 사용자는 한 역할만 가진다. 추가 폼은 감사 대상을 만든 사람에게만 보인다</span>
+            </form>
+          </div>
+          <div class="stack-3">
+            <p class="sec-h">GL 적재</p>
+            <div class="tbl-wrap">
+              <table class="tk-table">
+                <caption class="sr-only">GL 적재 목록</caption>
+                <thead><tr><th scope="col">출처</th><th scope="col">상태</th><th scope="col" class="right">전표</th><th scope="col" class="right">라인</th><th scope="col" class="right">차변 합계(원)</th><th scope="col" class="right">대변 합계(원)</th><th scope="col" class="right">오류</th><th scope="col" class="right">경고</th><th scope="col">해시</th><th scope="col">적재 시각</th><th scope="col"><span class="sr-only">행동</span></th></tr></thead>
+                <tbody>
+                  <tr><td>합성 GL, 기본 시드</td><td><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span></td><td class="right num">8,341</td><td class="right num">19,794</td><td class="right money">386,214,905,000</td><td class="right money">386,214,905,000</td><td class="right num">0</td><td class="right num">0</td><td class="mono">3f9a0c7e</td><td class="num">2026-10-19 09:55</td><td><button class="btn btn-sm" type="button"><svg class="ic"><use href="#i-play"/></svg>테스트 실행</button></td></tr>
+                  <tr><td><a class="mono" href="#s3">gl_2025_draft.csv</a></td><td><span class="st st-error"><svg class="ic"><use href="#i-x-circle"/></svg>실패</span></td><td class="right muted">-<span class="sr-only">없음</span></td><td class="right muted">-<span class="sr-only">없음</span></td><td class="right muted">-<span class="sr-only">없음</span></td><td class="right muted">-<span class="sr-only">없음</span></td><td class="right num t-error">4</td><td class="right num">1</td><td class="mono">b71d02e5</td><td class="num">2026-10-19 09:48</td><td></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="stack-3">
+            <p class="sec-h">테스트 실행</p>
+            <div class="tbl-wrap">
+              <table class="tk-table">
+                <caption class="sr-only">테스트 실행 목록</caption>
+                <thead><tr><th scope="col">시작 시각</th><th scope="col">상태</th><th scope="col" class="right">룰</th><th scope="col" class="right">적중 전표</th><th scope="col" class="right">검토 큐</th><th scope="col"><span class="sr-only">행동</span></th></tr></thead>
+                <tbody>
+                  <tr><td class="num">2026-10-19 10:02</td><td><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span></td><td class="right num">8 / 8</td><td class="right num">265</td><td class="right num">52</td><td><a class="btn btn-sm" href="#s4">열기<svg class="ic"><use href="#i-chevron-right"/></svg></a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </figure>
+    <p class="frame-note">"테스트 실행"은 작성자에게만, 같은 적재에 실행 중인 테스트가 없을 때만 보인다. 실행 중이면 버튼 대신 "실행 중인 테스트가 있습니다"가 그 자리에 보인다({:error, :run_in_progress}). 실패한 적재의 행을 누르면 S3의 오류 표로 간다.</p>
+
+    <!-- S3 -->
+    <h3 class="sub" id="s3">S3 GL 적재</h3>
+    <figure class="frame">
+      <figcaption class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><b>S3 (a)</b><code>/engagements/:id/imports/new</code><span>ImportLive, CSV 업로드가 검증에서 실패한 상태</span></figcaption>
+      <div class="frame-scroll"><div class="frame-canvas">
+        <div class="app-bar">
+          <a class="app-brand" href="#s1"><span class="logo-mark" aria-hidden="true"><svg class="ic ic-xs"><use href="#i-check"/></svg></span>Tickmark</a>
+          <div class="app-nav"><a href="#s2">누리정밀 주식회사 FY2025</a><a href="#s6">감사 로그</a></div>
+          <div class="app-tools">
+            <span class="avatars"><span class="avatar avatar-self" aria-hidden="true">김</span></span><span class="sr-only">지금 보는 사람: 김작성(나)</span>
+            <span class="tt" aria-hidden="true"><span class="on"><svg class="ic"><use href="#i-computer-desktop"/></svg></span><span><svg class="ic"><use href="#i-sun"/></svg></span><span><svg class="ic"><use href="#i-moon"/></svg></span></span>
+            <span class="user-menu"><svg class="ic"><use href="#i-user-circle"/></svg>kim.writer@example.com<svg class="ic ic-xs"><use href="#i-chevron-down"/></svg></span>
+          </div>
+        </div>
+        <div class="app-main">
+          <div class="stack" style="gap:4px">
+            <p class="crumb"><a href="#s1">감사 대상</a><span aria-hidden="true">/</span><a href="#s2">누리정밀 주식회사 FY2025</a><span aria-hidden="true">/</span><span>GL 불러오기</span></p>
+            <p class="page-title">GL 불러오기</p>
+          </div>
+          <nav class="tabs" aria-label="적재 방식"><a class="tab tab-active" href="#s3" aria-current="page"><svg class="ic"><use href="#i-arrow-up-tray"/></svg>CSV 업로드</a><a class="tab" href="#s3b"><svg class="ic"><use href="#i-document-text"/></svg>합성 GL 생성</a></nav>
+          <form class="panel" action="#" onsubmit="return false">
+            <div class="drop"><svg class="ic ic-lg muted"><use href="#i-arrow-up-tray"/></svg><span class="medium">CSV 파일을 끌어 놓거나 선택</span><span class="xs muted">.csv 1개, 20MB, 100,000행까지. 컬럼은 MVP 문서 5장의 GL 계약을 따른다</span></div>
+            <div class="row" style="justify-content:flex-end"><span class="xs muted" id="up-why">파일을 선택하면 업로드할 수 있습니다</span><button class="btn btn-primary btn-sm" type="submit" disabled aria-describedby="up-why">업로드</button></div>
+          </form>
+          <div class="panel">
+            <div class="row between"><div class="row gap-1-5"><span class="mono medium">gl_2025_draft.csv</span><span class="st st-error"><svg class="ic"><use href="#i-x-circle"/></svg>실패</span></div><span class="xs muted num">2026-10-19 09:48, 해시 b71d02e5</span></div>
+            <div class="alert alert-error" role="alert"><svg class="ic"><use href="#i-x-circle"/></svg><span>GL을 적재하지 못했습니다. 아래 오류 4건을 고친 뒤 다시 올리세요. 파일의 원래 값은 화면에 다시 쓰지 않습니다.</span></div>
+            <div class="tbl-wrap">
+              <table class="tk-table">
+                <caption class="sr-only">적재 오류</caption>
+                <thead><tr><th scope="col" class="right">행</th><th scope="col">컬럼</th><th scope="col">코드</th><th scope="col">내용</th></tr></thead>
+                <tbody>
+                  <tr><td class="right num">214</td><td class="mono">debit</td><td class="mono">both_sides</td><td>한 행에는 차변과 대변 중 하나만 있어야 합니다</td></tr>
+                  <tr><td class="right num">1,032</td><td class="mono">entered_at</td><td class="mono">invalid_date</td><td>날짜 또는 일시 형식이 잘못되었습니다</td></tr>
+                  <tr><td class="right num">3,377</td><td class="mono">entry_number</td><td class="mono">unbalanced_entry</td><td>전표의 차변 합계와 대변 합계가 다릅니다</td></tr>
+                  <tr><td class="right num">5,881</td><td class="mono">entry_number</td><td class="mono">non_contiguous_entry</td><td>같은 전표의 행이 이어져 있지 않습니다</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>경고 1건</summary>
+              <div class="tbl-wrap" style="margin-top:8px">
+                <table class="tk-table">
+                  <caption class="sr-only">적재 경고</caption>
+                  <thead><tr><th scope="col" class="right">행</th><th scope="col">컬럼</th><th scope="col">코드</th><th scope="col">내용</th></tr></thead>
+                  <tbody><tr><td class="right num">7,410</td><td class="mono">posting_date</td><td class="mono">period_mismatch</td><td>전기일의 월과 회계기간이 다릅니다</td></tr></tbody>
+                </table>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div></div>
+    </figure>
+
+    <figure class="frame" id="s3b">
+      <figcaption class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><b>S3 (b)</b><code>/engagements/:id/imports/new</code><span>합성 GL 생성이 끝난 상태</span></figcaption>
+      <div class="frame-scroll"><div class="frame-canvas">
+        <div class="app-bar">
+          <a class="app-brand" href="#s1"><span class="logo-mark" aria-hidden="true"><svg class="ic ic-xs"><use href="#i-check"/></svg></span>Tickmark</a>
+          <div class="app-nav"><a href="#s2">누리정밀 주식회사 FY2025</a><a href="#s6">감사 로그</a></div>
+          <div class="app-tools">
+            <span class="avatars"><span class="avatar avatar-self" aria-hidden="true">김</span></span><span class="sr-only">지금 보는 사람: 김작성(나)</span>
+            <span class="tt" aria-hidden="true"><span class="on"><svg class="ic"><use href="#i-computer-desktop"/></svg></span><span><svg class="ic"><use href="#i-sun"/></svg></span><span><svg class="ic"><use href="#i-moon"/></svg></span></span>
+            <span class="user-menu"><svg class="ic"><use href="#i-user-circle"/></svg>kim.writer@example.com<svg class="ic ic-xs"><use href="#i-chevron-down"/></svg></span>
+          </div>
+        </div>
+        <div class="app-main">
+          <div class="stack" style="gap:4px">
+            <p class="crumb"><a href="#s1">감사 대상</a><span aria-hidden="true">/</span><a href="#s2">누리정밀 주식회사 FY2025</a><span aria-hidden="true">/</span><span>GL 불러오기</span></p>
+            <p class="page-title">GL 불러오기</p>
+          </div>
+          <nav class="tabs" aria-label="적재 방식"><a class="tab" href="#s3"><svg class="ic"><use href="#i-arrow-up-tray"/></svg>CSV 업로드</a><a class="tab tab-active" href="#s3b" aria-current="page"><svg class="ic"><use href="#i-document-text"/></svg>합성 GL 생성</a></nav>
+          <form class="panel" action="#" onsubmit="return false">
+            <div class="form-grid" style="max-width:560px">
+              <label class="field"><span class="label">시드 (정수)</span><input class="input num" inputmode="numeric" placeholder="비우면 기본 시드"></label>
+              <label class="field"><span class="label">목표 라인 수</span><input class="input num" inputmode="numeric" value="20,000"></label>
+            </div>
+            <p class="row gap-1-5 xs muted"><svg class="ic ic-xs"><use href="#i-information-circle"/></svg>같은 시드면 같은 GL이 나옵니다. 룰 테스트의 기대 건수는 기본 시드 기준입니다.</p>
+            <div><button class="btn btn-sm" type="submit">생성</button></div>
+          </form>
+          <div class="panel">
+            <div class="row between"><div class="row gap-1-5"><span class="medium">합성 GL, 기본 시드</span><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span></div><span class="xs muted num">2026-10-19 09:55, 해시 3f9a0c7e</span></div>
+            <div class="stats">
+              <div class="stat"><span class="label">전표</span><span class="stat-v">8,341<small>건</small></span></div>
+              <div class="stat"><span class="label">라인</span><span class="stat-v">19,794<small>건</small></span></div>
+              <div class="stat" style="grid-column: span 2"><span class="label">차변 합계 = 대변 합계</span><span class="stat-v money">386,214,905,000<small>원</small></span></div>
+              <div class="stat"><span class="label">경고</span><span class="stat-v">0<small>건</small></span></div>
+            </div>
+            <div class="row"><button class="btn btn-primary" type="button"><svg class="ic"><use href="#i-play"/></svg>테스트 실행</button><span class="xs muted">룰 8개를 실행하고 S4로 이동합니다</span></div>
+          </div>
+        </div>
+      </div></div>
+    </figure>
+    <p class="frame-note">상태는 같은 화면에서 대기, 적재 중, 완료/실패로 바뀐다(import_updated). 오류는 최대 100건까지 보이고 넘으면 "그 밖에 N건"이 붙는다. 오류 내용은 코드별 고정 문구다.</p>
+
+    <!-- S4 -->
+    <h3 class="sub" id="s4">S4 테스트 실행</h3>
+    <figure class="frame">
+      <figcaption class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><b>S4</b><code>/engagements/:id/runs/:run_id</code><span>TestRunLive, 검토 큐 탭, 김작성(작성자)</span></figcaption>
+      <div class="frame-scroll"><div class="frame-canvas">
+        <div class="app-bar">
+          <a class="app-brand" href="#s1"><span class="logo-mark" aria-hidden="true"><svg class="ic ic-xs"><use href="#i-check"/></svg></span>Tickmark</a>
+          <div class="app-nav"><a href="#s2">누리정밀 주식회사 FY2025</a><a href="#s6">감사 로그</a></div>
+          <div class="app-tools">
+            <span class="avatars"><span class="avatar avatar-self" aria-hidden="true">김</span><span class="avatar" aria-hidden="true">이</span><span class="avatar" aria-hidden="true">박</span></span><span class="sr-only">지금 보는 사람: 김작성(나), 이작성, 박검토</span>
+            <span class="tt" aria-hidden="true"><span class="on"><svg class="ic"><use href="#i-computer-desktop"/></svg></span><span><svg class="ic"><use href="#i-sun"/></svg></span><span><svg class="ic"><use href="#i-moon"/></svg></span></span>
+            <span class="user-menu"><svg class="ic"><use href="#i-user-circle"/></svg>kim.writer@example.com<svg class="ic ic-xs"><use href="#i-chevron-down"/></svg></span>
+          </div>
+        </div>
+        <div class="app-main">
+          <div class="stack" style="gap:4px">
+            <p class="crumb"><a href="#s1">감사 대상</a><span aria-hidden="true">/</span><a href="#s2">누리정밀 주식회사 FY2025</a><span aria-hidden="true">/</span><span>테스트 실행</span></p>
+            <p class="page-title">테스트 실행 <span class="num">2026-10-19 10:02</span></p>
+          </div>
+          <div class="panel">
+            <div class="tp">
+              <div class="row between"><span class="st st-success" aria-live="polite"><svg class="ic"><use href="#i-check"/></svg>완료 <span class="num">8 / 8 룰, 적중 전표 265건</span></span><span class="xs muted num">10:02:04 - 10:02:19</span></div>
+              <progress class="progress progress-success" value="8" max="8" aria-label="룰 진행률">100%</progress>
+              <ul class="tp-rules">
+                <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">주말/공휴일 전기</span><span class="cnt">46건</span></li>
+                <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">업무시간 외 입력</span><span class="cnt">42건</span></li>
+                <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">라운드 금액</span><span class="cnt">68건</span></li>
+                <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">기말 수기 전표</span><span class="cnt">45건</span></li>
+                <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">승인 통제 이탈</span><span class="cnt">40건</span></li>
+                <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">증빙일 괴리</span><span class="cnt">29건</span></li>
+                <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">희귀 계정 조합</span><span class="cnt">16건</span></li>
+                <li class="tp-rule"><svg class="ic t-success"><use href="#i-check"/></svg><span class="sr-only">완료</span><span class="name">중복 전표 의심</span><span class="cnt">15건</span></li>
+              </ul>
+            </div>
+          </div>
+          <div class="ai-box" style="padding:12px 16px">
+            <div class="row between">
+              <div class="row gap-1-5"><span class="badge badge-soft badge-accent"><svg class="ic"><use href="#i-sparkles"/></svg>AI 트리아지</span><span>검토 큐 <b class="num">52</b>건: 완료 <span class="num">50</span>, 분석 중 <span class="num">1</span>, 실패 <span class="num">1</span>, 미요청 <span class="num">0</span></span></div>
+              <div class="row"><span class="xs muted" id="tri-why">모든 항목을 요청했습니다. 실패 항목은 전표 화면에서 다시 요청합니다</span><button class="btn btn-sm btn-soft" type="button" disabled aria-describedby="tri-why"><svg class="ic"><use href="#i-sparkles"/></svg>AI 트리아지 요청</button></div>
+            </div>
+            <p class="xs muted">1회 최대 100건까지 요청합니다. 요청하면 감사 로그에 요청자가 남습니다. 결과가 오는 대로 표의 AI 열이 바뀝니다.</p>
+          </div>
+          <div class="stack-3">
+            <div class="row between">
+              <nav class="tabs" aria-label="목록 필터"><a class="tab tab-active" href="#s4" aria-current="page">검토 큐 <span class="badge badge-count">52</span></a><a class="tab" href="#s4">경미 적중 <span class="badge badge-count">213</span></a></nav>
+              <div class="join" role="group" aria-label="검토 상태">
+                <button class="btn btn-sm" type="button" aria-pressed="true">전체 <span class="num">52</span></button><button class="btn btn-sm" type="button" aria-pressed="false">미판단 <span class="num">43</span></button><button class="btn btn-sm" type="button" aria-pressed="false">검토 대기 <span class="num">4</span></button><button class="btn btn-sm" type="button" aria-pressed="false">승인 <span class="num">4</span></button><button class="btn btn-sm" type="button" aria-pressed="false">반려 <span class="num">1</span></button>
+              </div>
+            </div>
+            <div class="tbl-wrap">
+              <table class="tk-table">
+                <caption class="sr-only">검토 큐, 점수 내림차순</caption>
+                <thead><tr><th scope="col">전표</th><th scope="col">전기일</th><th scope="col" class="right">금액(원)</th><th scope="col" aria-sort="descending">점수</th><th scope="col">적중 룰</th><th scope="col">AI</th><th scope="col">판단</th><th scope="col">검토</th></tr></thead>
+                <tbody>
+                  <tr><td><a class="mono" href="#s5">JE-000123</a></td><td class="num">2025-12-30</td><td class="right money">40,000,000</td><td><span class="score"><b class="num">55</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span></td><td>기말 수기, 라운드, 승인 이탈</td><td><span class="badge badge-sm badge-soft badge-error"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>높음</span></td><td><span class="badge badge-sm badge-dash badge-neutral"><svg class="ic"><use href="#i-pencil-square"/></svg>미판단</span></td><td><span class="muted">-<span class="sr-only">검토 전</span></span></td></tr>
+                  <tr><td><a class="mono" href="#s5">JE-004415</a></td><td class="num">2025-12-31</td><td class="right money">30,000,000</td><td><span class="score"><b class="num">55</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span></td><td>기말 수기, 라운드, 승인 이탈</td><td><span class="badge badge-sm badge-soft badge-error"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>높음</span></td><td><span class="badge badge-sm badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span></td><td><span class="badge badge-sm badge-neutral"><svg class="ic"><use href="#i-clock"/></svg>검토 대기</span></td></tr>
+                  <tr><td><a class="mono" href="#s5">JE-002961</a></td><td class="num">2025-08-14</td><td class="right money">25,000,000</td><td><span class="score"><b class="num">50</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span></td><td>증빙일, 라운드, 승인 이탈</td><td><span class="badge badge-sm badge-soft badge-warning"><svg class="ic"><use href="#i-exclamation-circle"/></svg>중간</span></td><td><span class="badge badge-sm badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span></td><td><span class="badge badge-sm badge-success"><svg class="ic"><use href="#i-check-badge"/></svg>승인</span></td></tr>
+                  <tr><td><a class="mono" href="#s5">JE-007702</a></td><td class="num">2025-12-29</td><td class="right money">18,350,000</td><td><span class="score"><b class="num">50</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span></td><td>희귀 조합, 기말 수기, 시간 외</td><td><span class="badge badge-sm badge-soft badge-error"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>높음</span></td><td><span class="badge badge-sm badge-outline badge-warning"><svg class="ic"><use href="#i-question-mark-circle"/></svg>추가 확인 필요</span></td><td><span class="badge badge-sm badge-error"><svg class="ic"><use href="#i-arrow-uturn-left"/></svg>반려</span></td></tr>
+                  <tr><td><a class="mono" href="#s5">JE-001846</a></td><td class="num">2025-03-11</td><td class="right money">12,840,000</td><td><span class="score"><b class="num">25</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="xs muted">중</span></span></td><td>승인 이탈</td><td><span class="badge badge-sm badge-soft badge-neutral"><svg class="ic"><use href="#i-minus-circle"/></svg>낮음</span></td><td><span class="badge badge-sm badge-dash badge-neutral"><svg class="ic"><use href="#i-pencil-square"/></svg>미판단</span></td><td><span class="muted">-<span class="sr-only">검토 전</span></span></td></tr>
+                  <tr><td><a class="mono" href="#s5">JE-003307</a></td><td class="num">2025-06-17</td><td class="right money">4,730,000</td><td><span class="score"><b class="num">25</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="xs muted">중</span></span></td><td>승인 이탈</td><td><span class="row-nw gap-1-5 t-accent xs medium"><span class="loading-dots" aria-hidden="true"><i></i><i></i><i></i></span>분석 중</span></td><td><span class="badge badge-sm badge-dash badge-neutral"><svg class="ic"><use href="#i-pencil-square"/></svg>미판단</span></td><td><span class="muted">-<span class="sr-only">검토 전</span></span></td></tr>
+                  <tr><td><a class="mono" href="#s5">JE-005590</a></td><td class="num">2025-09-22</td><td class="right money">1,260,000</td><td><span class="score"><b class="num">25</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="xs muted">중</span></span></td><td>승인 이탈</td><td><span class="badge badge-sm badge-ghost"><svg class="ic t-error"><use href="#i-exclamation-circle"/></svg>AI 실패</span></td><td><span class="badge badge-sm badge-dash badge-neutral"><svg class="ic"><use href="#i-pencil-square"/></svg>미판단</span></td><td><span class="muted">-<span class="sr-only">검토 전</span></span></td></tr>
+                  <tr><td><a class="mono" href="#s5">JE-006118</a></td><td class="num">2025-10-04</td><td class="right money">2,480,000</td><td><span class="score"><b class="num">25</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="xs muted">중</span></span></td><td>휴일, 시간 외</td><td><span class="badge badge-sm badge-soft badge-neutral"><svg class="ic"><use href="#i-minus-circle"/></svg>낮음</span></td><td><span class="badge badge-sm badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span></td><td><span class="badge badge-sm badge-success"><svg class="ic"><use href="#i-check-badge"/></svg>승인</span></td></tr>
+                </tbody>
+              </table>
+              <div class="tbl-more"><button class="btn btn-ghost btn-sm" type="button">그 밖에 44건 더 보기</button></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </figure>
+    <p class="frame-note">기본 정렬은 점수 내림차순, 같으면 전표번호. 적중 룰은 짧은 이름이고 전체 이름은 S5와 툴팁에 있다. 경미 적중 탭에는 AI 열과 트리아지 바가 없다(트리아지 대상이 아니다).</p>
+
+    <!-- S5 -->
+    <h3 class="sub" id="s5">S5 전표 검토</h3>
+    <figure class="frame">
+      <figcaption class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><b>S5</b><code>/engagements/:id/findings/:finding_id</code><span>FindingLive.Show, JE-000123, 작성자(김작성)가 보는 화면</span></figcaption>
+      <div class="frame-scroll"><div class="frame-canvas">
+        <div class="app-bar">
+          <a class="app-brand" href="#s1"><span class="logo-mark" aria-hidden="true"><svg class="ic ic-xs"><use href="#i-check"/></svg></span>Tickmark</a>
+          <div class="app-nav"><a href="#s2">누리정밀 주식회사 FY2025</a><a href="#s6">감사 로그</a></div>
+          <div class="app-tools">
+            <span class="tt" aria-hidden="true"><span class="on"><svg class="ic"><use href="#i-computer-desktop"/></svg></span><span><svg class="ic"><use href="#i-sun"/></svg></span><span><svg class="ic"><use href="#i-moon"/></svg></span></span>
+            <span class="user-menu"><svg class="ic"><use href="#i-user-circle"/></svg>kim.writer@example.com<svg class="ic ic-xs"><use href="#i-chevron-down"/></svg></span>
+          </div>
+        </div>
+        <div class="app-main">
+          <div class="s5-grid">
+            <nav class="queue" aria-label="검토 큐">
+              <div class="queue-head"><span class="semibold">검토 큐</span><span class="xs muted">전체 52건, 점수순</span></div>
+              <a href="#s5" aria-current="page"><span class="mono">JE-000123</span><span class="num xs">55</span><span class="xs muted">미판단</span></a>
+              <a href="#s5"><span class="mono">JE-004415</span><span class="num xs">55</span><span class="xs muted">검토 대기</span></a>
+              <a href="#s5"><span class="mono">JE-002961</span><span class="num xs">50</span><span class="xs muted">승인</span></a>
+              <a href="#s5"><span class="mono">JE-007702</span><span class="num xs">50</span><span class="xs muted">반려</span></a>
+              <a href="#s5"><span class="mono">JE-001846</span><span class="num xs">25</span><span class="xs muted">미판단</span></a>
+              <a href="#s5"><span class="mono">JE-003307</span><span class="num xs">25</span><span class="xs muted">미판단</span></a>
+              <div class="queue-foot"><a class="btn btn-sm" href="#s5" style="display:inline-flex;border-bottom:1px solid var(--tk-line-strong);padding:0 10px">다음 미판단 <span class="mono xs">JE-001846</span><svg class="ic"><use href="#i-chevron-right"/></svg></a></div>
+            </nav>
+            <div class="stack-6">
+              <div class="stack" style="gap:4px">
+                <p class="crumb"><a href="#s1">감사 대상</a><span aria-hidden="true">/</span><a href="#s2">누리정밀 주식회사 FY2025</a><span aria-hidden="true">/</span><a href="#s4">테스트 실행 2026-10-19 10:02</a><span aria-hidden="true">/</span><span>JE-000123</span></p>
+                <div class="page-head">
+                  <div class="row gap-3"><p class="page-title mono">JE-000123</p><span class="score"><b class="num">55</b><span class="cells" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="xs muted">상</span></span><span class="badge badge-soft badge-error"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>높음</span><span class="badge badge-dash badge-neutral"><svg class="ic"><use href="#i-pencil-square"/></svg>미판단</span><span class="muted">-<span class="sr-only">검토 전</span></span></div>
+                  <div class="row gap-1-5"><span class="avatars"><span class="avatar avatar-self" aria-hidden="true">김</span><span class="avatar" aria-hidden="true">박</span></span><span class="sr-only">이 전표를 보는 사람: 김작성(나), 박검토</span></div>
+                </div>
+              </div>
+              <section class="panel" aria-label="전표 사실">
+                <p class="sec-h">전표 사실</p>
+                <dl class="facts">
+                  <div><dt>전기일</dt><dd class="num">2025-12-30</dd></div>
+                  <div><dt>증빙일</dt><dd class="num">2025-12-24</dd></div>
+                  <div><dt>입력 일시 (KST)</dt><dd class="num">2025-12-30 17:42:10</dd></div>
+                  <div><dt>회계기간</dt><dd class="num">12</dd></div>
+                  <div><dt>입력자</dt><dd class="mono">acct03</dd></div>
+                  <div><dt>승인자</dt><dd class="row-nw gap-1-5"><span class="mono">acct03</span><svg class="ic t-warning"><use href="#i-exclamation-triangle"/></svg><span class="sr-only">입력자와 같음</span></dd></div>
+                  <div><dt>구분</dt><dd class="row-nw gap-1-5">수기<svg class="ic t-warning"><use href="#i-exclamation-triangle"/></svg><span class="sr-only">기말 수기 전표 근거</span></dd></div>
+                  <div><dt>거래처</dt><dd class="mono">V012</dd></div>
+                  <div class="wide"><dt>적요</dt><dd>선급금 지급</dd></div>
+                </dl>
+              </section>
+              <section class="stack-3" aria-label="전표 행">
+                <p class="sec-h">전표 행</p>
+                <div class="tbl-wrap">
+                  <table class="tk-table">
+                    <caption class="sr-only">JE-000123 전표 행</caption>
+                    <thead><tr><th scope="col">행</th><th scope="col">계정</th><th scope="col">적요</th><th scope="col" class="right">차변(원)</th><th scope="col" class="right">대변(원)</th></tr></thead>
+                    <tbody>
+                      <tr><td class="num">L1</td><td><span class="mono">1310</span> 선급금</td><td>선급금 지급</td><td class="right money">40,000,000</td><td class="right">-<span class="sr-only">0</span></td></tr>
+                      <tr><td class="num">L2</td><td><span class="mono">1020</span> 보통예금</td><td>선급금 지급</td><td class="right">-<span class="sr-only">0</span></td><td class="right money">40,000,000</td></tr>
+                    </tbody>
+                    <tfoot><tr><td colspan="3"><span class="st st-success"><svg class="ic"><use href="#i-check-circle"/></svg>차대 일치</span></td><td class="right money">40,000,000</td><td class="right money">40,000,000</td></tr></tfoot>
+                  </table>
+                </div>
+              </section>
+              <section class="panel" aria-label="룰 적중">
+                <p class="sec-h">룰 적중</p>
+                <ul class="hits">
+                  <li class="hit"><span class="hit-w">+20</span><div class="stack" style="gap:2px"><div class="row gap-1-5"><span class="medium">기말 수기 전표</span><code class="xs muted">period_end_manual</code></div><p>결산일(2025-12-31) 3일 이내에 수기로 입력된 전표입니다.</p><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>근거 값</summary><dl class="kv"><dt>posting_date</dt><dd>2025-12-30</dd><dt>source</dt><dd>manual</dd><dt>period_end_window_days</dt><dd>3</dd></dl></details></div></li>
+                  <li class="hit"><span class="hit-w">+10</span><div class="stack" style="gap:2px"><div class="row gap-1-5"><span class="medium">라운드 금액</span><code class="xs muted">round_amount</code></div><p>금액 40,000,000이 1,000,000 단위로 떨어지고 기준(10,000,000) 이상입니다.</p><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>근거 값</summary><dl class="kv"><dt>entry_amount</dt><dd>40,000,000</dd><dt>round_unit</dt><dd>1,000,000</dd><dt>round_min_amount</dt><dd>10,000,000</dd></dl></details></div></li>
+                  <li class="hit"><span class="hit-w">+25</span><div class="stack" style="gap:2px"><div class="row gap-1-5"><span class="medium">승인 통제 이탈</span><code class="xs muted">approval_control_gap</code></div><p>승인자가 입력자와 같습니다 (<span class="mono">acct03</span>).</p><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>근거 값</summary><dl class="kv"><dt>entered_by</dt><dd>acct03</dd><dt>approved_by</dt><dd>acct03</dd><dt>entry_amount</dt><dd>40,000,000</dd><dt>approval_min_amount</dt><dd>1,000,000</dd></dl></details></div></li>
+                </ul>
+                <p class="hit-sum"><span class="muted">점수</span><b>55 = 20 + 10 + 25</b></p>
+              </section>
+              <section class="ai-box" aria-label="AI 제안">
+                <div class="box-head">
+                  <div class="row gap-1-5"><span class="badge badge-soft badge-accent" tabindex="0" data-tip="claude-opus-5-5, triage-v1"><svg class="ic"><use href="#i-sparkles"/></svg>AI 제안</span><span class="badge badge-soft badge-error"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>높음</span></div>
+                  <span class="xs muted num">2026-10-19 10:43</span>
+                </div>
+                <p class="ai-note"><svg class="ic ic-xs"><use href="#i-information-circle"/></svg>이 제안은 판단이 아닙니다. 결론은 작성자가 입력합니다.</p>
+                <div class="stack"><p class="semibold">근거</p><p class="prose">결산일 하루 전에 수기로 입력된 40,000,000원 선급금 지급 전표이며, 입력자와 승인자가 같은 사용자(acct03)로 기록되어 있습니다. 금액이 1,000,000원 단위로 떨어지고 수행중요성(225,000,000원)의 약 18% 수준입니다. 기말 수기 입력, 라운드 금액, 승인 통제 이탈이 겹쳐 있어 통제 우회 가능성을 배제하기 위한 추가 절차가 필요해 보입니다. 거래의 실재성과 승인 경위는 이 전표만으로 확인되지 않습니다.</p></div>
+                <div class="stack"><p class="semibold">추가 절차 제안</p>
+                  <ol class="proc">
+                    <li><span>자기승인 경위를 입력자와 승인 권한자에게 질문하고 승인 권한표와 대조합니다.</span><span class="xs muted">확보할 증거: 결재 문서, 승인 권한표</span></li>
+                    <li><span>선급금 지급 근거를 계약 조건과 대사합니다.</span><span class="xs muted">확보할 증거: V012 계약서, 지급 요청서, 이체 확인서</span></li>
+                    <li><span>기말 이후 원재료 대체 여부를 확인합니다.</span><span class="xs muted">확보할 증거: 2026년 1-2월 입고 내역, 대체 전표</span></li>
+                  </ol>
+                </div>
+                <div class="stack"><p class="semibold">AI가 판단에 부족하다고 본 정보</p><ul class="bullets"><li>V012와의 계약 조건</li><li>선급금 대체 예정 시기</li></ul></div>
+                <details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>생성 정보</summary>
+                  <dl class="kv"><dt>model</dt><dd class="mono">claude-opus-5-5</dd><dt>prompt_version</dt><dd class="mono">triage-v1</dd><dt>input_hash</dt><dd class="mono" title="9c41e2b7d03f5a8e61b2c94f07d8e3a5b6c1f2e40a9d7b38c5e6f1a2b3d4c5e6">9c41e2b7</dd><dt>inserted_at</dt><dd>2026-10-19 10:43:18 KST</dd></dl>
+                </details>
+              </section>
+              <form class="human-box" action="#" onsubmit="return false" aria-label="작성자 판단">
+                <input type="hidden" name="ai_triage_id" value="">
+                <fieldset><legend>작성자 판단</legend>
+                  <div class="opts">
+                    <label class="opt"><input class="radio" type="radio" name="o-s5" value="no_exception"><span class="badge badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span></label>
+                    <label class="opt"><input class="radio" type="radio" name="o-s5" value="needs_follow_up"><span class="badge badge-outline badge-warning"><svg class="ic"><use href="#i-question-mark-circle"/></svg>추가 확인 필요</span></label>
+                    <label class="opt"><input class="radio" type="radio" name="o-s5" value="exception"><span class="badge badge-outline badge-error"><svg class="ic"><use href="#i-flag"/></svg>예외</span></label>
+                  </div>
+                </fieldset>
+                <label class="field"><span class="label">코멘트 (필수)</span><textarea class="textarea" rows="4" placeholder="수행한 절차와 판단 근거"></textarea></label>
+                <div class="form-foot"><span class="help">AI 제안을 본 상태로 제출하면 그 제안이 결론에 연결됩니다. <span class="kbd">Ctrl</span> + <span class="kbd">Enter</span>로 제출</span><span class="help num">0 / 2000</span></div>
+                <div><button class="btn btn-primary btn-sm" type="submit">결론 제출</button></div>
+              </form>
+              <section class="stack-3" aria-label="이력">
+                <p class="sec-h">이력</p>
+                <div class="card"><div class="empty"><svg class="ic"><use href="#i-pencil-square"/></svg><span>아직 결론이 없습니다.</span></div></div>
+              </section>
+            </div>
+          </div>
+        </div>
+        <div class="signoff signoff-stuck"><p class="xs muted" id="s5-sod"><svg class="ic ic-xs"><use href="#i-lock-closed"/></svg> 작성자는 승인, 반려할 수 없습니다 (직무분리)</p><div class="row"><button class="btn btn-sm" type="button" disabled aria-describedby="s5-sod">반려</button><button class="btn btn-sm" type="button" disabled aria-describedby="s5-sod">승인</button></div></div>
+      </div></div>
+    </figure>
+    <p class="frame-note">위에서 아래로 사실, 룰 근거, AI 제안(점선), 사람 판단(실선), 서명 순서다. AI는 결론 라디오를 미리 고르지 않는다. presence는 이 화면에서 상단 바 대신 헤더에 있고, 같은 전표를 보는 사람만 보인다(view "finding:#{id}"). 왼쪽 큐는 S4의 탭과 필터를 이어받는다. 검토자(박검토)가 결론 제출 뒤 같은 화면을 보면 판단은 read_only, 서명 바는 4.2의 "결정 가능" 상태가 된다.</p>
+
+    <!-- S6 -->
+    <h3 class="sub" id="s6">S6 감사 로그</h3>
+    <figure class="frame">
+      <figcaption class="frame-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><b>S6</b><code>/engagements/:id/audit</code><span>AuditLive, 읽기 전용</span></figcaption>
+      <div class="frame-scroll"><div class="frame-canvas">
+        <div class="app-bar">
+          <a class="app-brand" href="#s1"><span class="logo-mark" aria-hidden="true"><svg class="ic ic-xs"><use href="#i-check"/></svg></span>Tickmark</a>
+          <div class="app-nav"><a href="#s2">누리정밀 주식회사 FY2025</a><a href="#s6" aria-current="page">감사 로그</a></div>
+          <div class="app-tools">
+            <span class="avatars"><span class="avatar avatar-self" aria-hidden="true">김</span></span><span class="sr-only">지금 보는 사람: 김작성(나)</span>
+            <span class="tt" aria-hidden="true"><span class="on"><svg class="ic"><use href="#i-computer-desktop"/></svg></span><span><svg class="ic"><use href="#i-sun"/></svg></span><span><svg class="ic"><use href="#i-moon"/></svg></span></span>
+            <span class="user-menu"><svg class="ic"><use href="#i-user-circle"/></svg>kim.writer@example.com<svg class="ic ic-xs"><use href="#i-chevron-down"/></svg></span>
+          </div>
+        </div>
+        <div class="app-main">
+          <div class="stack" style="gap:4px">
+            <p class="crumb"><a href="#s1">감사 대상</a><span aria-hidden="true">/</span><a href="#s2">누리정밀 주식회사 FY2025</a><span aria-hidden="true">/</span><span>감사 로그</span></p>
+            <div class="page-head"><p class="page-title">감사 로그</p><p class="row gap-1-5 xs muted"><svg class="ic ic-xs"><use href="#i-lock-closed"/></svg>읽기 전용. 기록은 수정하거나 삭제할 수 없습니다.</p></div>
+          </div>
+          <form class="row between" action="#" onsubmit="return false" aria-label="감사 로그 필터">
+            <div class="row">
+              <div class="join" role="group" aria-label="행위자 유형">
+                <button class="btn btn-sm" type="button" aria-pressed="true">전체</button><button class="btn btn-sm" type="button" aria-pressed="false"><svg class="ic"><use href="#i-user-circle"/></svg>사람</button><button class="btn btn-sm" type="button" aria-pressed="false"><svg class="ic"><use href="#i-sparkles"/></svg>AI</button><button class="btn btn-sm" type="button" aria-pressed="false"><svg class="ic"><use href="#i-cog-6-tooth"/></svg>시스템</button>
+              </div>
+              <label class="row-nw gap-1-5"><span class="label">대상</span><input class="input" style="width:220px" placeholder="전표번호 또는 실행"></label>
+            </div>
+            <button class="btn btn-sm btn-soft" type="button" aria-live="polite">새 이벤트 1건</button>
+          </form>
+          <ol class="ev-list card" style="padding-top:4px;padding-bottom:4px" aria-label="이벤트, 최신순">
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#80</span><time class="xs muted num" datetime="2026-10-19T02:21:07Z" title="2026-10-19 02:21:07 UTC">2026-10-19 11:21:07</time><span class="medium">김작성</span><span>결론 제출</span><code class="xs muted">conclusion.submitted</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-004415</a><span class="muted">예외</span></div><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>payload</summary><dl class="kv"><dt>conclusion_id</dt><dd class="mono">5e0b9c7a-3d2f-4b61-9a8e-1c7f4d2b6e90</dd><dt>outcome</dt><dd class="mono">"exception"</dd></dl></details></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#79</span><time class="xs muted num" datetime="2026-10-19T02:20:58Z" title="2026-10-19 02:20:58 UTC">2026-10-19 11:20:58</time><span class="medium">김작성</span><span>AI 제안 요청</span><code class="xs muted">ai_triage.requested</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-003307</a><span class="muted">다시 요청</span></div></div></li>
+            <li class="ev"><span class="ev-ic ev-agent" title="AI"><svg class="ic"><use href="#i-sparkles"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#78</span><time class="xs muted num" datetime="2026-10-19T02:20:12Z" title="2026-10-19 02:20:12 UTC">2026-10-19 11:20:12</time><span class="mono medium">triage:claude-opus-5-5</span><span>AI 제안 실패</span><code class="xs muted">ai_triage.failed</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-005590</a></div></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#77</span><time class="xs muted num" datetime="2026-10-19T02:20:05Z" title="2026-10-19 02:20:05 UTC">2026-10-19 11:20:05</time><span class="medium">김작성</span><span>AI 제안 요청</span><code class="xs muted">ai_triage.requested</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-005590</a><span class="muted">다시 요청</span></div></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#76</span><time class="xs muted num" datetime="2026-10-19T02:18:40Z" title="2026-10-19 02:18:40 UTC">2026-10-19 11:18:40</time><span class="medium">박검토</span><span>반려</span><code class="xs muted">review.rejected</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-007702</a><span>급여대장과 대사한 결과를 받은 뒤 다시 제출해 주세요.</span></div></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#75</span><time class="xs muted num" datetime="2026-10-19T02:15:02Z" title="2026-10-19 02:15:02 UTC">2026-10-19 11:15:02</time><span class="medium">이작성</span><span>결론 제출</span><code class="xs muted">conclusion.submitted</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-000958</a><span class="muted">이상 없음</span></div><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>payload</summary><dl class="kv"><dt>conclusion_id</dt><dd class="mono">a2c4e6f8-1b3d-4f5a-8c7e-9d0b2a4c6e81</dd><dt>outcome</dt><dd class="mono">"no_exception"</dd></dl></details></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#74</span><time class="xs muted num" datetime="2026-10-19T02:13:20Z" title="2026-10-19 02:13:20 UTC">2026-10-19 11:13:20</time><span class="medium">김작성</span><span>검토 거부됨</span><code class="xs muted">review.denied</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-003871</a><span class="t-error">직무분리: 자신의 결론은 승인, 반려할 수 없음</span><code class="xs muted">self_review</code></div></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#73</span><time class="xs muted num" datetime="2026-10-19T02:11:58Z" title="2026-10-19 02:11:58 UTC">2026-10-19 11:11:58</time><span class="medium">이작성</span><span>결론 제출</span><code class="xs muted">conclusion.submitted</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-006640</a><span class="muted">추가 확인 필요</span></div><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>payload</summary><dl class="kv"><dt>conclusion_id</dt><dd class="mono">7f1e3d5c-9b2a-4c8e-a6f4-0d2b4e6a8c13</dd><dt>outcome</dt><dd class="mono">"needs_follow_up"</dd></dl></details></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#72</span><time class="xs muted num" datetime="2026-10-19T02:09:26Z" title="2026-10-19 02:09:26 UTC">2026-10-19 11:09:26</time><span class="medium">김작성</span><span>결론 제출</span><code class="xs muted">conclusion.submitted</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-003871</a><span class="muted">예외</span></div><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>payload</summary><dl class="kv"><dt>conclusion_id</dt><dd class="mono">c8a0e2b4-6d1f-4a3c-9e5b-7f2d4a6c8e05</dd><dt>outcome</dt><dd class="mono">"exception"</dd></dl></details></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#71</span><time class="xs muted num" datetime="2026-10-19T02:07:40Z" title="2026-10-19 02:07:40 UTC">2026-10-19 11:07:40</time><span class="medium">박검토</span><span>승인</span><code class="xs muted">review.approved</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-005033</a></div></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#70</span><time class="xs muted num" datetime="2026-10-19T02:06:52Z" title="2026-10-19 02:06:52 UTC">2026-10-19 11:06:52</time><span class="medium">박검토</span><span>승인</span><code class="xs muted">review.approved</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-001207</a></div></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#69</span><time class="xs muted num" datetime="2026-10-19T02:05:30Z" title="2026-10-19 02:05:30 UTC">2026-10-19 11:05:30</time><span class="medium">박검토</span><span>승인</span><code class="xs muted">review.approved</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-002961</a></div></div></li>
+          </ol>
+          <div class="row" style="justify-content:center"><button class="btn btn-ghost btn-sm" type="button">더 보기 <span class="xs muted">(#68 이전)</span></button></div>
+        </div>
+      </div></div>
+    </figure>
+    <p class="frame-note">새 이벤트는 목록에 바로 끼우지 않고 "새 이벤트 N건" 버튼으로 알린다. 읽던 위치가 밀리지 않게 하기 위해서다. 보이지 않는 앞부분은 #1 engagement.created(09:41:03)부터 #2-3 멤버 추가, #4-7 GL 적재 2회(실패 1, 완료 1), #8-9 테스트 실행 시작과 완료, #10 검토 큐 52건 일괄 AI 요청(10:40:22), #11-62 AI 결과 52건(완료 50, 실패 2), #63-67 결론 제출 5건, #68 JE-006118 승인(11:04:09)이다. 일시는 KST로 보이고 datetime 속성과 툴팁은 UTC다.</p>
+  </section>
+</main>
+
+<footer class="doc-foot wrap">
+  <p>모든 회사명, 인물, 금액, 전표는 합성 데이터이며 실제와 무관합니다.</p>
+  <p>아이콘: Heroicons outline (MIT License). daisyUI 5 프리미티브의 모양을 이 파일 안의 CSS로 흉내 냈다.</p>
+  <p>값이나 규칙이 다르면 <a href="2026-10-17-5-디자인-시스템.md">디자인 시스템 문서</a>가 우선합니다.</p>
+</footer>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var buttons = document.querySelectorAll("[data-theme-set]");
+
+    function syncPressed() {
+      var current = root.getAttribute("data-theme") || "system";
+      buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-theme-set") === current)); });
+    }
+
+    buttons.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var value = b.getAttribute("data-theme-set");
+        if (value === "system") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", value);
+        try {
+          if (value === "system") localStorage.removeItem("tk:theme"); else localStorage.setItem("tk:theme", value);
+        } catch (e) {
+          // 저장소를 못 쓰면 이번 페이지에만 적용한다.
+        }
+        syncPressed();
+      });
+    });
+    syncPressed();
+
+    // 1.2의 라이트 패널을 다크 패널로 복제한다. 복제본은 id를 지우고 포커스를 받지 않게 한다.
+    document.querySelectorAll("[data-clone-of]").forEach(function (target) {
+      var source = document.getElementById(target.getAttribute("data-clone-of"));
+      if (!source) return;
+      source.childNodes.forEach(function (n) { target.appendChild(n.cloneNode(true)); });
+      target.querySelectorAll("[id]").forEach(function (el) { el.removeAttribute("id"); });
+      var cap = target.querySelector(".cap");
+      if (cap) cap.textContent = target.getAttribute("data-clone-label");
+      target.inert = true;
+    });
+  })();
+</script>
+</main>
+</body>
+</html>
