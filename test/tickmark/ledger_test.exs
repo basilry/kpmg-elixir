@@ -11,7 +11,7 @@ defmodule Tickmark.LedgerTest do
   alias Tickmark.AuditTrail.AuditEvent
   alias Tickmark.Engagements
   alias Tickmark.Ledger
-  alias Tickmark.Ledger.{ImportWorker, JournalEntry, JournalLine, LedgerImport}
+  alias Tickmark.Ledger.{Generator, ImportWorker, JournalEntry, JournalLine, LedgerImport}
 
   setup do
     preparer = user_fixture()
@@ -37,6 +37,17 @@ defmodule Tickmark.LedgerTest do
   end
 
   defp sha256(content), do: :sha256 |> :crypto.hash(content) |> Base.encode16(case: :lower)
+
+  defp labels_path(ledger_import) do
+    String.replace_suffix(stored_path(ledger_import), ".csv", ".labels.csv")
+  end
+
+  defp remove_sample_files(ledger_import) do
+    on_exit(fn ->
+      File.rm(stored_path(ledger_import))
+      File.rm(labels_path(ledger_import))
+    end)
+  end
 
   describe "create_import/3" do
     test "copies the file and registers a pending upload with its job and audit event", ctx do
@@ -134,6 +145,81 @@ defmodule Tickmark.LedgerTest do
       assert %{byte_size: [_]} = errors_on(changeset)
       assert Repo.aggregate(LedgerImport, :count) == 0
       refute_enqueued(worker: ImportWorker)
+    end
+  end
+
+  describe "generate_sample_import/3" do
+    test "writes the generated GL and labels and registers a generated import", ctx do
+      %{gl_csv: gl_csv, labels_csv: labels_csv} = Generator.generate(seed: 7)
+
+      assert {:ok, %LedgerImport{} = imported} =
+               Ledger.generate_sample_import(ctx.preparer, ctx.engagement, seed: 7)
+
+      remove_sample_files(imported)
+
+      assert imported.status == :pending
+      assert imported.source_kind == :generated
+      assert imported.original_filename == "synthetic-gl-seed-7.csv"
+      assert imported.stored_filename =~ ~r/\A[0-9a-f-]{36}\.csv\z/
+      assert File.read!(stored_path(imported)) == gl_csv
+      assert File.read!(labels_path(imported)) == labels_csv
+      assert imported.byte_size == byte_size(gl_csv)
+      assert imported.sha256 == sha256(gl_csv)
+
+      assert_enqueued(worker: ImportWorker, args: %{"ledger_import_id" => imported.id})
+
+      assert [%{action: "ledger_import.created", payload: %{"source_kind" => "generated"}}] =
+               audit_events(imported.id)
+    end
+
+    test "uses the generator's default seed without options", ctx do
+      assert {:ok, imported} = Ledger.generate_sample_import(ctx.preparer, ctx.engagement)
+      remove_sample_files(imported)
+
+      assert imported.original_filename ==
+               "synthetic-gl-seed-#{Generator.default_seed()}.csv"
+    end
+
+    test "refuses reviewers, non-members and unknown options", ctx do
+      assert Ledger.generate_sample_import(ctx.reviewer, ctx.engagement, seed: 7) ==
+               {:error, :forbidden}
+
+      assert Ledger.generate_sample_import(ctx.outsider, ctx.engagement, seed: 7) ==
+               {:error, :forbidden}
+
+      assert Ledger.list_imports(ctx.preparer, ctx.engagement.id) == []
+
+      assert_raise ArgumentError, fn ->
+        Ledger.generate_sample_import(ctx.preparer, ctx.engagement, target_lines: 100)
+      end
+    end
+
+    # 10/18 completion check (planning doc): the generator's file goes through
+    # CsvParser and Importer as it is, CRLF line endings included.
+    test "loads the default synthetic GL, one entry per label row", ctx do
+      {:ok, imported} = Ledger.generate_sample_import(ctx.preparer, ctx.engagement)
+      remove_sample_files(imported)
+
+      assert {:ok, %{status: :succeeded} = loaded} = Ledger.process_import(imported.id)
+      assert loaded.entry_count == 8_341
+      assert loaded.line_count == 19_804
+      assert loaded.error_count == 0
+      assert Decimal.equal?(loaded.total_debit, loaded.total_credit)
+      assert count_rows(JournalLine, imported.id) == 19_804
+
+      [_header | label_rows] =
+        imported |> labels_path() |> File.read!() |> String.split("\r\n", trim: true)
+
+      label_numbers = MapSet.new(label_rows, &(&1 |> String.split(",") |> hd()))
+
+      entry_numbers =
+        Repo.all(
+          from e in JournalEntry,
+            where: e.ledger_import_id == ^imported.id,
+            select: e.entry_number
+        )
+
+      assert MapSet.new(entry_numbers) == label_numbers
     end
   end
 

@@ -18,7 +18,16 @@ defmodule Tickmark.Ledger do
   alias Tickmark.AuditTrail
   alias Tickmark.Engagements
   alias Tickmark.Engagements.Engagement
-  alias Tickmark.Ledger.{Importer, ImportWorker, JournalEntry, JournalLine, LedgerImport}
+
+  alias Tickmark.Ledger.{
+    Generator,
+    Importer,
+    ImportWorker,
+    JournalEntry,
+    JournalLine,
+    LedgerImport
+  }
+
   alias Tickmark.Repo
 
   # Same limit as the upload (allow_upload max_file_size), checked again here.
@@ -45,6 +54,45 @@ defmodule Tickmark.Ledger do
         original_filename: Path.basename(filename),
         stored_filename: stored_filename
       })
+    end
+  end
+
+  @doc """
+  Generates the synthetic GL (domain doc 7) and registers it the same way as
+  an upload. The answer labels go next to it as `<uuid>.labels.csv` and are
+  never loaded into the database.
+
+  Options: `:seed` (default `Generator.default_seed/0`). The same seed gives
+  the same file.
+  """
+  @spec generate_sample_import(Scope.t(), Engagement.t(), keyword()) ::
+          {:ok, LedgerImport.t()} | {:error, :forbidden | term()}
+  def generate_sample_import(scope, %Engagement{} = engagement, opts \\ []) do
+    opts = Keyword.validate!(opts, seed: Generator.default_seed())
+
+    with {:ok, _role} <- Engagements.authorize(scope, engagement.id, :import_ledger) do
+      %{gl_csv: gl_csv, labels_csv: labels_csv} = Generator.generate(seed: opts[:seed])
+      id = Ecto.UUID.generate()
+      labels_path = stored_path("#{id}.labels.csv")
+      File.mkdir_p!(import_dir())
+      File.write!(stored_path("#{id}.csv"), gl_csv)
+      File.write!(labels_path, labels_csv)
+
+      attrs = %{
+        source_kind: :generated,
+        original_filename: "synthetic-gl-seed-#{opts[:seed]}.csv",
+        stored_filename: "#{id}.csv"
+      }
+
+      case register_import(scope, engagement, attrs) do
+        {:ok, ledger_import} ->
+          {:ok, ledger_import}
+
+        # register_import/3 has removed the GL copy. The labels go with it.
+        {:error, error} ->
+          File.rm(labels_path)
+          {:error, error}
+      end
     end
   end
 
@@ -124,8 +172,8 @@ defmodule Tickmark.Ledger do
   # Registration -------------------------------------------------------------
 
   # Registers a file that is already in the import directory: the pending row,
-  # its audit event and the job commit together. create_import/3 ends here, and
-  # so will generate_sample_import/3 (architecture doc 2.1).
+  # its audit event and the job commit together. create_import/3 and
+  # generate_sample_import/3 both end here (architecture doc 2.1).
   defp register_import(scope, engagement, %{stored_filename: stored_filename} = attrs) do
     path = stored_path(stored_filename)
     attrs = Map.merge(attrs, %{byte_size: File.stat!(path).size, sha256: sha256!(path)})
