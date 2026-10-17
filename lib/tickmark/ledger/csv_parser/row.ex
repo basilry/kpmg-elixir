@@ -16,12 +16,10 @@ defmodule Tickmark.Ledger.CsvParser.Row do
   # numeric(18,2)
   @max_amount Decimal.new("9999999999999999.99")
 
-  # The 9.2 code list has no code for an unreadable cell, an over-long cell or
-  # a bad enum value, so they use parse_error until the contract adds one
-  # (see the devlog).
+  # Error codes from the architecture doc 9.2.
   @unreadable_code "parse_error"
-  @too_long_code "parse_error"
-  @bad_value_code "parse_error"
+  @too_long_code "too_long"
+  @bad_value_code "invalid_value"
 
   @doc "The 16 contract columns, in the documented order."
   def columns, do: @columns

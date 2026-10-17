@@ -178,7 +178,7 @@ defmodule Tickmark.Ledger.CsvParser do
     else
       {:error,
        Enum.map(missing, &error(1, &1, "missing_column")) ++
-         Enum.map(unknown, fn _name -> error(1, nil, @unreadable_code) end)}
+         Enum.map(unknown, fn _name -> error(1, nil, "unknown_column") end)}
     end
   end
 
@@ -302,7 +302,7 @@ defmodule Tickmark.Ledger.CsvParser do
     {errors, _seen} =
       Enum.reduce(lines, {[], MapSet.new()}, fn line, {errors, seen} ->
         if MapSet.member?(seen, line.line_number) do
-          {[error(line.row, :line_number, "invalid_number") | errors], seen}
+          {[error(line.row, :line_number, "duplicate_line_number") | errors], seen}
         else
           {errors, MapSet.put(seen, line.line_number)}
         end

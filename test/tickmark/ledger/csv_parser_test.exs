@@ -193,9 +193,13 @@ defmodule Tickmark.Ledger.CsvParserTest do
                  error(2, "fiscal_period", "invalid_number"),
                  error(3, "fiscal_period", "invalid_number")
                ]
+    end
+
+    test "duplicate_line_number when a line number repeats in an entry" do
+      [debit, credit] = gl_entry("JE-0001")
 
       assert rejected(gl_csv([debit, %{credit | line_number: "1"}])).errors ==
-               [error(3, "line_number", "invalid_number")]
+               [error(3, "line_number", "duplicate_line_number")]
     end
 
     test "both_sides when a line has both or neither side" do
@@ -252,17 +256,17 @@ defmodule Tickmark.Ledger.CsvParserTest do
       assert rejected(csv).errors == [error(4, nil, "parse_error")]
     end
 
-    test "parse_error for an unknown or duplicated header, without echoing it" do
+    test "unknown_column for an unknown or duplicated header, without echoing it" do
       columns = CsvParser.column_names() ++ ["memo"]
 
       assert rejected(gl_csv(gl_entry("JE-0001"), columns: columns)).errors == [
-               error(1, nil, "parse_error")
+               error(1, nil, "unknown_column")
              ]
 
       columns = CsvParser.column_names() ++ ["debit"]
 
       assert rejected(gl_csv(gl_entry("JE-0001"), columns: columns)).errors == [
-               error(1, nil, "parse_error")
+               error(1, nil, "unknown_column")
              ]
     end
 
@@ -272,18 +276,18 @@ defmodule Tickmark.Ledger.CsvParserTest do
       assert rejected(csv).errors == [error(4, nil, "parse_error")]
     end
 
-    test "parse_error for unreadable text, an unknown source and an over-long cell" do
+    test "parse_error, invalid_value and too_long for bad cells" do
       [debit, credit] = gl_entry("JE-0001")
 
-      for {column, value} <- [
-            account_name: <<0xB0, 0xA1>>,
-            account_name: "a" <> <<0>>,
-            source: "batch",
-            account_name: String.duplicate("가", 201),
-            description: String.duplicate("가", 501)
+      for {column, value, code} <- [
+            {:account_name, <<0xB0, 0xA1>>, "parse_error"},
+            {:account_name, "a" <> <<0>>, "parse_error"},
+            {:source, "batch", "invalid_value"},
+            {:account_name, String.duplicate("가", 201), "too_long"},
+            {:description, String.duplicate("가", 501), "too_long"}
           ] do
         assert rejected(gl_csv([Map.put(debit, column, value), credit])).errors ==
-                 [error(2, to_string(column), "parse_error")],
+                 [error(2, to_string(column), code)],
                "accepted #{column}"
       end
 
