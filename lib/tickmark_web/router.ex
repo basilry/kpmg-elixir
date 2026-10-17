@@ -54,6 +54,16 @@ defmodule TickmarkWeb.Router do
       on_mount: [{TickmarkWeb.UserAuth, :require_authenticated}] do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+
+      # Engagement screens S1-S6 (design doc). Login is enforced here; membership
+      # and role are checked by the contexts on every call.
+      live "/engagements", EngagementLive.Index, :index
+      live "/engagements/new", EngagementLive.Index, :new
+      live "/engagements/:id", EngagementLive.Show, :show
+      live "/engagements/:id/imports/new", ImportLive.New, :new
+      live "/engagements/:id/runs/:run_id", TestRunLive.Show, :show
+      live "/engagements/:id/findings/:finding_id", FindingLive.Show, :show
+      live "/engagements/:id/audit", AuditLive.Index, :index
     end
 
     post "/users/update-password", UserSessionController, :update_password
