@@ -27,7 +27,7 @@ defmodule TickmarkWeb.FindingLive.RuleEvidence do
             <summary class="cursor-pointer text-muted">근거 값</summary>
             <dl class="mt-2 grid gap-2 rounded-field bg-base-200 p-3">
               <div :for={{key, value} <- Enum.sort(hit.details)} class="grid gap-1 sm:grid-cols-2">
-                <dt class="font-mono break-all">{key}</dt><dd class="whitespace-pre-wrap break-words">
+                <dt class="font-mono break-all">{key}</dt><dd class="break-words">
                   {detail_value(value)}
                 </dd>
               </div>

@@ -63,7 +63,7 @@ defmodule TickmarkWeb.FindingLive.EntryPanels do
         <div>
           <dt class="text-xs text-muted">거래처</dt><dd
             id="entry-counterparty"
-            class="whitespace-pre-wrap break-words"
+            class="break-words"
           >
             <.optional_value value={@entry.counterparty} />
           </dd>
@@ -71,7 +71,7 @@ defmodule TickmarkWeb.FindingLive.EntryPanels do
         <div class="col-span-full">
           <dt class="text-xs text-muted">적요</dt><dd
             id="entry-description"
-            class="whitespace-pre-wrap break-words"
+            class="break-words"
           >
             <.optional_value value={@description} />
           </dd>
@@ -107,7 +107,7 @@ defmodule TickmarkWeb.FindingLive.EntryPanels do
             <tr :for={{id, line} <- @rows} id={id}>
               <td class="hidden font-mono sm:table-cell">L{line.line_number}</td>
               <td><span class="font-mono">{line.account_code}</span> {line.account_name}</td>
-              <td class="hidden whitespace-pre-wrap break-words sm:table-cell">
+              <td class="hidden break-words sm:table-cell">
                 <.optional_value value={line.description} />
               </td>
               <td class="text-right tabular-nums whitespace-nowrap"><.money value={line.debit} /></td>

@@ -225,6 +225,10 @@ defmodule TickmarkWeb.FindingLiveTest do
     {:ok, view, _html} = open_finding(ctx)
     assert has_element?(view, "#finding-ai-status", "높음")
     assert has_element?(view, "#ai-triage-result", "새 제안의 근거")
+    # pre-wrap keeps template indentation, so the text must touch the tag.
+    assert view |> element("#ai-triage-rationale") |> render() =~
+             ">새 제안의 근거</p>"
+
     refute has_element?(view, "#ai-triage-result", "이전 제안의 근거")
     assert has_element?(view, "#ai-procedures", "증빙 대사")
     assert has_element?(view, "#ai-procedures", "확보할 증거: 세금계산서")

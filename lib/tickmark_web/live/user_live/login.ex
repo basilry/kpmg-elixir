@@ -109,7 +109,7 @@ defmodule TickmarkWeb.UserLive.Login do
 
     form = to_form(%{"email" => email}, as: "user")
 
-    {:ok, assign(socket, form: form, trigger_submit: false)}
+    {:ok, assign(socket, page_title: "로그인", form: form, trigger_submit: false)}
   end
 
   @impl true

@@ -45,6 +45,12 @@ defmodule TickmarkWeb.FindingLive.ConclusionActionsTest do
     assert has_element?(view, "#flash-info", "결론을 제출했습니다. 검토자에게 검토 대기로 보입니다.")
     assert has_element?(view, "#finding-review-status", "검토 대기")
     assert has_element?(view, "#history-conclusion-#{conclusion.id}", params.comment)
+    # The comment sits under whitespace-pre-wrap, so no indentation around it.
+    assert view
+           |> element("#history-conclusion-#{conclusion.id} p.whitespace-pre-wrap")
+           |> render() =~
+             ">증빙을 요청했습니다</p>"
+
     assert has_element?(view, "#conclusion-character-count", "0 / 2000")
     refute has_element?(view, "#conclusion-form input[type=radio][checked]")
     refute has_element?(view, "#conclusion-comment", params.comment)

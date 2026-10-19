@@ -39,9 +39,8 @@ defmodule TickmarkWeb.FindingLive.AiSuggestion do
         <% @triage -> %>
           <div id="ai-triage-result" class="space-y-3">
             <div>
-              <h3 class="mb-1 text-xs font-semibold text-muted">근거</h3><p class="whitespace-pre-wrap break-words">
-                {@triage.rationale}
-              </p>
+              <h3 class="mb-1 text-xs font-semibold text-muted">근거</h3>
+              <p id="ai-triage-rationale" class="whitespace-pre-wrap break-words" phx-no-format>{@triage.rationale}</p>
             </div>
             <details>
               <summary class="cursor-pointer text-xs font-semibold text-muted">추가 절차 제안</summary>

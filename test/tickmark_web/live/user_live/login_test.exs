@@ -9,6 +9,7 @@ defmodule TickmarkWeb.UserLive.LoginTest do
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
 
       assert has_element?(lv, "#login-title", "로그인")
+      assert page_title(lv) == "로그인 | Tickmark"
       assert has_element?(lv, "#registration-link", "회원가입")
       assert has_element?(lv, "#login_form_magic")
       assert has_element?(lv, "#login_form_password")

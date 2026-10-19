@@ -30,9 +30,7 @@ defmodule TickmarkWeb.FindingLive.SignBar do
             <.review_badge status={@status} /><span class="text-xs text-muted">{@last_decision.reviewer.email},
             <.system_time at={@last_decision.inserted_at} /></span>
           </div>
-          <p :if={@status == :rejected} class="whitespace-pre-wrap break-words">
-            {@last_decision.comment}
-          </p>
+          <p :if={@status == :rejected} class="whitespace-pre-wrap break-words" phx-no-format>{@last_decision.comment}</p>
         </div>
       <% end %>
       <%= cond do %>
