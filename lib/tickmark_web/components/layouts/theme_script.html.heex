@@ -1,0 +1,38 @@
+<script>
+  (() => {
+    const systemTheme = () => matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+
+    const setTheme = (value) => {
+      const theme = ["light", "dark"].includes(value) ? value : "system";
+      document.documentElement.setAttribute("data-theme", theme === "system" ? systemTheme() : theme);
+      document.documentElement.setAttribute("data-theme-source", theme === "system" ? "system" : "user");
+
+      try {
+        if (theme === "system") {
+          localStorage.removeItem("tk:theme");
+        } else {
+          localStorage.setItem("tk:theme", theme);
+        }
+      } catch (_) {
+        // Keep the selected theme on this page when storage is unavailable.
+      }
+    };
+
+    let storedTheme = "system";
+    try {
+      storedTheme = localStorage.getItem("tk:theme") || "system";
+    } catch (_) {
+      // Use the system preference when storage cannot be read.
+    }
+
+    if (!document.documentElement.hasAttribute("data-theme")) setTheme(storedTheme);
+    window.addEventListener("storage", (e) => e.key === "tk:theme" && setTheme(e.newValue || "system"));
+    window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
+
+    matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      if (document.documentElement.getAttribute("data-theme-source") === "system") {
+        document.documentElement.setAttribute("data-theme", systemTheme());
+      }
+    });
+  })();
+</script>
