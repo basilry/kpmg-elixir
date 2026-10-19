@@ -29,6 +29,9 @@ defmodule Tickmark.AI.Anthropic do
   ]
 
   @impl true
+  def model, do: Keyword.fetch!(Tickmark.AI.config(), :model)
+
+  @impl true
   def triage(input, _opts \\ []) do
     cfg = Tickmark.AI.config()
 

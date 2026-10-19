@@ -24,4 +24,10 @@ defmodule Tickmark.AI.Client do
           | {:fatal, term()}
 
   @callback triage(input(), keyword()) :: {:ok, result()} | {:error, error()}
+
+  @doc """
+  The model id the client asks for. Triage stores it in `ai_triages.model`, so
+  results from different clients never share a uniqueness key.
+  """
+  @callback model() :: String.t()
 end

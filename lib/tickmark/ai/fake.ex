@@ -4,6 +4,12 @@ defmodule Tickmark.AI.Fake do
   """
   @behaviour Tickmark.AI.Client
 
+  # Not a real model id, so a fake result is never mistaken for one.
+  @model "fake-triage-v1"
+
+  @impl true
+  def model, do: @model
+
   @impl true
   def triage(input, _opts \\ []) do
     <<first_byte, _rest::binary>> =
@@ -35,7 +41,7 @@ defmodule Tickmark.AI.Fake do
          }
        ],
        missing_information: ["전표를 뒷받침하는 증빙 원본"],
-       response_model: "fake-triage-v1",
+       response_model: @model,
        stop_reason: "end_turn",
        input_tokens: 0,
        output_tokens: 0

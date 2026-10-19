@@ -17,6 +17,9 @@ defmodule Tickmark.AI do
   @spec triage(Client.input(), keyword()) :: {:ok, Client.result()} | {:error, Client.error()}
   def triage(input, opts \\ []), do: client().triage(input, opts)
 
+  @spec model() :: String.t()
+  def model, do: client().model()
+
   @doc """
   SHA-256 of JSON with recursively sorted object keys. Array order is preserved.
   """

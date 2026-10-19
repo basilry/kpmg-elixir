@@ -11,6 +11,13 @@ defmodule Tickmark.AITest do
     assert AI.triage(input) == AI.Fake.triage(input, [])
   end
 
+  test "model/0 는 구현마다 자기 모델 ID를 돌려주고 Fake 는 실제 모델 ID를 쓰지 않는다" do
+    assert AI.model() == "fake-triage-v1"
+    assert AI.model() == AI.Fake.model()
+    assert AI.Anthropic.model() == AI.config()[:model]
+    refute AI.Fake.model() == AI.Anthropic.model()
+  end
+
   describe "input_hash/1" do
     test "정렬된 JSON의 SHA-256을 소문자 64자 hex로 반환한다" do
       expected = :crypto.hash(:sha256, ~s({"a":1,"b":2})) |> Base.encode16(case: :lower)
