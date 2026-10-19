@@ -18,6 +18,10 @@ defmodule Tickmark.Application do
       TickmarkWeb.Endpoint
     ]
 
+    # Telemetry handlers are global, not tied to a process, so this can run
+    # before Oban starts. It records final failures of jobs that raised.
+    :ok = Tickmark.Jobs.FailureHandler.attach()
+
     # See https://elixir.hexdocs.pm/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Tickmark.Supervisor]
