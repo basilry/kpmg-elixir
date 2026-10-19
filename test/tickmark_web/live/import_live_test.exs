@@ -40,6 +40,25 @@ defmodule TickmarkWeb.ImportLiveTest do
     assert has_element?(view, "#s3-result-next[href='/engagements/#{engagement.id}']")
   end
 
+  test "messages for other screens keep the screen running", ctx do
+    %{conn: conn, engagement: engagement} = ctx
+    {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}/imports/new")
+
+    for message <- [
+          {:test_run_updated,
+           %{test_run_id: Ecto.UUID.generate(), status: :running, finding_count: 0}},
+          {:finding_updated,
+           %{finding_id: Ecto.UUID.generate(), status: :open, triage_status: :queued}},
+          {:audit_appended, %{seq: 1, action: "engagement.created"}},
+          {:triage_requested, %{test_run_id: Ecto.UUID.generate(), enqueued: 1}}
+        ] do
+      :ok = Engagements.broadcast(engagement.id, message)
+    end
+
+    assert has_element?(view, "#s3-main-1", "GL 불러오기")
+    assert Process.alive?(view.pid)
+  end
+
   test "extension and size refusals do not create imports", ctx do
     %{conn: conn, scope: scope, engagement: engagement} = ctx
     {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}/imports/new")

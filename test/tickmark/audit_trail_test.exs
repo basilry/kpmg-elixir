@@ -106,6 +106,61 @@ defmodule Tickmark.AuditTrailTest do
     end
   end
 
+  describe "broadcast_appended/1" do
+    test "sends the event summary to the engagement topic", %{
+      scope: scope,
+      engagement: engagement
+    } do
+      :ok = Phoenix.PubSub.subscribe(Tickmark.PubSub, Tickmark.Engagements.topic(engagement.id))
+
+      {:ok, event} =
+        AuditTrail.record(
+          event_attrs(scope, engagement, %{
+            action: "conclusion.submitted",
+            subject_type: "finding",
+            payload: %{"entry_number" => "JE-000123", "outcome" => "exception"}
+          })
+        )
+
+      assert :ok = AuditTrail.broadcast_appended(event)
+
+      assert_receive {:audit_appended,
+                      %{
+                        seq: seq,
+                        action: "conclusion.submitted",
+                        actor_type: :user,
+                        subject_type: "finding",
+                        subject_id: subject_id,
+                        entry_number: "JE-000123"
+                      }}
+
+      assert seq == event.seq
+      assert subject_id == engagement.id
+    end
+
+    test "leaves entry_number nil when the payload has none and skips events without an engagement",
+         %{scope: scope, engagement: engagement} do
+      :ok = Phoenix.PubSub.subscribe(Tickmark.PubSub, Tickmark.Engagements.topic(engagement.id))
+
+      {:ok, event} = AuditTrail.record(event_attrs(scope, engagement))
+      assert :ok = AuditTrail.broadcast_appended(event)
+      assert_receive {:audit_appended, %{action: "engagement.created", entry_number: nil}}
+
+      {:ok, orphan} =
+        AuditTrail.record(%{
+          engagement_id: nil,
+          actor: {:system, "testing.rule_worker"},
+          action: "test_run.completed",
+          subject_type: "test_run",
+          subject_id: engagement.id,
+          payload: %{}
+        })
+
+      assert :ok = AuditTrail.broadcast_appended(orphan)
+      refute_receive {:audit_appended, _}, 50
+    end
+  end
+
   describe "seq is never written by the app" do
     test "a seq set on the struct is ignored and the DB assigns its own", %{
       scope: scope,

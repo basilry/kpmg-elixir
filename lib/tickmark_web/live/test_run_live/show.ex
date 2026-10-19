@@ -99,6 +99,7 @@ defmodule TickmarkWeb.TestRunLive.Show do
   def handle_info({:import_updated, _payload}, socket), do: {:noreply, socket}
   def handle_info({:test_run_updated, _payload}, socket), do: {:noreply, socket}
   def handle_info({:audit_appended, _payload}, socket), do: {:noreply, socket}
+  def handle_info({:triage_requested, _payload}, socket), do: {:noreply, socket}
 
   defp ensure_same_engagement!(%TestRun{engagement_id: id}, id), do: :ok
   defp ensure_same_engagement!(_run, _id), do: raise(Ecto.NoResultsError, queryable: TestRun)

@@ -9,6 +9,7 @@ defmodule Tickmark.AuditTrail do
   alias Ecto.Multi
   alias Tickmark.Accounts.Scope
   alias Tickmark.AuditTrail.AuditEvent
+  alias Tickmark.Engagements
   alias Tickmark.Repo
 
   @type actor :: {:user, Ecto.UUID.t()} | {:agent, String.t()} | {:system, String.t()}
@@ -34,5 +35,28 @@ defmodule Tickmark.AuditTrail do
     attrs
     |> AuditEvent.changeset()
     |> Repo.insert()
+  end
+
+  @doc """
+  Tells the engagement's screens that an event was appended (design doc 6).
+  Call it only after the transaction that inserted the event has committed.
+  An event without an engagement has no topic and is not broadcast.
+  """
+  @spec broadcast_appended(AuditEvent.t()) :: :ok
+  def broadcast_appended(%AuditEvent{engagement_id: nil}), do: :ok
+
+  def broadcast_appended(%AuditEvent{} = event) do
+    Engagements.broadcast(
+      event.engagement_id,
+      {:audit_appended,
+       %{
+         seq: event.seq,
+         action: event.action,
+         actor_type: event.actor_type,
+         subject_type: event.subject_type,
+         subject_id: event.subject_id,
+         entry_number: event.payload["entry_number"]
+       }}
+    )
   end
 end

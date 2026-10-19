@@ -414,6 +414,12 @@ defmodule TickmarkWeb.EngagementLiveTest do
           {:audit_appended, %{seq: 1, action: "engagement.created"}}
         )
 
+      :ok =
+        Engagements.broadcast(
+          engagement.id,
+          {:triage_requested, %{test_run_id: Ecto.UUID.generate(), enqueued: 3}}
+        )
+
       assert render(view) =~ engagement.client_name
       assert Process.alive?(view.pid)
     end

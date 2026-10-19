@@ -119,6 +119,7 @@ defmodule TickmarkWeb.EngagementLive.Show do
 
   def handle_info({:finding_updated, _payload}, socket), do: {:noreply, socket}
   def handle_info({:audit_appended, _payload}, socket), do: {:noreply, socket}
+  def handle_info({:triage_requested, _payload}, socket), do: {:noreply, socket}
 
   defp start_error_message(:import_not_ready), do: "적재가 끝난 GL만 테스트할 수 있습니다."
   defp start_error_message(:run_in_progress), do: "이 GL에 실행 중인 테스트가 있습니다."

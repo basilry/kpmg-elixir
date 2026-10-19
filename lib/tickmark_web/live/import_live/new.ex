@@ -98,6 +98,7 @@ defmodule TickmarkWeb.ImportLive.New do
   def handle_info({:test_run_updated, _payload}, socket), do: {:noreply, socket}
   def handle_info({:finding_updated, _payload}, socket), do: {:noreply, socket}
   def handle_info({:audit_appended, _payload}, socket), do: {:noreply, socket}
+  def handle_info({:triage_requested, _payload}, socket), do: {:noreply, socket}
 
   defp seed_form(value, errors \\ []),
     do: to_form(%{"seed" => value}, as: :sample, errors: errors)

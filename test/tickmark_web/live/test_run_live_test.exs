@@ -234,6 +234,12 @@ defmodule TickmarkWeb.TestRunLiveTest do
        %{test_run_id: Ecto.UUID.generate(), status: :completed_with_errors, finding_count: 999}}
     )
 
+    Phoenix.PubSub.broadcast(
+      Tickmark.PubSub,
+      Engagements.topic(engagement.id),
+      {:triage_requested, %{test_run_id: run.id, enqueued: 2}}
+    )
+
     assert has_element?(view, "#s4-progress-summary", "적중 전표 4건")
   end
 
