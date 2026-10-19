@@ -5,7 +5,7 @@
 - MVP: 2026-10-23 (D-3)
 - 지원 마감: 2026-10-25 (D-5)
 
-## 진행 중: 라운드 4a (M3 트리아지 + M4 검토, 감사 로그)
+## 진행 중: 라운드 4a (M3 트리아지 + M4 검토, 감사 로그) + 4b 선행 (W6)
 
 계약: [아키텍처 문서 12.2](docs/architecture/2026-10-17-4-시스템-구조와-데이터-모델.md) (2.1, 4.2, 5.5.1, 6, 7, 8 장). 통합 브랜치는 `feature/m2-rule-engine`.
 
@@ -16,26 +16,26 @@
 | W3 | 4.2 | `AuditTrail.list_events/3`, S6 AuditLive | Codex `gpt-6.1-sol` max | `feature/m4-audit-log` | 병합 (80dc408) |
 | W4 | 3.3 | `Testing.get_finding!/2`, `list_rule_results/2`, S5 FindingLive 표시 | Codex `gpt-6.1-sol` max | `feature/m3-finding-show` | 병합 (34c247e) |
 | W5 | 2.4, 2.6 | Runner 경유 정답 라벨 시험, S2 단추 테스트, `audit_appended` 보강, DuplicateEntry 느린 쿼리 | Codex `gpt-6.1-sol` max | `feature/m2-wrapup` | 진행 중 |
+| W6 | 4.3 (일부) | S5 결론 제출, 승인/반려 2단계, `components.ex` 분리 ([계약 12.3](docs/architecture/2026-10-17-4-시스템-구조와-데이터-모델.md)) | Codex `gpt-6.1-sol` max | `feature/m4-finding-actions` | 진행 중 |
 
 ## 메인 세션 다음 할 일
 
 - [x] 2.1 워커 A 병합 (fadb51c, 385 통과)
 - [x] 라운드 4 선행 작업: `AI.model/0` (fa8a3c1), `broadcast_appended/1` 과 `:triage_requested` 무시 절 (f0769f5), 계약
 - [ ] 워커 결과 검토 후 하나씩 병합, 병합마다 `mix precommit`
-- [ ] 라운드 4b (W1, W2, W4 병합 뒤): S5 동작 (트리아지 요청, 결론 제출, 승인/반려), S4 AI 열과 일괄 요청 (3.4), Presence (4.3, 4.4), 통합 테스트
-- [ ] 4b 에서 S5 를 고칠 때 `finding_live/components.ex` (610줄) 를 영역별로 나눈다
+- [ ] 라운드 4b (W1 병합 뒤): S5 AI 분석 요청 단추, S4 AI 열과 일괄 요청 (3.4), Presence 와 상단 바 (4.3, 4.4), 검토 대기열과 '다음 미판단', 통합 테스트. S5 결론 제출과 승인/반려, `components.ex` 분리는 W6
+- [ ] S2 `start_run` 이 import 의 engagement 가 현재 engagement 와 같은지 확인 (W5 발견, W5 병합 뒤 `engagement_live/show.ex`)
 - [ ] S1-S6 브라우저 확인
 - [ ] 라운드 4 devlog (2026-10-20-1), WBS 와 이 파일 갱신
 - [x] README 초안 (WBS 6.1 당김. M6 에 데모 GIF 와 최종 상태 반영)
 
 ## 사용자 결정 대기
 
-- PR #2 (`feature/foundation` -> `main`) 병합 승인 (WBS 1.19, M1 완료 조건)
-- 배포 대상: Azure 또는 Fly.io (WBS 5.1, 10/22 전)
+- 배포 대상 (WBS 5.1, 10/22 전): 무료 우선, Vercel 선호. Vercel 은 서버리스라 Phoenix LiveView (WebSocket) 와 Oban 을 돌릴 수 없어 무료 대안을 조사 중
 
 ## 다음 라운드 (M5-M6)
 
-- 5.1-5.4 배포, 1.19 PR 정리, 제출 자료
+- 5.1-5.4 배포, 제출 자료
 
 ## Changelog
 
@@ -45,3 +45,4 @@
 - 2026-10-20: README 초안 (6.1) 추가
 - 2026-10-20: W2 병합
 - 2026-10-20: W3, W4 병합
+- 2026-10-20: PR #2 병합 (1.19 완료), W6 배정, 배포 조건 (무료, Vercel 선호) 반영, W5 발견 (S2 start_run engagement 확인) 추가
