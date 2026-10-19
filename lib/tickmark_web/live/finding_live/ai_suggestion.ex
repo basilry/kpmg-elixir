@@ -96,9 +96,11 @@ defmodule TickmarkWeb.FindingLive.AiSuggestion do
         <button
           id="ai-triage-request"
           type="button"
-          disabled
+          phx-click="request_triage"
+          phx-disable-with="요청 중"
+          disabled={@role != :preparer}
           aria-describedby="ai-triage-request-help"
-          class="btn btn-sm"
+          class="btn btn-sm btn-accent btn-outline"
         >
           {if @status in [:failed, :succeeded], do: "다시 요청", else: "AI 제안 요청"}
         </button>

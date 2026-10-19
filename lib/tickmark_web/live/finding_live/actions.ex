@@ -3,7 +3,7 @@ defmodule TickmarkWeb.FindingLive.Actions do
   import Phoenix.Component, only: [assign: 2, to_form: 1]
   import Phoenix.LiveView, only: [put_flash: 3]
 
-  alias Tickmark.Review
+  alias Tickmark.{Review, Triage}
   alias Tickmark.Review.{Conclusion, ReviewDecision}
   alias TickmarkWeb.FindingLive.State
 
@@ -93,6 +93,26 @@ defmodule TickmarkWeb.FindingLive.Actions do
         socket = cancel_decision(socket)
         socket = if reason in [:invalid_state, :stale], do: State.reload(socket), else: socket
         put_flash(socket, :error, decision_error(reason))
+    end
+  end
+
+  def request_triage(socket) do
+    # Triage checks the role and threshold again under a row lock, so a
+    # forged click from a reviewer or a stale button only gets a flash.
+    case Triage.request_finding_triage(socket.assigns.current_scope, socket.assigns.finding.id) do
+      {:ok, _queued} ->
+        socket
+        |> State.reload()
+        |> put_flash(:info, "AI 제안을 요청했습니다. 분석이 끝나면 이 화면에 보입니다.")
+
+      {:error, :already_queued} ->
+        socket |> State.reload() |> put_flash(:info, "이미 분석 중입니다.")
+
+      {:error, :below_threshold} ->
+        put_flash(socket, :error, "점수가 기준보다 낮아 AI 제안을 요청할 수 없습니다.")
+
+      {:error, :forbidden} ->
+        put_flash(socket, :error, "AI 제안을 요청할 권한이 없습니다.")
     end
   end
 

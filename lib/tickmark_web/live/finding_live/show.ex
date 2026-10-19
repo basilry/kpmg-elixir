@@ -78,6 +78,10 @@ defmodule TickmarkWeb.FindingLive.Show do
     {:noreply, Actions.decide(socket, event["conclusion-id"], attrs)}
   end
 
+  def handle_event("request_triage", _params, socket) do
+    {:noreply, Actions.request_triage(socket)}
+  end
+
   @impl true
   def handle_info({:finding_updated, %{finding_id: id}}, socket) do
     if id == socket.assigns.finding.id do
