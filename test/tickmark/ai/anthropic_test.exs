@@ -242,6 +242,67 @@ defmodule Tickmark.AI.AnthropicTest do
     end
   end
 
+  test "모든 출력 필드에서 결론이 아닌 확인 질문과 감사절차 문장을 허용한다" do
+    allowed = [
+      "전표가 승인 대상 금액을 초과하는지 확인한다",
+      "승인이 적절한 권한자에 의해 이루어졌는지 확인한다",
+      "승인이 필요한 금액 기준을 확인한다",
+      "거래에 문제가 없는지 증빙과 대조한다",
+      "동일 금액 거래가 이상이 없는지 거래처 원장과 대조한다",
+      "승인 가능 한도와 전표 금액을 비교한다",
+      "입력자와 승인 권한자에게 입력 경위를 질문한다",
+      "승인 이력, 결재 문서",
+      "부정 위험 요인이 있는지 질문한다",
+      "결재권자가 승인했는지 결재 이력을 확인한다",
+      "기말 수기 전표의 승인 절차를 확인한다"
+    ]
+
+    for phrase <- allowed,
+        path <- [
+          ["rationale"],
+          ["suggested_procedures", Access.at(0), "procedure"],
+          ["suggested_procedures", Access.at(0), "evidence_to_obtain"],
+          ["missing_information", Access.at(0)]
+        ] do
+      output = put_in(valid_output(), path, phrase)
+      stub_response(message_response(output))
+      result = Anthropic.triage(input())
+
+      assert match?({:ok, _result}, result),
+             "정상 감사절차 거절: #{phrase}, 필드: #{inspect(path)}"
+    end
+  end
+
+  test "모든 출력 필드에서 단정하는 종결형과 가정하는 조건형을 구분한다" do
+    cases = [
+      {"거래에 문제가 없다", :reject},
+      {"거래에 이상이 없으므로 추가 절차를 생략한다", :reject},
+      {"승인이 필요합니다", :reject},
+      {"반려가 타당하다", :reject},
+      {"승인 권고", :reject},
+      {"거래에 문제가 없다면 관련 증빙을 추가로 확보한다", :allow},
+      {"승인이 필요하다면 권한자의 결재 이력을 확보한다", :allow},
+      {"승인이 적절하다면 관련 승인 이력을 증빙과 대조한다", :allow}
+    ]
+
+    for {phrase, expected} <- cases,
+        path <- [
+          ["rationale"],
+          ["suggested_procedures", Access.at(0), "procedure"],
+          ["suggested_procedures", Access.at(0), "evidence_to_obtain"],
+          ["missing_information", Access.at(0)]
+        ] do
+      output = put_in(valid_output(), path, phrase)
+      stub_response(message_response(output))
+      result = Anthropic.triage(input())
+
+      case expected do
+        :allow -> assert {:ok, _result} = result
+        :reject -> assert result == {:error, {:fatal, :invalid_output}}
+      end
+    end
+  end
+
   test "한국어 근거는 600자로 자르되 자르기 전 전체 텍스트의 금지 표현을 검사한다" do
     long_text = String.duplicate("가", 620)
     stub_response(message_response(Map.put(valid_output(), "rationale", long_text)))
