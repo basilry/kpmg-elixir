@@ -97,10 +97,14 @@ defmodule Tickmark.LedgerTest do
 
       assert_receive {:import_updated,
                       %{import_id: ^import_id, status: :pending, entry_count: 0, error_count: 0}}
+
+      assert_audit_appended(event)
+      refute_received {:audit_appended, _}
     end
 
     test "refuses reviewers, non-members and missing scopes", ctx do
       path = write_csv!(gl_csv(gl_entry("JE-0001")))
+      :ok = Engagements.subscribe(ctx.preparer, ctx.engagement.id)
 
       for scope <- [ctx.reviewer, ctx.outsider, nil] do
         assert Ledger.create_import(scope, ctx.engagement, %{path: path, filename: "gl.csv"}) ==
@@ -115,9 +119,11 @@ defmodule Tickmark.LedgerTest do
              ) == 0
 
       refute_enqueued(worker: ImportWorker)
+      refute_received {:audit_appended, _}
     end
 
     test "refuses a file over 20,000,000 bytes", ctx do
+      :ok = Engagements.subscribe(ctx.preparer, ctx.engagement.id)
       # A sparse file: the size is 20,000,001 bytes, but only one byte is written.
       path = write_csv!("")
       {:ok, file} = File.open(path, [:write, :binary])
@@ -131,10 +137,12 @@ defmodule Tickmark.LedgerTest do
 
       assert Repo.aggregate(LedgerImport, :count) == 0
       refute_enqueued(worker: ImportWorker)
+      refute_received {:audit_appended, _}
     end
 
     test "returns the changeset for an empty file", ctx do
       path = write_csv!("")
+      :ok = Engagements.subscribe(ctx.preparer, ctx.engagement.id)
 
       assert {:error, %Ecto.Changeset{} = changeset} =
                Ledger.create_import(ctx.preparer, ctx.engagement, %{
@@ -145,12 +153,14 @@ defmodule Tickmark.LedgerTest do
       assert %{byte_size: [_]} = errors_on(changeset)
       assert Repo.aggregate(LedgerImport, :count) == 0
       refute_enqueued(worker: ImportWorker)
+      refute_received {:audit_appended, _}
     end
   end
 
   describe "generate_sample_import/3" do
     test "writes the generated GL and labels and registers a generated import", ctx do
       %{gl_csv: gl_csv, labels_csv: labels_csv} = Generator.generate(seed: 7)
+      :ok = Engagements.subscribe(ctx.preparer, ctx.engagement.id)
 
       assert {:ok, %LedgerImport{} = imported} =
                Ledger.generate_sample_import(ctx.preparer, ctx.engagement, seed: 7)
@@ -168,8 +178,14 @@ defmodule Tickmark.LedgerTest do
 
       assert_enqueued(worker: ImportWorker, args: %{"ledger_import_id" => imported.id})
 
-      assert [%{action: "ledger_import.created", payload: %{"source_kind" => "generated"}}] =
+      assert [
+               %{action: "ledger_import.created", payload: %{"source_kind" => "generated"}} =
+                 event
+             ] =
                audit_events(imported.id)
+
+      assert_audit_appended(event)
+      refute_received {:audit_appended, _}
     end
 
     test "uses the generator's default seed without options", ctx do
@@ -281,6 +297,9 @@ defmodule Tickmark.LedgerTest do
 
       assert_receive {:import_updated,
                       %{import_id: ^import_id, status: :succeeded, entry_count: 2, error_count: 0}}
+
+      assert_audit_appended(event)
+      refute_received {:audit_appended, _}
     end
 
     test "writes nothing when an entry is rejected after a full chunk was written", ctx do
@@ -311,6 +330,9 @@ defmodule Tickmark.LedgerTest do
 
       assert_receive {:import_updated,
                       %{import_id: ^import_id, status: :failed, entry_count: 0, error_count: 1}}
+
+      assert_audit_appended(event)
+      refute_received {:audit_appended, _}
     end
 
     test "returns a finished import as it is when called again", ctx do
@@ -336,6 +358,7 @@ defmodule Tickmark.LedgerTest do
       assert length(audit_events(good.id)) == 2
       assert length(audit_events(bad.id)) == 2
       refute_receive {:import_updated, _}
+      refute_received {:audit_appended, _}
     end
 
     test "starts over an import left processing by an attempt that crashed", ctx do
@@ -349,6 +372,7 @@ defmodule Tickmark.LedgerTest do
     test "fails the import when the stored file is gone", ctx do
       imported = ledger_import_fixture(ctx.preparer, ctx.engagement, gl_csv(gl_entry("JE-0001")))
       File.rm!(stored_path(imported))
+      :ok = Engagements.subscribe(ctx.preparer, ctx.engagement.id)
 
       assert {:ok, failed} = Ledger.process_import(imported.id)
       assert failed.status == :failed
@@ -356,11 +380,15 @@ defmodule Tickmark.LedgerTest do
 
       assert [_created, event] = audit_events(imported.id)
       assert event.payload == %{"reason" => "file_missing", "error_count" => 0}
+      assert_audit_appended(event)
+      refute_received {:audit_appended, _}
     end
 
-    test "returns :not_found for unknown and malformed ids" do
+    test "returns :not_found for unknown and malformed ids", ctx do
+      :ok = Engagements.subscribe(ctx.preparer, ctx.engagement.id)
       assert Ledger.process_import(Ecto.UUID.generate()) == {:error, :not_found}
       assert Ledger.process_import("not-a-uuid") == {:error, :not_found}
+      refute_received {:audit_appended, _}
     end
   end
 
@@ -387,22 +415,28 @@ defmodule Tickmark.LedgerTest do
 
       import_id = imported.id
       assert_receive {:import_updated, %{import_id: ^import_id, status: :failed}}
+      assert_audit_appended(event)
+      refute_received {:audit_appended, _}
     end
 
     @tag :capture_log
     test "leaves a finished import alone", ctx do
       imported = ledger_import_fixture(ctx.preparer, ctx.engagement, gl_csv(gl_entry("JE-0001")))
       {:ok, _loaded} = Ledger.process_import(imported.id)
+      :ok = Engagements.subscribe(ctx.preparer, ctx.engagement.id)
 
       assert Ledger.mark_import_failed(imported.id, :timeout) == :ok
       assert Repo.get!(LedgerImport, imported.id).status == :succeeded
       assert length(audit_events(imported.id)) == 2
+      refute_received {:audit_appended, _}
     end
 
     @tag :capture_log
-    test "returns :ok for unknown and malformed ids" do
+    test "returns :ok for unknown and malformed ids", ctx do
+      :ok = Engagements.subscribe(ctx.preparer, ctx.engagement.id)
       assert Ledger.mark_import_failed(Ecto.UUID.generate(), :timeout) == :ok
       assert Ledger.mark_import_failed("not-a-uuid", :timeout) == :ok
+      refute_received {:audit_appended, _}
     end
   end
 
@@ -470,5 +504,18 @@ defmodule Tickmark.LedgerTest do
 
       assert_raise Ecto.NoResultsError, fn -> Ledger.get_entry!(ctx.outsider, ctx.entry.id) end
     end
+  end
+
+  defp assert_audit_appended(event) do
+    assert_receive {:audit_appended, message}
+
+    assert message == %{
+             seq: event.seq,
+             action: event.action,
+             actor_type: event.actor_type,
+             subject_type: "ledger_import",
+             subject_id: event.subject_id,
+             entry_number: nil
+           }
   end
 end

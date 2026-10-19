@@ -86,7 +86,8 @@ defmodule Tickmark.Engagements do
     end)
     |> Repo.transact()
     |> case do
-      {:ok, %{engagement: engagement, member: member}} ->
+      {:ok, %{engagement: engagement, member: member, audit: event}} ->
+        AuditTrail.broadcast_appended(event)
         {:ok, %{engagement | members: [member]}}
 
       {:error, _step, %Ecto.Changeset{} = changeset, _changes_so_far} ->
@@ -130,8 +131,12 @@ defmodule Tickmark.Engagements do
       end)
       |> Repo.transact()
       |> case do
-        {:ok, %{member: member}} -> {:ok, %{member | user: user}}
-        {:error, _step, %Ecto.Changeset{} = changeset, _changes_so_far} -> {:error, changeset}
+        {:ok, %{member: member, audit: event}} ->
+          AuditTrail.broadcast_appended(event)
+          {:ok, %{member | user: user}}
+
+        {:error, _step, %Ecto.Changeset{} = changeset, _changes_so_far} ->
+          {:error, changeset}
       end
     end
   end

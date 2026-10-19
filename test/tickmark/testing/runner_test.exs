@@ -15,6 +15,7 @@ defmodule Tickmark.Testing.RunnerTest do
 
   @moduletag :capture_log
   @rule "approval_control_gap"
+  @run_messages [:rule_progress, :test_run_updated, :run_completed, :audit_appended]
 
   setup do
     preparer = user_fixture()
@@ -37,16 +38,22 @@ defmodule Tickmark.Testing.RunnerTest do
 
   describe "start_test_run/3" do
     test "refuses a non-member", ctx do
+      subscribe_engagement(ctx)
+
       assert {:error, :forbidden} =
                Testing.start_test_run(ctx.outsider, ctx.ledger_import, [@rule])
+
+      refute_received {:audit_appended, _}
     end
 
     test "re-reads the import and refuses one that is not loaded", ctx do
+      subscribe_engagement(ctx)
       pending = insert_ledger_import(ctx.engagement, ctx.preparer)
       stale = %{pending | status: :succeeded}
 
       assert {:error, :import_not_ready} = Testing.start_test_run(ctx.scope, stale, [@rule])
       assert all_enqueued(worker: RuleWorker) == []
+      refute_received {:audit_appended, _}
     end
 
     test "allows one running run per import", ctx do
@@ -59,6 +66,8 @@ defmodule Tickmark.Testing.RunnerTest do
     end
 
     test "raises for an empty list, an unknown id and a duplicate id", ctx do
+      subscribe_engagement(ctx)
+
       for rule_ids <- [[], ["nope"], [@rule, "nope"], [@rule, @rule]] do
         assert_raise ArgumentError, fn ->
           Testing.start_test_run(ctx.scope, ctx.ledger_import, rule_ids)
@@ -66,6 +75,7 @@ defmodule Tickmark.Testing.RunnerTest do
       end
 
       assert Repo.aggregate(TestRun, :count) == 0
+      refute_received {:audit_appended, _}
     end
 
     test ":all runs every registered rule and queues one job per rule", ctx do
@@ -122,24 +132,29 @@ defmodule Tickmark.Testing.RunnerTest do
 
       assert_receive {:test_run_updated, message}
       assert message == %{test_run_id: run_id, status: :running, finding_count: 0}
+      assert_audit_appended(event)
       refute_receive {:test_run_updated, _}
+      refute_received {:audit_appended, _}
     end
 
     test "broadcasts nothing when the insert fails", ctx do
       subscribe_engagement(ctx)
       start(ctx, [@rule])
       assert_receive {:test_run_updated, _}
+      assert_receive {:audit_appended, %{action: "test_run.started"}}
 
       assert {:error, :run_in_progress} =
                Testing.start_test_run(ctx.scope, ctx.ledger_import, [@rule])
 
       refute_receive {:test_run_updated, _}
+      refute_received {:audit_appended, _}
     end
   end
 
   describe "run_rule/2" do
     test "stores the hits, finishes the rule and completes a one-rule run", ctx do
       run = start(ctx, [@rule])
+      subscribe_engagement(ctx)
       assert {:ok, :done} = Testing.run_rule(run.id, @rule)
 
       results = results(run)
@@ -172,6 +187,8 @@ defmodule Tickmark.Testing.RunnerTest do
       assert completed.actor_type == :system
       assert completed.actor_id == "testing.rule_worker"
       assert completed.payload == %{"status" => "completed", "finding_count" => 2}
+      assert_audit_appended(completed)
+      refute_received {:audit_appended, _}
     end
 
     test "the last rule builds one finding per entry, caps the score and sorts the ids", ctx do
@@ -197,6 +214,7 @@ defmodule Tickmark.Testing.RunnerTest do
 
     test "records a skip with its reason and completes the run", ctx do
       run = start(ctx, ["test_skip"])
+      subscribe_engagement(ctx)
       assert {:ok, :skipped} = Testing.run_rule(run.id, "test_skip")
 
       rule = get_rule(run, "test_skip")
@@ -208,10 +226,13 @@ defmodule Tickmark.Testing.RunnerTest do
       assert %{status: :completed, finding_count: 0} = get_run(run)
       assert results(run) == []
       assert actions(run) == ["test_run.started", "test_run.completed"]
+      assert_audit_appended(List.last(audit_events(run)))
+      refute_received {:audit_appended, _}
     end
 
     test "leaves the rule running when it returns an error, so the job can retry", ctx do
       run = start(ctx, ["test_error"])
+      subscribe_engagement(ctx)
       assert {:error, :test_error} = Testing.run_rule(run.id, "test_error")
 
       rule = get_rule(run, "test_error")
@@ -225,10 +246,12 @@ defmodule Tickmark.Testing.RunnerTest do
 
       assert {:error, :test_error} = Testing.run_rule(run.id, "test_error")
       assert get_rule(run, "test_error").started_at == rule.started_at
+      refute_received {:audit_appended, _}
     end
 
     test "does not catch a rule that raises", ctx do
       run = start(ctx, ["test_raise"])
+      subscribe_engagement(ctx)
 
       assert_raise RuntimeError, "test_raise rule", fn ->
         Testing.run_rule(run.id, "test_raise")
@@ -236,11 +259,13 @@ defmodule Tickmark.Testing.RunnerTest do
 
       assert get_rule(run, "test_raise").status == :running
       assert get_run(run).status == :running
+      refute_received {:audit_appended, _}
     end
 
     test "is a noop for a finished rule, unknown ids and a malformed id", ctx do
       run = start(ctx, [@rule])
       assert {:ok, :done} = Testing.run_rule(run.id, @rule)
+      subscribe_engagement(ctx)
 
       assert {:ok, :noop} = Testing.run_rule(run.id, @rule)
       assert length(results(run)) == 2
@@ -249,6 +274,7 @@ defmodule Tickmark.Testing.RunnerTest do
       assert {:ok, :noop} = Testing.run_rule(Ecto.UUID.generate(), @rule)
       assert {:ok, :noop} = Testing.run_rule("nope", @rule)
       assert {:error, :unknown_rule} = Testing.run_rule(run.id, "nope")
+      refute_received {:audit_appended, _}
     end
 
     test "is a noop when the run is no longer running", ctx do
@@ -293,6 +319,7 @@ defmodule Tickmark.Testing.RunnerTest do
   describe "fail_rule/3" do
     test "marks the rule failed with the reason cut to 500 characters", ctx do
       run = start(ctx, [@rule, "test_error"])
+      subscribe_engagement(ctx)
       reason = String.duplicate("x", 600)
 
       log = capture_log(fn -> assert :ok = Testing.fail_rule(run.id, "test_error", reason) end)
@@ -312,16 +339,21 @@ defmodule Tickmark.Testing.RunnerTest do
       assert failed.actor_id == "testing.rule_worker"
       assert failed.subject_id == run.id
       assert failed.payload == %{"rule_id" => "test_error"}
+      assert_audit_appended(failed)
+      refute_received {:audit_appended, _}
     end
 
     test "records the failure only once", ctx do
       run = start(ctx, [@rule, "test_error"])
+      subscribe_engagement(ctx)
 
       assert :ok = Testing.fail_rule(run.id, "test_error", :boom)
+      assert_audit_appended(List.last(audit_events(run)))
       assert :ok = Testing.fail_rule(run.id, "test_error", :again)
 
       assert get_rule(run, "test_error").error == ":boom"
       assert actions(run) == ["test_run.started", "test_run_rule.failed"]
+      refute_received {:audit_appended, _}
     end
 
     test "finalizes the run when it was the last rule", ctx do
@@ -340,13 +372,63 @@ defmodule Tickmark.Testing.RunnerTest do
              ]
     end
 
-    test "returns :ok for ids that match nothing" do
+    test "returns :ok for ids that match nothing", ctx do
+      subscribe_engagement(ctx)
       assert :ok = Testing.fail_rule("nope", @rule, :boom)
       assert :ok = Testing.fail_rule(Ecto.UUID.generate(), @rule, :boom)
+      refute_received {:audit_appended, _}
+    end
+
+    test "does not broadcast an event when finalization rolls back after recording it", ctx do
+      run = start(ctx, [@rule, "test_error"])
+      assert {:ok, :done} = Testing.run_rule(run.id, @rule)
+
+      # A conflicting finding makes finalization fail after the failure event
+      # was inserted. The event and the rule's failed status must both roll back.
+      insert_finding(run, hd(ctx.entries))
+      subscribe_engagement(ctx)
+      subscribe_run(run)
+
+      assert_raise Postgrex.Error, fn ->
+        Testing.fail_rule(run.id, "test_error", :boom)
+      end
+
+      assert get_rule(run, "test_error").status == :queued
+      assert get_run(run).status == :running
+      assert actions(run) == ["test_run.started"]
+      refute_received {:audit_appended, _}
+      refute_received {:rule_progress, _}
+      refute_received {:test_run_updated, _}
+      refute_received {:run_completed, _}
     end
   end
 
   describe "broadcasts" do
+    test "sends terminal state messages before audit events in sequence order", ctx do
+      run = start(ctx, ["test_error"])
+      subscribe_engagement(ctx)
+      subscribe_run(run)
+
+      assert :ok = Testing.fail_rule(run.id, "test_error", :boom)
+
+      assert_receive {tag, _} = progress when tag in @run_messages
+
+      assert {:rule_progress, %{status: :failed, done: 1}} = progress
+
+      assert_receive {tag, _} = updated when tag in @run_messages
+
+      assert {:test_run_updated, %{status: :completed_with_errors}} = updated
+
+      assert_receive {tag, _} = completed when tag in @run_messages
+
+      assert {:run_completed, %{status: :completed_with_errors}} = completed
+
+      assert [_started, failed, finished] = audit_events(run)
+      assert_audit_appended(failed)
+      assert_audit_appended(finished)
+      refute_received {:audit_appended, _}
+    end
+
     test "sends rule progress and run completion in the contract shape", ctx do
       run = start(ctx, [@rule, "test_skip"])
       run_id = run.id
@@ -461,6 +543,19 @@ defmodule Tickmark.Testing.RunnerTest do
   end
 
   defp actions(run), do: Enum.map(audit_events(run), & &1.action)
+
+  defp assert_audit_appended(event) do
+    assert_receive {:audit_appended, message}
+
+    assert message == %{
+             seq: event.seq,
+             action: event.action,
+             actor_type: event.actor_type,
+             subject_type: "test_run",
+             subject_id: event.subject_id,
+             entry_number: nil
+           }
+  end
 
   defp ids(rows, key), do: rows |> Enum.map(&Map.fetch!(&1, key)) |> Enum.sort()
 

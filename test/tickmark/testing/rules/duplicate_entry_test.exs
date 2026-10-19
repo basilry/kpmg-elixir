@@ -127,4 +127,20 @@ defmodule Tickmark.Testing.Rules.DuplicateEntryTest do
     [hit] = assert_hits(Rule.run(context(ctx, Rule)), [later])
     assert hit.details["entry_amount"] == "1000000"
   end
+
+  test "an excluded source cannot become the predecessor of an allowed entry", ctx do
+    entry(ctx, "JE-1", source: :system, posting_date: ~D[2025-01-01])
+    first_manual = entry(ctx, "JE-2", posting_date: ~D[2025-01-02])
+    later_manual = entry(ctx, "JE-3", posting_date: ~D[2025-01-03])
+
+    hits = assert_hits(Rule.run(context(ctx, Rule)), [first_manual, later_manual])
+    assert Enum.all?(hits, &(&1.details["duplicate_of"] == "JE-1"))
+
+    [hit] =
+      assert_hits(Rule.run(context(ctx, Rule, %{"apply_sources" => ["manual"]})), [later_manual])
+
+    assert hit.details["duplicate_of"] == "JE-2"
+    assert_hits(Rule.run(context(ctx, Rule, %{"apply_sources" => ["system"]})), [])
+    assert_hits(Rule.run(context(ctx, Rule, %{"apply_sources" => []})), [])
+  end
 end

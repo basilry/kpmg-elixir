@@ -16,6 +16,7 @@ defmodule Tickmark.EngagementsTest do
   describe "create_engagement/2" do
     test "creates the engagement, the preparer membership and the audit event" do
       scope = user_scope_fixture()
+      subscribe_on_creation()
 
       attrs =
         valid_engagement_attributes(%{
@@ -47,6 +48,9 @@ defmodule Tickmark.EngagementsTest do
                "period_end_date" => "2025-12-31",
                "performance_materiality" => "225000000"
              }
+
+      assert_audit_appended(event)
+      refute_received {:audit_appended, _}
     end
 
     test "takes created_by_id from the scope, not from attrs" do
@@ -64,6 +68,7 @@ defmodule Tickmark.EngagementsTest do
 
     test "returns the failing changeset and writes nothing on invalid attrs" do
       scope = user_scope_fixture()
+      subscribe_on_creation()
 
       attrs = %{client_name: "", fiscal_year: 1999, performance_materiality: "0"}
       assert {:error, %Ecto.Changeset{} = changeset} = Engagements.create_engagement(scope, attrs)
@@ -77,6 +82,7 @@ defmodule Tickmark.EngagementsTest do
       assert Repo.aggregate(Engagement, :count) == 0
       assert Repo.aggregate(Member, :count) == 0
       assert Repo.aggregate(AuditEvent, :count) == 0
+      refute_received {:audit_appended, _}
     end
   end
 
@@ -165,6 +171,7 @@ defmodule Tickmark.EngagementsTest do
       engagement: engagement
     } do
       user = user_fixture()
+      :ok = Engagements.subscribe(creator, engagement.id)
 
       assert {:ok, %Member{} = member} =
                Engagements.add_member(creator, engagement, user.email, :reviewer)
@@ -180,6 +187,34 @@ defmodule Tickmark.EngagementsTest do
       assert event.subject_type == "engagement"
       assert event.subject_id == engagement.id
       assert event.payload == %{"user_id" => user.id, "role" => "reviewer"}
+      assert_audit_appended(event)
+      refute_received {:audit_appended, _}
+    end
+
+    test "refused and invalid member additions do not broadcast", %{
+      creator: creator,
+      engagement: engagement
+    } do
+      user = user_fixture()
+      :ok = Engagements.subscribe(creator, engagement.id)
+
+      assert {:error, :forbidden} =
+               Engagements.add_member(user_scope_fixture(), engagement, user.email, :reviewer)
+
+      assert {:error, :user_not_found} =
+               Engagements.add_member(creator, engagement, "missing@example.com", :reviewer)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Engagements.add_member(creator, engagement, user.email, "admin")
+
+      assert {:ok, _member} = Engagements.add_member(creator, engagement, user.email, :reviewer)
+      assert [event] = audit_events("engagement.member_added")
+      assert_audit_appended(event)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Engagements.add_member(creator, engagement, user.email, :preparer)
+
+      refute_received {:audit_appended, _}
     end
 
     test "accepts the role as a form string and trims the email", %{
@@ -284,5 +319,44 @@ defmodule Tickmark.EngagementsTest do
     test "a non-member gets an empty list", %{engagement: engagement} do
       assert Engagements.list_members(user_scope_fixture(), engagement) == []
     end
+  end
+
+  # The id is generated inside create_engagement/2. Subscribe as soon as its
+  # INSERT returns, while the membership and event still have to commit.
+  # The query's UUID parameters include the new id and the creator's id;
+  # subscribing to both avoids depending on their SQL parameter positions.
+  defp subscribe_on_creation do
+    handler = {__MODULE__, self()}
+
+    :ok =
+      :telemetry.attach(
+        handler,
+        [:tickmark, :repo, :query],
+        fn _, _, metadata, owner ->
+          if self() == owner and metadata.source == "engagements" and
+               String.starts_with?(metadata.query, "INSERT") do
+            for param <- metadata.params, is_binary(param), byte_size(param) == 16 do
+              {:ok, id} = Ecto.UUID.load(param)
+              :ok = Phoenix.PubSub.subscribe(Tickmark.PubSub, Engagements.topic(id))
+            end
+          end
+        end,
+        self()
+      )
+
+    on_exit(fn -> :telemetry.detach(handler) end)
+  end
+
+  defp assert_audit_appended(event) do
+    assert_receive {:audit_appended, message}
+
+    assert message == %{
+             seq: event.seq,
+             action: event.action,
+             actor_type: :user,
+             subject_type: "engagement",
+             subject_id: event.subject_id,
+             entry_number: nil
+           }
   end
 end

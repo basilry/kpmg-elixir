@@ -11,6 +11,7 @@ defmodule TickmarkWeb.EngagementLiveTest do
   alias Tickmark.Ledger
   alias Tickmark.Ledger.LedgerImport
   alias Tickmark.Repo
+  alias Tickmark.Testing
   alias Tickmark.Testing.TestRunRule
   alias TickmarkWeb.EngagementLive.Components
 
@@ -134,6 +135,96 @@ defmodule TickmarkWeb.EngagementLiveTest do
   end
 
   describe "Show (S2)" do
+    test "a preparer starts all rules for a loaded GL and navigates to S4", %{
+      conn: conn,
+      scope: scope
+    } do
+      engagement = engagement_fixture(scope)
+      imported = ledger_import_fixture(scope, engagement, gl_csv(gl_entry("JE-001")))
+      assert {:ok, %{status: :succeeded}} = Ledger.process_import(imported.id)
+
+      {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}")
+      assert has_element?(view, "#start-run-#{imported.id}", "테스트 실행")
+
+      result = view |> element("#start-run-#{imported.id}") |> render_click()
+      assert [run] = Testing.list_test_runs(scope, engagement.id)
+      assert run.ledger_import_id == imported.id
+      assert run.status == :running
+      assert run.rule_count == length(Tickmark.Testing.Rules.ids())
+
+      {:ok, run_view, _html} =
+        follow_redirect(result, conn, ~p"/engagements/#{engagement}/runs/#{run}")
+
+      assert has_element?(run_view, "#s4-running")
+    end
+
+    test "a start button opened before another run shows the run-in-progress flash", %{
+      conn: conn,
+      scope: scope
+    } do
+      engagement = engagement_fixture(scope)
+      imported = succeeded_import(scope, engagement)
+      {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}")
+      assert has_element?(view, "#start-run-#{imported.id}")
+
+      # Another request won the race, before this screen receives a state
+      # message. The context's unique constraint still rejects this click.
+      running = insert_test_run(imported, scope.user)
+      view |> element("#start-run-#{imported.id}") |> render_click()
+
+      assert has_element?(view, "#flash-error", "이 GL에 실행 중인 테스트가 있습니다.")
+      assert [%{id: run_id}] = Testing.list_test_runs(scope, engagement.id)
+      assert run_id == running.id
+      refute_redirected(view)
+    end
+
+    test "there is no executable start button without any GL", %{conn: conn, scope: scope} do
+      engagement = engagement_fixture(scope)
+      {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}")
+
+      assert has_element?(view, "#imports-empty")
+      refute has_element?(view, "#imports button[phx-click='start_run']")
+      assert Testing.list_test_runs(scope, engagement.id) == []
+    end
+
+    test "a failed GL has no start button and a forged event shows import-not-ready", %{
+      conn: conn,
+      scope: scope
+    } do
+      engagement = engagement_fixture(scope)
+      [debit, credit] = gl_entry("JE-001")
+
+      imported =
+        ledger_import_fixture(scope, engagement, gl_csv([debit, %{credit | credit: "1"}]))
+
+      assert {:ok, %{status: :failed}} = Ledger.process_import(imported.id)
+      {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}")
+
+      assert has_element?(view, "#imports-#{imported.id}", "실패")
+      refute has_element?(view, "#imports button[phx-click='start_run']")
+
+      render_hook(view, "start_run", %{"id" => imported.id})
+      assert has_element?(view, "#flash-error", "적재가 끝난 GL만 테스트할 수 있습니다.")
+      assert Testing.list_test_runs(scope, engagement.id) == []
+    end
+
+    test "a reviewer cannot start a loaded GL even with a forged event", %{
+      conn: conn,
+      scope: scope
+    } do
+      creator = user_scope_fixture()
+      engagement = engagement_fixture(creator)
+      member_fixture(creator, engagement, :reviewer, scope.user)
+      imported = succeeded_import(creator, engagement)
+      {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}")
+
+      refute has_element?(view, "#start-run-#{imported.id}")
+      render_hook(view, "start_run", %{"id" => imported.id})
+
+      assert has_element?(view, "#flash-error", "테스트를 실행할 권한이 없습니다.")
+      assert Testing.list_test_runs(creator, engagement.id) == []
+    end
+
     test "the creator sees the overview, members, actions and empty sections", %{
       conn: conn,
       scope: scope
