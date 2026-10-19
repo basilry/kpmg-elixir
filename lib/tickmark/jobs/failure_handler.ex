@@ -13,7 +13,7 @@ defmodule Tickmark.Jobs.FailureHandler do
   """
   require Logger
 
-  alias Tickmark.{Ledger, Testing}
+  alias Tickmark.{Ledger, Testing, Triage}
 
   @handler_id "tickmark-jobs-failure-handler"
   @event [:oban, :job, :exception]
@@ -64,6 +64,13 @@ defmodule Tickmark.Jobs.FailureHandler do
     Testing.fail_rule(run_id, rule_id, reason)
   end
 
-  # Other workers (the triage worker comes in M3) record their own failures.
+  defp record_failure(
+         %Oban.Job{worker: "Tickmark.Triage.TriageWorker", args: %{"finding_id" => id}},
+         _reason
+       ) do
+    Triage.mark_failed(id, :worker_crashed)
+  end
+
+  # Other workers record their own failures.
   defp record_failure(_job, _reason), do: :ok
 end
