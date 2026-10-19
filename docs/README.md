@@ -21,9 +21,11 @@
 | [2026-10-19-5-AI-클라이언트](devlog/2026-10-19-5-AI-클라이언트.md) | 워커 D 보고: AI Client behaviour, Fake, Anthropic, 트리아지 프롬프트, 금지 표현 검사 |
 | [2026-10-19-6-라운드-3-통합](devlog/2026-10-19-6-라운드-3-통합.md) | 라운드 3 B, C, D 병합, D 오탐 후속, S1 두 열, S2 통계와 실행 목록, 스트림 학습 포인트, A 병합과 교착 수정 |
 | [2026-10-20-1-라운드-4-계약과-통합](devlog/2026-10-20-1-라운드-4-계약과-통합.md) | 라운드 4 선행 작업 (`AI.model/0`, `broadcast_appended/1`), M3/M4 계약 결정과 트레이드오프, 워커 5명 배정 (진행 중) |
+| [2026-10-20-2-Triage-요청과-워커](devlog/2026-10-20-2-Triage-요청과-워커.md) | W1: 건별/일괄 트리아지 요청, 조건부 update_all 로 중복 job 방지, TriageWorker 반환표와 snooze 확인, 같은 입력의 제안 재사용 |
 | [2026-10-20-3-Review와-직무분리](devlog/2026-10-20-3-Review와-직무분리.md) | W2: `submit_conclusion/3`, `decide/4`, lock-first, stale/self_review 순서, DB backstop 테스트, 실제 연결 경합 검증의 제한 |
 | [2026-10-20-4-감사-로그-조회와-S6](devlog/2026-10-20-4-감사-로그-조회와-S6.md) | W3: `list_events/3` 필터와 커서, S6 필터, 새 이벤트 카운터 (수동 갱신), payload 요약 컴포넌트 |
 | [2026-10-20-5-S5-finding-상세-표시](devlog/2026-10-20-5-S5-finding-상세-표시.md) | W4: `get_finding!/2`, `list_rule_results/2`, S5 읽기 화면, AI 제안과 사람 판단 구분, 초안 보존 |
+| [2026-10-20-6-M2-통합-테스트](devlog/2026-10-20-6-M2-통합-테스트.md) | W5: Runner 경유 정답 라벨 시험, S2 단추 테스트, 커밋 뒤 `audit_appended` 보강, DuplicateEntry 15초 타임아웃 원인과 쿼리 수정 |
 
 ## planning - 기획
 
@@ -31,6 +33,7 @@
 |---|---|
 | [2026-10-17-2-MVP-범위와-일정](planning/2026-10-17-2-MVP-범위와-일정.md) | MVP 시나리오, 기능 범위, GL CSV 계약, 일정 (최신) |
 | [2026-10-17-8-WBS와-마일스톤](planning/2026-10-17-8-WBS와-마일스톤.md) | 마일스톤 M0-M7, WBS 항목별 담당/상태/커밋, 리스크 (살아있는 문서) |
+| [2026-10-20-8-배포-대상-검토](planning/2026-10-20-8-배포-대상-검토.md) | 무료 배포 대상 8곳 비교 (Vercel, Render, Fly.io, Neon 등), Render + Neon 제안 (결정 대기) |
 
 ## architecture - 설계
 
