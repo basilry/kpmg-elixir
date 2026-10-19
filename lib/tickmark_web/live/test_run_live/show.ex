@@ -42,7 +42,7 @@ defmodule TickmarkWeb.TestRunLive.Show do
        started_by: if(started_by, do: started_by.user.email, else: "-"),
        tab: "queue",
        filters: %{queue: :review, status: nil, rule_id: nil},
-       counts: %{review_queue: 0, minor: 0},
+       counts: %{review_queue: 0, minor: 0, approved: 0},
        filter_form: to_form(%{"rule_id" => "", "status" => ""}, as: :filter)
      )
      |> stream_configure(:findings, dom_id: &"s4-finding-#{&1.id}")

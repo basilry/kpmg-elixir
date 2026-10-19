@@ -110,12 +110,13 @@ defmodule Tickmark.Testing do
 
   @doc """
   Finding counts on each side of the run's triage threshold, in one query.
-  Used by the S2 run list and the S4 tabs (screen design C-07).
-  Zeros without :view.
+  `approved` counts approved findings in the review queue. Used by the S2
+  run list and stats and the S4 tabs (screen design C-07). Zeros without :view.
   """
   @spec count_findings(Scope.t(), Ecto.UUID.t()) :: %{
           review_queue: non_neg_integer(),
-          minor: non_neg_integer()
+          minor: non_neg_integer(),
+          approved: non_neg_integer()
         }
   def count_findings(scope, test_run_id) do
     case fetch_visible_run(scope, test_run_id) do
@@ -127,12 +128,13 @@ defmodule Tickmark.Testing do
             where: f.test_run_id == ^run.id,
             select: %{
               review_queue: filter(count(f.id), f.score >= ^threshold),
-              minor: filter(count(f.id), f.score < ^threshold)
+              minor: filter(count(f.id), f.score < ^threshold),
+              approved: filter(count(f.id), f.score >= ^threshold and f.status == :approved)
             }
         )
 
       :error ->
-        %{review_queue: 0, minor: 0}
+        %{review_queue: 0, minor: 0, approved: 0}
     end
   end
 

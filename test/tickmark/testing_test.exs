@@ -113,12 +113,23 @@ defmodule Tickmark.TestingTest do
     end
 
     test "counts both sides of the threshold", ctx do
-      assert Testing.count_findings(ctx.scope, ctx.run.id) == %{review_queue: 3, minor: 1}
+      assert Testing.count_findings(ctx.scope, ctx.run.id) ==
+               %{review_queue: 3, minor: 1, approved: 0}
+    end
+
+    test "counts approvals in the review queue only", ctx do
+      insert_finding(ctx.run, entry(ctx, "JE-005"), %{score: 30, status: :approved})
+      insert_finding(ctx.run, entry(ctx, "JE-006"), %{score: 5, status: :approved})
+
+      assert Testing.count_findings(ctx.scope, ctx.run.id) ==
+               %{review_queue: 4, minor: 2, approved: 1}
     end
 
     test "shows nothing to a non-member", ctx do
       assert Testing.list_findings(ctx.outsider, ctx.run.id) == []
-      assert Testing.count_findings(ctx.outsider, ctx.run.id) == %{review_queue: 0, minor: 0}
+
+      assert Testing.count_findings(ctx.outsider, ctx.run.id) ==
+               %{review_queue: 0, minor: 0, approved: 0}
     end
   end
 

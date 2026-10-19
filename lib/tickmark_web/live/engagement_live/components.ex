@@ -116,4 +116,35 @@ defmodule TickmarkWeb.EngagementLive.Components do
     <span class="badge badge-sm badge-outline badge-neutral">{role_label(@role)}</span>
     """
   end
+
+  @doc """
+  Summary numbers in a row (design system `stat_row/1`). Each item has
+  `:label` and `:value`, and may have `:unit` and `:hint`. A nil value
+  shows `-`.
+  """
+  attr :id, :string, required: true
+  attr :items, :list, required: true
+
+  def stat_row(assigns) do
+    ~H"""
+    <dl id={@id} class="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div
+        :for={item <- @items}
+        class="rounded-box border border-base-300 bg-base-100 p-3"
+      >
+        <dt class="text-xs text-base-content/70">{item.label}</dt>
+        <dd :if={item.value} class="text-2xl font-semibold tabular-nums">
+          {item.value}<small
+            :if={item[:unit]}
+            class="ml-1 text-sm font-normal text-base-content/70"
+          >{item.unit}</small>
+        </dd>
+        <dd :if={!item.value} class="text-2xl text-base-content/70">
+          -<span class="sr-only">없음</span>
+        </dd>
+        <dd :if={item[:hint]} class="text-xs text-base-content/70">{item.hint}</dd>
+      </div>
+    </dl>
+    """
+  end
 end
