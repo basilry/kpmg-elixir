@@ -57,7 +57,7 @@ defmodule TickmarkWeb.FindingLive.ConclusionActionsTest do
 
     assert has_element?(view, "#conclusion-outcome-errors", "판단을 선택하세요")
     assert has_element?(view, "#conclusion-form", "코멘트를 입력하세요 (1-2000자)")
-    refute has_element?(view, "#conclusion-form", "can't be blank")
+    refute has_element?(view, "#conclusion-form", "필수 입력 항목입니다.")
     assert Repo.aggregate(Conclusion, :count) == 0
     assert Repo.get!(Finding, ctx.finding.id).status == :open
   end
