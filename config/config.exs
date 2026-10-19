@@ -24,6 +24,24 @@ config :tickmark,
   ecto_repos: [Tickmark.Repo],
   generators: [timestamp_type: :utc_datetime, binary_id: true]
 
+# Background jobs (Oban OSS). Queue sizes follow the architecture doc 5.1.
+config :tickmark, Oban,
+  engine: Oban.Engines.Basic,
+  repo: Tickmark.Repo,
+  queues: [ingest: 1, rules: 4, llm: 2],
+  pruner: [max_age: {7, :days}],
+  lifeline: [rescue_after: {30, :minutes}]
+
+# AI triage client. Fake works without an API key; runtime.exs switches to
+# the real client only when ANTHROPIC_API_KEY is set outside of tests.
+config :tickmark, Tickmark.AI,
+  client: Tickmark.AI.Fake,
+  model: "claude-opus-5-5",
+  max_tokens: 8000,
+  effort: "low",
+  server_side_fallbacks: false,
+  max_findings_per_request: 100
+
 # Configure the endpoint
 config :tickmark, TickmarkWeb.Endpoint,
   url: [host: "localhost"],

@@ -23,6 +23,9 @@ config :tickmark, TickmarkWeb.Endpoint,
   secret_key_base: "U1MAssm7BjOFGRFxGdQ2kdU8tytRmy+rrfYor4TuVM+/IZGn1bQt02ipNN+/zHZO",
   server: false
 
+# Jobs are inserted but not run; tests drain or perform them explicitly
+config :tickmark, Oban, testing: :manual
+
 # In test we don't send emails
 config :tickmark, Tickmark.Mailer, adapter: Swoosh.Adapters.Test
 

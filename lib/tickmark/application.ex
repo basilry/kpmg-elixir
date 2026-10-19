@@ -10,10 +10,10 @@ defmodule Tickmark.Application do
     children = [
       TickmarkWeb.Telemetry,
       Tickmark.Repo,
+      {Oban, Application.fetch_env!(:tickmark, Oban)},
       {DNSCluster, query: Application.get_env(:tickmark, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Tickmark.PubSub},
-      # Start a worker by calling: Tickmark.Worker.start_link(arg)
-      # {Tickmark.Worker, arg},
+      TickmarkWeb.Presence,
       # Start to serve requests, typically the last entry
       TickmarkWeb.Endpoint
     ]
