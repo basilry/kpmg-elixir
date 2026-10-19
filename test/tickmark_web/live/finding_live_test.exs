@@ -165,7 +165,7 @@ defmodule TickmarkWeb.FindingLiveTest do
     assert has_element?(view, "#conclusion-ai-triage-id[value='']")
     assert has_element?(view, "#conclusion-character-count", "0 / 2000")
     refute has_element?(view, "#conclusion-form input[type=radio][checked]")
-    assert has_element?(view, "#conclusion-submit[disabled]", "결론 제출")
+    assert has_element?(view, "#conclusion-submit:not([disabled])", "결론 제출")
     assert has_element?(view, "#sign-bar[data-can-decide=false]", "작성자는 승인, 반려할 수 없습니다 (직무분리)")
     assert has_element?(view, "#finding-approve[disabled][aria-describedby=sign-bar-reason]")
     assert has_element?(view, "#finding-reject[disabled]")
@@ -325,7 +325,7 @@ defmodule TickmarkWeb.FindingLiveTest do
     refute has_element?(view, "#conclusion-form")
   end
 
-  test "a reviewer can be eligible to decide while this round keeps both buttons disabled", ctx do
+  test "a reviewer with another preparer's conclusion can start either decision", ctx do
     conn = reviewer_conn(ctx)
 
     conclusion =
@@ -336,8 +336,8 @@ defmodule TickmarkWeb.FindingLiveTest do
     assert has_element?(view, "#conclusion-summary", conclusion.comment)
     assert has_element?(view, "#conclusion-panel[data-mode=read_only]")
     assert has_element?(view, "#sign-bar[data-can-decide=true]", "작성자 판단")
-    assert has_element?(view, "#finding-approve[disabled]")
-    assert has_element?(view, "#finding-reject[disabled]")
+    assert has_element?(view, "#finding-approve:not([disabled])")
+    assert has_element?(view, "#finding-reject:not([disabled])")
     refute has_element?(view, "#conclusion-form")
   end
 

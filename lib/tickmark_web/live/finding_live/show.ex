@@ -4,10 +4,16 @@ defmodule TickmarkWeb.FindingLive.Show do
 
   import TickmarkWeb.EngagementLive.Components, only: [fiscal_year_label: 1]
   import TickmarkWeb.TestRunLive.Components, only: [system_time: 1]
-  import TickmarkWeb.FindingLive.Components
+  import TickmarkWeb.FindingLive.Badges
+  import TickmarkWeb.FindingLive.EntryPanels
+  import TickmarkWeb.FindingLive.RuleEvidence
+  import TickmarkWeb.FindingLive.AiSuggestion
+  import TickmarkWeb.FindingLive.ConclusionPanel
+  import TickmarkWeb.FindingLive.History
+  import TickmarkWeb.FindingLive.SignBar
 
   alias Tickmark.{Engagements, Testing}
-  alias Tickmark.Review.Conclusion
+  alias TickmarkWeb.FindingLive.{Actions, State}
   alias Tickmark.Testing.Finding
 
   @impl true
@@ -26,41 +32,57 @@ defmodule TickmarkWeb.FindingLive.Show do
        page_title: "전표 검토",
        engagement: engagement,
        role: role,
-       form: to_form(Conclusion.changeset(%Conclusion{}, %{})),
+       form: Actions.new_conclusion_form(),
+       decision_mode: :idle,
+       rejection_form: Actions.new_rejection_form(),
+       rejection_length: 0,
        comment_length: 0,
        conclusion_notice: nil
      )
      |> stream_configure(:entry_lines, dom_id: &"entry-line-#{&1.id}")
      |> stream_configure(:rule_hits, dom_id: &"rule-hit-#{&1.id}")
-     |> refresh_finding(finding)}
+     |> State.refresh_finding(finding)}
   end
 
   @impl true
   def handle_event("validate", %{"conclusion" => params}, socket) do
-    if socket.assigns.form_mode == :edit do
-      changeset =
-        %Conclusion{}
-        |> Conclusion.changeset(
-          Map.put(params, "ai_triage_id", visible_triage_id(socket.assigns.triage))
-        )
-        |> Map.put(:action, :validate)
-        |> localize_errors()
+    {:noreply, Actions.validate_conclusion(socket, params)}
+  end
 
-      {:noreply,
-       assign(socket,
-         form: to_form(changeset),
-         comment_length: String.length(params["comment"] || "")
-       )}
-    else
-      {:noreply, socket}
-    end
+  def handle_event("submit", %{"conclusion" => params}, socket) do
+    {:noreply, Actions.submit(socket, params)}
+  end
+
+  def handle_event("start_approve", _params, socket) do
+    {:noreply, Actions.start_decision(socket, :approve)}
+  end
+
+  def handle_event("start_reject", _params, socket) do
+    {:noreply, Actions.start_decision(socket, :reject)}
+  end
+
+  def handle_event("cancel_decision", _params, socket) do
+    {:noreply, Actions.cancel_decision(socket)}
+  end
+
+  def handle_event("validate_rejection", %{"review_decision" => params}, socket) do
+    {:noreply, Actions.validate_rejection(socket, params)}
+  end
+
+  def handle_event("confirm_approve", params, socket) do
+    {:noreply, Actions.decide(socket, params["conclusion-id"], %{"decision" => "approved"})}
+  end
+
+  def handle_event("confirm_reject", %{"review_decision" => params} = event, socket) do
+    attrs = %{"decision" => "rejected", "comment" => params["comment"]}
+    {:noreply, Actions.decide(socket, event["conclusion-id"], attrs)}
   end
 
   @impl true
   def handle_info({:finding_updated, %{finding_id: id}}, socket) do
     if id == socket.assigns.finding.id do
       finding = Testing.get_finding!(socket.assigns.current_scope, id)
-      {:noreply, socket |> notify_new_conclusion(finding) |> refresh_finding(finding)}
+      {:noreply, socket |> notify_new_conclusion(finding) |> State.refresh_finding(finding)}
     else
       {:noreply, socket}
     end
@@ -81,121 +103,12 @@ defmodule TickmarkWeb.FindingLive.Show do
   defp ensure_same_engagement!(%Finding{engagement_id: id}, id), do: :ok
   defp ensure_same_engagement!(_finding, _id), do: raise(Ecto.NoResultsError, queryable: Finding)
 
-  defp refresh_finding(socket, finding) do
-    hits = Testing.list_rule_results(socket.assigns.current_scope, finding)
-    triage = if finding.triage_status == :succeeded, do: List.first(finding.ai_triages)
-    latest_conclusion = List.last(finding.conclusions)
-    lines = finding.journal_entry.lines
-    total_debit = Enum.reduce(lines, Decimal.new(0), &Decimal.add(&1.debit, &2))
-    total_credit = Enum.reduce(lines, Decimal.new(0), &Decimal.add(&1.credit, &2))
-
-    description =
-      case List.first(lines) do
-        nil -> nil
-        line -> line.description
-      end
-
-    # Only the displayed suggestion reference changes; draft fields and their
-    # validation errors survive updates made by another person or the AI.
-    form =
-      socket.assigns.form.source
-      |> Ecto.Changeset.put_change(:ai_triage_id, visible_triage_id(triage))
-      |> to_form()
-
-    form_mode =
-      cond do
-        finding.status == :approved -> :locked
-        socket.assigns.role == :preparer -> :edit
-        true -> :read_only
-      end
-
-    can_decide =
-      socket.assigns.role == :reviewer and finding.status == :concluded and
-        not is_nil(latest_conclusion) and
-        latest_conclusion.preparer_id != socket.assigns.current_scope.user.id
-
-    socket
-    |> assign(
-      finding: finding,
-      entry: finding.journal_entry,
-      entry_description: description,
-      triage: triage,
-      latest_conclusion: latest_conclusion,
-      last_decision: List.last(finding.review_decisions),
-      form_mode: form_mode,
-      can_decide: can_decide,
-      form: form,
-      total_debit: total_debit,
-      total_credit: total_credit,
-      balanced: Decimal.equal?(total_debit, total_credit),
-      score_formula: score_formula(finding.score, hits),
-      history_empty?: finding.conclusions == [] and finding.review_decisions == []
-    )
-    |> stream(:entry_lines, lines, reset: true)
-    |> stream(:rule_hits, hits, reset: true)
-    |> stream(:history, history_entries(finding), reset: true)
-  end
-
-  defp visible_triage_id(nil), do: nil
-  defp visible_triage_id(triage), do: triage.id
-
-  defp score_formula(score, hits) do
-    sum = Enum.map_join(hits, " + ", &Integer.to_string(&1.score))
-
-    cond do
-      hits == [] -> "점수 #{score}"
-      Enum.sum(Enum.map(hits, & &1.score)) > 100 -> "점수 #{score} = min(100, #{sum})"
-      true -> "점수 #{score} = #{sum}"
-    end
-  end
-
-  defp history_entries(finding) do
-    conclusions =
-      Enum.map(finding.conclusions, fn conclusion ->
-        %{
-          id: "conclusion-#{conclusion.id}",
-          kind: :conclusion,
-          actor: conclusion.preparer.email,
-          outcome: conclusion.outcome,
-          comment: conclusion.comment,
-          inserted_at: conclusion.inserted_at
-        }
-      end)
-
-    decisions =
-      Enum.map(finding.review_decisions, fn decision ->
-        %{
-          id: "decision-#{decision.id}",
-          kind: :decision,
-          actor: decision.reviewer.email,
-          outcome: decision.decision,
-          comment: decision.comment,
-          inserted_at: decision.inserted_at
-        }
-      end)
-
-    Enum.sort_by(conclusions ++ decisions, fn entry ->
-      {DateTime.to_unix(entry.inserted_at, :microsecond), entry.kind == :decision, entry.id}
-    end)
-  end
-
-  defp localize_errors(changeset) do
-    errors =
-      Enum.map(changeset.errors, fn {field, {_message, opts}} ->
-        message =
-          case field do
-            :outcome -> "판단을 선택하세요"
-            :comment -> "코멘트를 입력하세요 (1-2000자)"
-            :ai_triage_id -> "화면의 AI 제안을 다시 확인하세요"
-          end
-
-        {field, {message, opts}}
-      end)
-
-    %{changeset | errors: errors}
-  end
-
   defp notify_new_conclusion(socket, finding) do
+    socket =
+      if socket.assigns.role == :reviewer,
+        do: Actions.cancel_decision(socket),
+        else: socket
+
     previous = socket.assigns.latest_conclusion
     latest = List.last(finding.conclusions)
 
@@ -210,7 +123,7 @@ defmodule TickmarkWeb.FindingLive.Show do
     if latest && (is_nil(previous) || latest.id != previous.id) do
       message =
         if socket.assigns.role == :reviewer do
-          "#{latest.preparer.email}님이 결론을 다시 제출했습니다. 최신 결론을 확인한 뒤 결정하세요."
+          "작성자가 결론을 다시 제출했습니다. 최신 결론을 확인한 뒤 결정하세요."
         else
           "#{latest.preparer.email}님이 방금 결론을 제출했습니다. 제출하면 새 결론으로 남습니다."
         end
@@ -301,6 +214,9 @@ defmodule TickmarkWeb.FindingLive.Show do
           last_decision={@last_decision}
           can_decide={@can_decide}
           current_user_id={@current_scope.user.id}
+          decision_mode={@decision_mode}
+          rejection_form={@rejection_form}
+          rejection_length={@rejection_length}
         />
       </div>
     </Layouts.app>
