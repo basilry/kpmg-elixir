@@ -4,7 +4,13 @@ defmodule TickmarkWeb.FindingLive.Show do
 
   import TickmarkWeb.EngagementLive.Components, only: [fiscal_year_label: 1]
   import TickmarkWeb.TestRunLive.Components, only: [system_time: 1]
-  import TickmarkWeb.FindingLive.Components
+  import TickmarkWeb.FindingLive.Badges
+  import TickmarkWeb.FindingLive.EntryPanels
+  import TickmarkWeb.FindingLive.RuleEvidence
+  import TickmarkWeb.FindingLive.AiSuggestion
+  import TickmarkWeb.FindingLive.ConclusionPanel
+  import TickmarkWeb.FindingLive.History
+  import TickmarkWeb.FindingLive.SignBar
 
   alias Tickmark.{Engagements, Testing}
   alias Tickmark.Review.Conclusion
