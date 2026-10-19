@@ -17,10 +17,23 @@ defmodule TickmarkWeb.Router do
     plug :accepts, ["json"]
   end
 
+  # Design HTML files for the docs wiki frame. No session or user lookup.
+  pipeline :doc_files do
+    plug :accepts, ["html"]
+    plug :put_secure_browser_headers
+  end
+
   scope "/", TickmarkWeb do
     pipe_through :browser
 
     get "/", PageController, :home
+  end
+
+  # Defined before the live "/docs/*id" route so it matches first.
+  scope "/", TickmarkWeb do
+    pipe_through :doc_files
+
+    get "/docs/files/*path", DocFileController, :show
   end
 
   # Other scopes may use custom stacks.
@@ -77,6 +90,10 @@ defmodule TickmarkWeb.Router do
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
+
+      # Docs wiki, open without login like the home page.
+      live "/docs", DocsLive, :index
+      live "/docs/*id", DocsLive, :show
     end
 
     post "/users/log-in", UserSessionController, :create

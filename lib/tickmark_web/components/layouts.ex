@@ -107,6 +107,19 @@ defmodule TickmarkWeb.Layouts do
             <span class="sr-only">지금 보는 사람: {Enum.map_join(@presence, ", ", & &1.name)}</span>
           </div>
 
+          <.link
+            id="topbar-docs"
+            navigate={~p"/docs"}
+            aria-current={@active == :docs && "page"}
+            class={[
+              "flex items-center gap-1 rounded-field px-1.5 py-1 hover:text-primary",
+              @active == :docs && "font-semibold text-primary"
+            ]}
+          >
+            <.icon name="hero-book-open" class="size-4" />
+            <span class="sr-only sm:not-sr-only">문서</span>
+          </.link>
+
           <div id="topbar-theme"><.theme_toggle /></div>
 
           <details

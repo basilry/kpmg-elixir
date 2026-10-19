@@ -52,7 +52,10 @@ if config_env() == :dev do
         ~r"priv/gettext/.*\.po$"E,
         # Router, Controllers, LiveViews and LiveComponents
         ~r"lib/tickmark_web/router\.ex$"E,
-        ~r"lib/tickmark_web/(controllers|live|components)/.*\.(ex|heex)$"E
+        ~r"lib/tickmark_web/(controllers|live|components)/.*\.(ex|heex)$"E,
+        # Project documents shown in the docs wiki
+        ~r"docs/.*\.(md|html)$"E,
+        ~r"(README|TASKS|AGENTS)\.md$"E
       ]
     ]
 end

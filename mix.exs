@@ -70,6 +70,7 @@ defmodule Tickmark.MixProject do
       {:req, "~> 0.5"},
       {:oban, "~> 2.24"},
       {:nimble_csv, "~> 1.3"},
+      {:mdex, "~> 0.14.2"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 1.0"},
