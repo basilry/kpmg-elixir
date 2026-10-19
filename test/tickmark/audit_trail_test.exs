@@ -161,6 +161,160 @@ defmodule Tickmark.AuditTrailTest do
     end
   end
 
+  describe "list_events/3" do
+    setup %{scope: scope, engagement: engagement} do
+      insert_member(engagement, scope.user, :preparer)
+      :ok
+    end
+
+    test "sorts by descending seq", ctx do
+      first = record_event(ctx)
+      second = record_event(ctx)
+      assert event_seqs(ctx) == [second.seq, first.seq]
+    end
+
+    test "defaults to 50 rows and clamps limits to 1..200", ctx do
+      events = Enum.map(1..205, fn _ -> record_event(ctx) end)
+      seqs = events |> Enum.map(& &1.seq) |> Enum.reverse()
+
+      assert event_seqs(ctx) == Enum.take(seqs, 50)
+      assert event_seqs(ctx, limit: 10) == Enum.take(seqs, 10)
+      assert event_seqs(ctx, limit: 500) == Enum.take(seqs, 200)
+      assert event_seqs(ctx, limit: 0) == Enum.take(seqs, 1)
+      assert event_seqs(ctx, limit: -10) == Enum.take(seqs, 1)
+      assert event_seqs(ctx, limit: "10") == Enum.take(seqs, 50)
+    end
+
+    test "before_seq is exclusive and can page back to the beginning", ctx do
+      first = record_event(ctx)
+      second = record_event(ctx)
+      third = record_event(ctx)
+
+      assert event_seqs(ctx, before_seq: third.seq, limit: 1) == [second.seq]
+      assert event_seqs(ctx, before_seq: second.seq) == [first.seq]
+      assert event_seqs(ctx, before_seq: first.seq) == []
+    end
+
+    test "filters each actor type", ctx do
+      person = record_event(ctx)
+      agent = record_event(ctx, actor: {:agent, "triage:fake-triage-v1"})
+      system = record_event(ctx, actor: {:system, "testing.rule_worker"})
+
+      assert event_seqs(ctx, actor_type: :user) == [person.seq]
+      assert event_seqs(ctx, actor_type: :agent) == [agent.seq]
+      assert event_seqs(ctx, actor_type: :system) == [system.seq]
+    end
+
+    test "subject matches both the type and the uuid", ctx do
+      id = Ecto.UUID.generate()
+      selected = record_event(ctx, subject_type: "finding", subject_id: id)
+      record_event(ctx, subject_type: "test_run", subject_id: id)
+      record_event(ctx, subject_type: "finding", subject_id: Ecto.UUID.generate())
+
+      assert event_seqs(ctx, subject: {"finding", id}) == [selected.seq]
+    end
+
+    test "entry_number matches the payload literally across different finding ids", ctx do
+      selected =
+        for _ <- 1..2 do
+          record_event(ctx,
+            subject_type: "finding",
+            subject_id: Ecto.UUID.generate(),
+            payload: %{"entry_number" => "JE-000123"}
+          )
+        end
+
+      record_event(ctx, payload: %{"entry_number" => "JE-123"})
+      record_event(ctx, payload: %{})
+
+      assert event_seqs(ctx, entry_number: "JE-000123") ==
+               selected |> Enum.map(& &1.seq) |> Enum.reverse()
+
+      literal = record_event(ctx, payload: %{"entry_number" => "x' OR '1'='1"})
+      assert event_seqs(ctx, entry_number: "x' OR '1'='1") == [literal.seq]
+    end
+
+    test "combines all filters with AND before applying the limit", ctx do
+      attrs = [
+        actor: {:agent, "triage:fake-triage-v1"},
+        subject_type: "finding",
+        subject_id: Ecto.UUID.generate(),
+        payload: %{"entry_number" => "JE-000123"}
+      ]
+
+      older = record_event(ctx, attrs)
+      selected = record_event(ctx, attrs)
+      cutoff = record_event(ctx, attrs)
+      record_event(ctx, Keyword.put(attrs, :actor, AuditTrail.actor(ctx.scope)))
+      record_event(ctx, Keyword.put(attrs, :subject_type, "test_run"))
+      record_event(ctx, Keyword.put(attrs, :payload, %{"entry_number" => "JE-999999"}))
+
+      filters = [
+        actor_type: :agent,
+        subject: {"finding", attrs[:subject_id]},
+        entry_number: "JE-000123",
+        before_seq: cutoff.seq,
+        limit: 1
+      ]
+
+      assert event_seqs(ctx, filters) == [selected.seq]
+      assert older.seq < selected.seq
+    end
+
+    test "ignores unknown options and invalid values", ctx do
+      event = record_event(ctx)
+
+      for option <- [
+            {:unknown, true},
+            {:actor_type, "user"},
+            {:actor_type, :nobody},
+            {:before_seq, "1"},
+            {:subject, {"finding", "not-a-uuid"}},
+            {:subject, {"", ctx.engagement.id}},
+            {:subject, :finding},
+            {:entry_number, 123},
+            {:entry_number, ""}
+          ] do
+        assert event_seqs(ctx, [option]) == [event.seq]
+      end
+    end
+
+    test "non-members, missing and malformed ids get an empty list", ctx do
+      record_event(ctx)
+      outsider = user_scope_fixture()
+
+      assert AuditTrail.list_events(outsider, ctx.engagement.id, []) == []
+      assert AuditTrail.list_events(ctx.scope, Ecto.UUID.generate(), []) == []
+      assert AuditTrail.list_events(ctx.scope, "not-a-uuid", []) == []
+      assert AuditTrail.list_events(ctx.scope, nil, []) == []
+      assert AuditTrail.list_events(nil, ctx.engagement.id, []) == []
+    end
+
+    test "only includes this engagement and is equally visible to reviewers", ctx do
+      selected = record_event(ctx)
+      other = insert_engagement(ctx.scope.user)
+      insert_member(other, ctx.scope.user, :preparer)
+      {:ok, _other_event} = AuditTrail.record(event_attrs(ctx.scope, other))
+      record_event(ctx, engagement_id: nil)
+      reviewer = user_scope_fixture()
+      insert_member(ctx.engagement, reviewer.user, :reviewer)
+
+      assert event_seqs(ctx) == [selected.seq]
+
+      assert AuditTrail.list_events(reviewer, ctx.engagement.id, []) |> Enum.map(& &1.seq) ==
+               [selected.seq]
+    end
+  end
+
+  defp record_event(ctx, attrs \\ []) do
+    {:ok, event} = AuditTrail.record(event_attrs(ctx.scope, ctx.engagement, attrs))
+    event
+  end
+
+  defp event_seqs(ctx, opts \\ []) do
+    AuditTrail.list_events(ctx.scope, ctx.engagement.id, opts) |> Enum.map(& &1.seq)
+  end
+
   describe "seq is never written by the app" do
     test "a seq set on the struct is ignored and the DB assigns its own", %{
       scope: scope,
