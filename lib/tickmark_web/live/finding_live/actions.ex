@@ -97,8 +97,8 @@ defmodule TickmarkWeb.FindingLive.Actions do
   end
 
   def request_triage(socket) do
-    # Triage checks the role and threshold again under a row lock, so a
-    # forged click from a reviewer or a stale button only gets a flash.
+    # Triage checks the role, then the threshold and status under a row lock,
+    # so a forged click from a reviewer or a stale button only gets a flash.
     case Triage.request_finding_triage(socket.assigns.current_scope, socket.assigns.finding.id) do
       {:ok, _queued} ->
         socket
