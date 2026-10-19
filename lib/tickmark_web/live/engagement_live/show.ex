@@ -214,7 +214,12 @@ defmodule TickmarkWeb.EngagementLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app
+      flash={@flash}
+      current_scope={@current_scope}
+      engagement={@engagement}
+      active={:engagement}
+    >
       <nav aria-label="이동 경로" class="mb-1 text-sm text-base-content/70">
         <.link navigate={~p"/engagements"} class="link link-hover">감사 대상</.link>
         <span aria-hidden="true">/</span>

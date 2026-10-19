@@ -138,7 +138,7 @@ defmodule TickmarkWeb.ImportLive.New do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app flash={@flash} current_scope={@current_scope} engagement={@engagement} active={nil}>
       <div id="s3" class="space-y-6">
         <header id="s3-main-1" class="space-y-1">
           <nav aria-label="이동 경로" class="text-sm text-muted">

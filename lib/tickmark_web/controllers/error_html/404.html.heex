@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>페이지를 찾을 수 없습니다 | Tickmark</title>
+    <link rel="stylesheet" href={~p"/assets/css/app.css"} />
+    <Layouts.theme_script />
+  </head>
+  <body class="bg-base-200 text-base-content text-sm antialiased">
+    <main id="error-page" class="mx-auto max-w-xl px-4 py-20 sm:px-6">
+      <div class="space-y-4 rounded-box border border-base-300 bg-base-100 p-6">
+        <.icon name="hero-magnifying-glass" class="size-8 text-muted" />
+        <h1 class="text-xl font-semibold">페이지를 찾을 수 없습니다</h1>
+        <p class="leading-6 text-muted">없는 주소이거나 내가 멤버가 아닌 감사 대상입니다.</p>
+        <.link href={~p"/engagements"} class="btn btn-primary">감사 대상 목록으로</.link>
+      </div>
+    </main>
+  </body>
+</html>

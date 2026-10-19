@@ -60,7 +60,11 @@ defmodule TickmarkWeb.EngagementLive.Components do
   @doc "KST on screen, the UTC original in `datetime` and the tooltip (design doc 6)."
   def kst_time(assigns) do
     ~H"""
-    <time datetime={DateTime.to_iso8601(@at)} title={DateTime.to_iso8601(@at)} class="tabular-nums">
+    <time
+      datetime={DateTime.to_iso8601(@at)}
+      title={TickmarkWeb.Format.utc_title(@at)}
+      class="tabular-nums"
+    >
       {format_kst(@at)}
     </time>
     """

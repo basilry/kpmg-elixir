@@ -190,7 +190,12 @@ defmodule TickmarkWeb.AuditLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app
+      flash={@flash}
+      current_scope={@current_scope}
+      engagement={@engagement}
+      active={:audit}
+    >
       <div id="s6" class="min-w-0 space-y-6">
         <header class="space-y-1">
           <nav aria-label="이동 경로" class="text-sm text-muted">
