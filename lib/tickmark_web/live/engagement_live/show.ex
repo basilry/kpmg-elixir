@@ -78,7 +78,14 @@ defmodule TickmarkWeb.EngagementLive.Show do
     %{current_scope: scope, engagement: engagement} = socket.assigns
     ledger_import = Ledger.get_import!(scope, import_id)
 
-    case Testing.start_test_run(scope, ledger_import, :all) do
+    # The event carries only an import id. A GL of another engagement the user
+    # belongs to would start a run there, so only this page's GLs go through.
+    result =
+      if ledger_import.engagement_id == engagement.id,
+        do: Testing.start_test_run(scope, ledger_import, :all),
+        else: {:error, :forbidden}
+
+    case result do
       {:ok, run} ->
         {:noreply, push_navigate(socket, to: ~p"/engagements/#{engagement}/runs/#{run}")}
 

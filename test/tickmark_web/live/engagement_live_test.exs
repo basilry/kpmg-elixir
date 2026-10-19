@@ -225,6 +225,21 @@ defmodule TickmarkWeb.EngagementLiveTest do
       assert Testing.list_test_runs(creator, engagement.id) == []
     end
 
+    test "a forged event with another engagement's GL starts nothing", %{
+      conn: conn,
+      scope: scope
+    } do
+      engagement = engagement_fixture(scope)
+      other = engagement_fixture(scope)
+      other_import = succeeded_import(scope, other)
+      {:ok, view, _html} = live(conn, ~p"/engagements/#{engagement}")
+
+      render_hook(view, "start_run", %{"id" => other_import.id})
+
+      assert has_element?(view, "#flash-error", "테스트를 실행할 권한이 없습니다.")
+      assert Testing.list_test_runs(scope, other.id) == []
+    end
+
     test "the creator sees the overview, members, actions and empty sections", %{
       conn: conn,
       scope: scope
