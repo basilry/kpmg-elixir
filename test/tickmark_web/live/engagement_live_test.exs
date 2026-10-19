@@ -5,10 +5,12 @@ defmodule TickmarkWeb.EngagementLiveTest do
   import Tickmark.AccountsFixtures
   import Tickmark.EngagementsFixtures
   import Tickmark.LedgerFixtures
+  import Tickmark.SchemaFixtures
 
   alias Tickmark.Engagements
   alias Tickmark.Ledger
   alias Tickmark.Ledger.LedgerImport
+  alias Tickmark.Repo
   alias TickmarkWeb.EngagementLive.Components
 
   setup :register_and_log_in_user
@@ -98,6 +100,35 @@ defmodule TickmarkWeb.EngagementLiveTest do
       assert html =~ "감사 대상을 만들었습니다."
       assert has_element?(show_view, "#engagement-overview", "225,000,000원")
       assert has_element?(show_view, "#members", scope.user.email)
+    end
+
+    test "shows the newest run status and its review queue", %{conn: conn, scope: scope} do
+      completed = engagement_fixture(scope, %{client_name: "누리정밀 주식회사"})
+      completed_import = insert_ledger_import(completed, scope.user)
+
+      run =
+        completed_import
+        |> insert_test_run(scope.user, %{triage_threshold: 25})
+        |> Ecto.Changeset.change(status: :completed)
+        |> Repo.update!()
+
+      for {number, score} <- [{"JE-001", 25}, {"JE-002", 60}, {"JE-003", 24}] do
+        entry = insert_journal_entry(completed_import, %{entry_number: number})
+        insert_finding(run, entry, %{score: score})
+      end
+
+      running = engagement_fixture(scope, %{client_name: "한빛소재 주식회사"})
+      running |> insert_ledger_import(scope.user) |> insert_test_run(scope.user)
+      no_run = engagement_fixture(scope, %{client_name: "세운물산 주식회사"})
+
+      {:ok, view, _html} = live(conn, ~p"/engagements")
+
+      assert has_element?(view, "#engagements-#{completed.id}-run", "완료")
+      assert has_element?(view, "#engagements-#{completed.id}-queue", "2")
+      assert has_element?(view, "#engagements-#{running.id}-run", "실행 중")
+      assert has_element?(view, "#engagements-#{running.id}-queue", "없음")
+      assert has_element?(view, "#engagements-#{no_run.id}-run", "없음")
+      assert has_element?(view, "#engagements-#{no_run.id}-queue", "없음")
     end
   end
 

@@ -1,5 +1,5 @@
 defmodule TickmarkWeb.TestRunLive.Components do
-  @moduledoc "Progress and finding table components used only by S4."
+  @moduledoc "Test run components: S4 progress and findings, and the run status S1 and S2 list."
   use TickmarkWeb, :html
 
   alias TickmarkWeb.Format
@@ -95,6 +95,30 @@ defmodule TickmarkWeb.TestRunLive.Components do
         <span>룰 {@failed}개를 실행하지 못했습니다. 그 룰은 점수에 넣지 않았습니다. 같은 GL로 다시 실행하면 처음부터 다시 계산합니다.</span>
       </div>
     </section>
+    """
+  end
+
+  @doc "Run status as icon and text, for the S1 and S2 lists. nil (no run yet) shows `-`."
+  attr :id, :string, default: nil
+  attr :status, :atom, required: true
+
+  def run_status(%{status: nil} = assigns) do
+    ~H"""
+    <span id={@id} class="text-muted">-<span class="sr-only">없음</span></span>
+    """
+  end
+
+  def run_status(assigns) do
+    assigns = assign(assigns, :theme, run_theme(assigns.status))
+
+    ~H"""
+    <span id={@id} class={["inline-flex items-center gap-1 whitespace-nowrap", @theme.text]}>
+      <.icon
+        name={@theme.icon}
+        class={["size-4", @status == :running && "motion-safe:animate-spin"]}
+      />
+      {Format.run_status_label(@status)}
+    </span>
     """
   end
 

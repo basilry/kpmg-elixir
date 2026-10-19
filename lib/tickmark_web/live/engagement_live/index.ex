@@ -6,18 +6,22 @@ defmodule TickmarkWeb.EngagementLive.Index do
   use TickmarkWeb, :live_view
 
   import TickmarkWeb.EngagementLive.Components
+  import TickmarkWeb.TestRunLive.Components, only: [run_status: 1]
 
-  alias Tickmark.Engagements
+  alias Tickmark.{Engagements, Testing}
   alias Tickmark.Engagements.Engagement
 
+  # The list is not live: run status is read once on mount (screen design S1.3
+  # subscribes to nothing). Reopening the page shows the latest state.
   @impl true
   def mount(_params, _session, socket) do
-    engagements = Engagements.list_engagements(socket.assigns.current_scope)
+    scope = socket.assigns.current_scope
 
     {:ok,
      socket
      |> assign(:page_title, "감사 대상")
-     |> stream(:engagements, engagements)}
+     |> assign(:run_summaries, Testing.latest_run_summaries(scope))
+     |> stream(:engagements, Engagements.list_engagements(scope))}
   end
 
   # mount runs once; handle_params runs on every patch between :index and
@@ -51,6 +55,21 @@ defmodule TickmarkWeb.EngagementLive.Index do
         {:noreply, assign(socket, :form, to_form(changeset))}
     end
   end
+
+  # Engagements without a run are not in the map.
+  defp summary_for(summaries, engagement),
+    do: Map.get(summaries, engagement.id, %{status: nil, review_queue: nil})
+
+  # nil while the newest run is running or when there is no run.
+  attr :count, :integer, required: true
+
+  defp review_queue(%{count: nil} = assigns) do
+    ~H"""
+    <span class="text-muted">-<span class="sr-only">없음</span></span>
+    """
+  end
+
+  defp review_queue(assigns), do: ~H"{format_count(@count)}"
 
   @impl true
   def render(assigns) do
@@ -114,12 +133,14 @@ defmodule TickmarkWeb.EngagementLive.Index do
               <th scope="col">회계연도</th>
               <th scope="col">결산일</th>
               <th scope="col" class="text-right">수행중요성(원)</th>
+              <th scope="col">최근 테스트</th>
+              <th scope="col" class="text-right">검토 큐(건)</th>
               <th scope="col">내 역할</th>
             </tr>
           </thead>
           <tbody id="engagements" phx-update="stream">
             <tr id="engagements-empty" class="hidden only:table-row">
-              <td colspan="5" class="py-6 text-center text-base-content/70">
+              <td colspan="7" class="py-6 text-center text-base-content/70">
                 감사 대상이 없습니다.
                 <.link patch={~p"/engagements/new"} class="link link-primary">새 감사 대상 만들기</.link>
               </td>
@@ -134,6 +155,15 @@ defmodule TickmarkWeb.EngagementLive.Index do
               <td class="tabular-nums">{Date.to_iso8601(engagement.period_end_date)}</td>
               <td class="text-right tabular-nums whitespace-nowrap">
                 {format_krw(engagement.performance_materiality)}
+              </td>
+              <td>
+                <.run_status
+                  id={"#{dom_id}-run"}
+                  status={summary_for(@run_summaries, engagement).status}
+                />
+              </td>
+              <td id={"#{dom_id}-queue"} class="text-right tabular-nums">
+                <.review_queue count={summary_for(@run_summaries, engagement).review_queue} />
               </td>
               <td><.role_badge role={my_role(engagement)} /></td>
             </tr>
