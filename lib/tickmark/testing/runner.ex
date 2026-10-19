@@ -115,8 +115,9 @@ defmodule Tickmark.Testing.Runner do
     |> Oban.insert_all(:jobs, jobs)
     |> Repo.transact()
     |> case do
-      {:ok, %{test_run: run}} ->
+      {:ok, %{test_run: run, audit_event: event}} ->
         broadcast_run_updated(run)
+        AuditTrail.broadcast_appended(event)
         {:ok, run}
 
       {:error, :test_run, %Ecto.Changeset{} = changeset, _changes} ->
@@ -302,15 +303,23 @@ defmodule Tickmark.Testing.Runner do
          {1, _} <- mark_rule(run_id, rule_id, outcome, now) do
       insert_results(result_rows)
 
-      if outcome.status == :failed do
-        record_event(run, "test_run_rule.failed", %{"rule_id" => rule_id})
-      end
+      events =
+        if outcome.status == :failed,
+          do: [record_event(run, "test_run_rule.failed", %{"rule_id" => rule_id})],
+          else: []
 
       counts = rule_counts(run_id)
       finalize? = counts.pending == 0 and run.status == :running
-      run = if finalize?, do: finalize(run, counts.failed, now), else: run
 
-      {:ok, progress(run, Map.put(outcome, :rule_id, rule_id), counts.done, finalize?)}
+      {run, events} =
+        if finalize? do
+          {completed, event} = finalize(run, counts.failed, now)
+          {completed, events ++ [event]}
+        else
+          {run, events}
+        end
+
+      {:ok, progress(run, Map.put(outcome, :rule_id, rule_id), counts.done, finalize?, events)}
     else
       _ -> {:error, :noop}
     end
@@ -375,12 +384,13 @@ defmodule Tickmark.Testing.Runner do
 
     run = %{run | status: status, finding_count: finding_count, finished_at: now}
 
-    record_event(run, "test_run.completed", %{
-      "status" => Atom.to_string(status),
-      "finding_count" => finding_count
-    })
+    event =
+      record_event(run, "test_run.completed", %{
+        "status" => Atom.to_string(status),
+        "finding_count" => finding_count
+      })
 
-    run
+    {run, event}
   end
 
   defp findings_query(run, now) do
@@ -400,7 +410,8 @@ defmodule Tickmark.Testing.Runner do
   end
 
   defp record_event(run, action, payload) do
-    {:ok, _event} = AuditTrail.record(audit_event(run, @worker_actor, action, payload))
+    {:ok, event} = AuditTrail.record(audit_event(run, @worker_actor, action, payload))
+    event
   end
 
   defp audit_event(run, actor, action, payload) do
@@ -416,13 +427,19 @@ defmodule Tickmark.Testing.Runner do
 
   # Broadcasts ----------------------------------------------------------------
 
-  defp progress(run, rule, done, finalized? \\ false) do
-    %{run: run, rule: rule, done: done, finalized?: finalized?}
+  defp progress(run, rule, done, finalized? \\ false, events \\ []) do
+    %{run: run, rule: rule, done: done, finalized?: finalized?, audit_events: events}
   end
 
   # Called after the transaction committed. Order: the rule's progress, the
-  # run row for the engagement screens, then completion.
-  defp broadcast(%{run: run, rule: rule, done: done, finalized?: finalized?}) do
+  # run row for the engagement screens, completion, then audit events in seq order.
+  defp broadcast(%{
+         run: run,
+         rule: rule,
+         done: done,
+         finalized?: finalized?,
+         audit_events: events
+       }) do
     broadcast_run(run.id, {
       :rule_progress,
       %{
@@ -440,6 +457,8 @@ defmodule Tickmark.Testing.Runner do
     if finalized? do
       broadcast_run(run.id, {:run_completed, run_summary(run)})
     end
+
+    Enum.each(events, &AuditTrail.broadcast_appended/1)
 
     :ok
   end
