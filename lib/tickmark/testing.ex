@@ -180,6 +180,69 @@ defmodule Tickmark.Testing do
     end)
   end
 
+  @doc """
+  One visible finding with its entry, ordered lines and review history.
+  Missing, malformed and inaccessible ids all raise `Ecto.NoResultsError`.
+  """
+  @spec get_finding!(Scope.t(), Ecto.UUID.t()) :: Finding.t()
+  def get_finding!(scope, id) do
+    case fetch_visible_finding(scope, id) do
+      {:ok, finding} ->
+        Repo.preload(finding,
+          journal_entry: [lines: from(l in Tickmark.Ledger.JournalLine, order_by: l.line_number)],
+          test_run: [],
+          ai_triages:
+            from(t in Tickmark.Triage.AiTriage, order_by: [desc: t.inserted_at, desc: t.id]),
+          conclusions:
+            from(c in Tickmark.Review.Conclusion,
+              order_by: [asc: c.inserted_at, asc: c.id],
+              preload: :preparer
+            ),
+          review_decisions:
+            from(d in Tickmark.Review.ReviewDecision,
+              order_by: [asc: d.inserted_at, asc: d.id],
+              preload: :reviewer
+            )
+        )
+
+      :error ->
+        raise Ecto.NoResultsError, queryable: Finding
+    end
+  end
+
+  @doc """
+  Hits for the finding's run and entry, in registry order. Empty without
+  :view. The persisted finding supplies the ids and engagement membership.
+  """
+  @spec list_rule_results(Scope.t(), Finding.t()) :: [Tickmark.Testing.RuleResult.t()]
+  def list_rule_results(scope, %Finding{id: id}) do
+    case fetch_visible_finding(scope, id) do
+      {:ok, finding} ->
+        positions = Rules.ids() |> Enum.with_index() |> Map.new()
+
+        from(r in Tickmark.Testing.RuleResult,
+          where:
+            r.test_run_id == ^finding.test_run_id and
+              r.journal_entry_id == ^finding.journal_entry_id
+        )
+        |> Repo.all()
+        |> Enum.sort_by(&{Map.get(positions, &1.rule_id, map_size(positions)), &1.rule_id})
+
+      :error ->
+        []
+    end
+  end
+
+  defp fetch_visible_finding(scope, id) do
+    with {:ok, id} <- Ecto.UUID.cast(id),
+         %Finding{} = finding <- Repo.get(Finding, id),
+         {:ok, _role} <- Engagements.authorize(scope, finding.engagement_id, :view) do
+      {:ok, finding}
+    else
+      _ -> :error
+    end
+  end
+
   defp fetch_visible_run(scope, id) do
     with {:ok, id} <- Ecto.UUID.cast(id),
          %TestRun{} = run <- Repo.get(TestRun, id),

@@ -1,17 +1,308 @@
 defmodule TickmarkWeb.FindingLive.Show do
-  @moduledoc """
-  Placeholder for screen S5 so the router compiles. 10/20 Worker C replaces this file.
-  """
+  @moduledoc "S5: entry facts, rule evidence, AI suggestions and human review history."
   use TickmarkWeb, :live_view
 
+  import TickmarkWeb.EngagementLive.Components, only: [fiscal_year_label: 1]
+  import TickmarkWeb.TestRunLive.Components, only: [system_time: 1]
+  import TickmarkWeb.FindingLive.Components
+
+  alias Tickmark.{Engagements, Testing}
+  alias Tickmark.Review.Conclusion
+  alias Tickmark.Testing.Finding
+
   @impl true
-  def mount(_params, _session, socket), do: {:ok, socket}
+  def mount(%{"id" => id, "finding_id" => finding_id}, _session, socket) do
+    scope = socket.assigns.current_scope
+    finding = Testing.get_finding!(scope, finding_id)
+    engagement = Engagements.get_engagement!(scope, id)
+    ensure_same_engagement!(finding, engagement.id)
+    {:ok, role} = Engagements.fetch_role(scope, engagement.id)
+
+    if connected?(socket), do: :ok = Engagements.subscribe(scope, engagement.id)
+
+    {:ok,
+     socket
+     |> assign(
+       page_title: "전표 검토",
+       engagement: engagement,
+       role: role,
+       form: to_form(Conclusion.changeset(%Conclusion{}, %{})),
+       comment_length: 0,
+       conclusion_notice: nil
+     )
+     |> stream_configure(:entry_lines, dom_id: &"entry-line-#{&1.id}")
+     |> stream_configure(:rule_hits, dom_id: &"rule-hit-#{&1.id}")
+     |> refresh_finding(finding)}
+  end
+
+  @impl true
+  def handle_event("validate", %{"conclusion" => params}, socket) do
+    if socket.assigns.form_mode == :edit do
+      changeset =
+        %Conclusion{}
+        |> Conclusion.changeset(
+          Map.put(params, "ai_triage_id", visible_triage_id(socket.assigns.triage))
+        )
+        |> Map.put(:action, :validate)
+        |> localize_errors()
+
+      {:noreply,
+       assign(socket,
+         form: to_form(changeset),
+         comment_length: String.length(params["comment"] || "")
+       )}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  @impl true
+  def handle_info({:finding_updated, %{finding_id: id}}, socket) do
+    if id == socket.assigns.finding.id do
+      finding = Testing.get_finding!(socket.assigns.current_scope, id)
+      {:noreply, socket |> notify_new_conclusion(finding) |> refresh_finding(finding)}
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_info({event, _payload}, socket)
+      when event in [
+             :audit_appended,
+             :triage_requested,
+             :test_run_updated,
+             :import_updated,
+             :member_added,
+             :rule_progress,
+             :run_completed
+           ],
+      do: {:noreply, socket}
+
+  defp ensure_same_engagement!(%Finding{engagement_id: id}, id), do: :ok
+  defp ensure_same_engagement!(_finding, _id), do: raise(Ecto.NoResultsError, queryable: Finding)
+
+  defp refresh_finding(socket, finding) do
+    hits = Testing.list_rule_results(socket.assigns.current_scope, finding)
+    triage = if finding.triage_status == :succeeded, do: List.first(finding.ai_triages)
+    latest_conclusion = List.last(finding.conclusions)
+    lines = finding.journal_entry.lines
+    total_debit = Enum.reduce(lines, Decimal.new(0), &Decimal.add(&1.debit, &2))
+    total_credit = Enum.reduce(lines, Decimal.new(0), &Decimal.add(&1.credit, &2))
+
+    description =
+      case List.first(lines) do
+        nil -> nil
+        line -> line.description
+      end
+
+    # Only the displayed suggestion reference changes; draft fields and their
+    # validation errors survive updates made by another person or the AI.
+    form =
+      socket.assigns.form.source
+      |> Ecto.Changeset.put_change(:ai_triage_id, visible_triage_id(triage))
+      |> to_form()
+
+    form_mode =
+      cond do
+        finding.status == :approved -> :locked
+        socket.assigns.role == :preparer -> :edit
+        true -> :read_only
+      end
+
+    can_decide =
+      socket.assigns.role == :reviewer and finding.status == :concluded and
+        not is_nil(latest_conclusion) and
+        latest_conclusion.preparer_id != socket.assigns.current_scope.user.id
+
+    socket
+    |> assign(
+      finding: finding,
+      entry: finding.journal_entry,
+      entry_description: description,
+      triage: triage,
+      latest_conclusion: latest_conclusion,
+      last_decision: List.last(finding.review_decisions),
+      form_mode: form_mode,
+      can_decide: can_decide,
+      form: form,
+      total_debit: total_debit,
+      total_credit: total_credit,
+      balanced: Decimal.equal?(total_debit, total_credit),
+      score_formula: score_formula(finding.score, hits),
+      history_empty?: finding.conclusions == [] and finding.review_decisions == []
+    )
+    |> stream(:entry_lines, lines, reset: true)
+    |> stream(:rule_hits, hits, reset: true)
+    |> stream(:history, history_entries(finding), reset: true)
+  end
+
+  defp visible_triage_id(nil), do: nil
+  defp visible_triage_id(triage), do: triage.id
+
+  defp score_formula(score, hits) do
+    sum = Enum.map_join(hits, " + ", &Integer.to_string(&1.score))
+
+    cond do
+      hits == [] -> "점수 #{score}"
+      Enum.sum(Enum.map(hits, & &1.score)) > 100 -> "점수 #{score} = min(100, #{sum})"
+      true -> "점수 #{score} = #{sum}"
+    end
+  end
+
+  defp history_entries(finding) do
+    conclusions =
+      Enum.map(finding.conclusions, fn conclusion ->
+        %{
+          id: "conclusion-#{conclusion.id}",
+          kind: :conclusion,
+          actor: conclusion.preparer.email,
+          outcome: conclusion.outcome,
+          comment: conclusion.comment,
+          inserted_at: conclusion.inserted_at
+        }
+      end)
+
+    decisions =
+      Enum.map(finding.review_decisions, fn decision ->
+        %{
+          id: "decision-#{decision.id}",
+          kind: :decision,
+          actor: decision.reviewer.email,
+          outcome: decision.decision,
+          comment: decision.comment,
+          inserted_at: decision.inserted_at
+        }
+      end)
+
+    Enum.sort_by(conclusions ++ decisions, fn entry ->
+      {DateTime.to_unix(entry.inserted_at, :microsecond), entry.kind == :decision, entry.id}
+    end)
+  end
+
+  defp localize_errors(changeset) do
+    errors =
+      Enum.map(changeset.errors, fn {field, {_message, opts}} ->
+        message =
+          case field do
+            :outcome -> "판단을 선택하세요"
+            :comment -> "코멘트를 입력하세요 (1-2000자)"
+            :ai_triage_id -> "화면의 AI 제안을 다시 확인하세요"
+          end
+
+        {field, {message, opts}}
+      end)
+
+    %{changeset | errors: errors}
+  end
+
+  defp notify_new_conclusion(socket, finding) do
+    previous = socket.assigns.latest_conclusion
+    latest = List.last(finding.conclusions)
+
+    if finding.status == :approved do
+      assign(socket, :conclusion_notice, nil)
+    else
+      notify_latest_conclusion(socket, previous, latest)
+    end
+  end
+
+  defp notify_latest_conclusion(socket, previous, latest) do
+    if latest && (is_nil(previous) || latest.id != previous.id) do
+      message =
+        if socket.assigns.role == :reviewer do
+          "#{latest.preparer.email}님이 결론을 다시 제출했습니다. 최신 결론을 확인한 뒤 결정하세요."
+        else
+          "#{latest.preparer.email}님이 방금 결론을 제출했습니다. 제출하면 새 결론으로 남습니다."
+        end
+
+      assign(socket, :conclusion_notice, message)
+    else
+      socket
+    end
+  end
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <p>전표 검토 화면은 준비 중입니다.</p>
+      <div id="s5" class="min-w-0 space-y-5 pb-6 text-sm">
+        <header id="finding-header" class="space-y-3">
+          <nav
+            id="finding-breadcrumb"
+            aria-label="이동 경로"
+            class="flex flex-wrap items-center gap-1 text-xs text-muted"
+          >
+            <.link navigate={~p"/engagements"} class="link link-hover">감사 대상</.link>
+            <span aria-hidden="true">/</span>
+            <.link navigate={~p"/engagements/#{@engagement}"} class="link link-hover">
+              {@engagement.client_name} {fiscal_year_label(@engagement.fiscal_year)}
+            </.link>
+            <span aria-hidden="true">/</span>
+            <.link
+              navigate={~p"/engagements/#{@engagement}/runs/#{@finding.test_run_id}"}
+              class="link link-hover"
+            >
+              테스트 실행 <.system_time at={@finding.test_run.started_at} />
+            </.link>
+            <span aria-hidden="true">/</span><span aria-current="page" class="font-mono">{@entry.entry_number}</span>
+          </nav>
+          <div class="flex flex-wrap items-center gap-3">
+            <h1 class="font-mono text-xl font-semibold">{@entry.entry_number}</h1>
+            <.score_meter score={@finding.score} />
+            <span id="finding-ai-status"><.risk_badge
+              triage={@triage}
+              status={@finding.triage_status}
+            /></span>
+            <span id="finding-conclusion-status"><.conclusion_badge outcome={
+              @latest_conclusion && @latest_conclusion.outcome
+            } /></span>
+            <span id="finding-review-status"><.review_badge status={@finding.status} /></span>
+          </div>
+        </header>
+
+        <.entry_facts entry={@entry} description={@entry_description} />
+        <.entry_lines
+          rows={@streams.entry_lines}
+          number={@entry.entry_number}
+          total_debit={@total_debit}
+          total_credit={@total_credit}
+          balanced={@balanced}
+        />
+        <.rule_hits rows={@streams.rule_hits} formula={@score_formula} />
+        <.ai_suggestion_card
+          triage={@triage}
+          status={@finding.triage_status}
+          role={@role}
+          below_threshold={@finding.score < @finding.test_run.triage_threshold}
+          threshold={@finding.test_run.triage_threshold}
+        />
+
+        <p
+          :if={@conclusion_notice}
+          id="conclusion-notice"
+          role="status"
+          class="rounded-box border border-warning bg-warning/10 p-3"
+        >
+          <.icon name="hero-exclamation-triangle" class="size-4" /> {@conclusion_notice}
+        </p>
+        <.conclusion_panel
+          form={@form}
+          mode={@form_mode}
+          latest={@latest_conclusion}
+          last_decision={@last_decision}
+          status={@finding.status}
+          comment_length={@comment_length}
+        />
+        <.finding_history rows={@streams.history} empty?={@history_empty?} />
+        <.sign_bar
+          status={@finding.status}
+          role={@role}
+          latest={@latest_conclusion}
+          last_decision={@last_decision}
+          can_decide={@can_decide}
+          current_user_id={@current_scope.user.id}
+        />
+      </div>
     </Layouts.app>
     """
   end

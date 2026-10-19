@@ -178,6 +178,137 @@ defmodule Tickmark.TestingTest do
     end
   end
 
+  describe "get_finding!/2" do
+    test "preloads ordered entry lines, run, suggestions, conclusions and reviewers", ctx do
+      entry = entry(ctx, "JE-DETAIL")
+      finding = insert_finding(ctx.run, entry)
+      reviewer = user_fixture()
+      insert_member(ctx.engagement, reviewer, :reviewer)
+      second_line = insert_detail_line(entry, 2)
+      first_line = insert_detail_line(entry, 1)
+
+      newer_triage = insert_timed_triage(finding, ~U[2026-10-20 01:02:00.000000Z], "b")
+      older_triage = insert_timed_triage(finding, ~U[2026-10-20 01:01:00.000000Z], "a")
+
+      newer_conclusion =
+        insert_timed_conclusion(finding, ctx.preparer, ~U[2026-10-20 01:04:00.000000Z])
+
+      older_conclusion =
+        insert_timed_conclusion(finding, ctx.preparer, ~U[2026-10-20 01:03:00.000000Z])
+
+      decision = insert_detail_decision(finding, older_conclusion, reviewer)
+
+      loaded = Testing.get_finding!(ctx.scope, finding.id)
+      assert loaded.journal_entry.id == entry.id
+      assert Enum.map(loaded.journal_entry.lines, & &1.id) == [first_line.id, second_line.id]
+      assert loaded.test_run.id == ctx.run.id
+      assert Enum.map(loaded.ai_triages, & &1.id) == [newer_triage.id, older_triage.id]
+      assert Enum.map(loaded.conclusions, & &1.id) == [older_conclusion.id, newer_conclusion.id]
+      assert Enum.all?(loaded.conclusions, &(&1.preparer.id == ctx.preparer.id))
+      assert [%{id: decision_id, reviewer: %{email: email}}] = loaded.review_decisions
+      assert decision_id == decision.id
+      assert email == reviewer.email
+      assert Testing.get_finding!(Scope.for_user(reviewer), finding.id).id == finding.id
+    end
+
+    test "raises the same error for a non-member, missing id and malformed ids", ctx do
+      finding = insert_finding(ctx.run, entry(ctx, "JE-HIDDEN"))
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Testing.get_finding!(ctx.outsider, finding.id)
+      end
+
+      for id <- [Ecto.UUID.generate(), "not-a-uuid", "", nil] do
+        assert_raise Ecto.NoResultsError, fn -> Testing.get_finding!(ctx.scope, id) end
+      end
+    end
+  end
+
+  describe "list_rule_results/2" do
+    test "keeps only the same run and entry and sorts by the registry", ctx do
+      entry = entry(ctx, "JE-RULES")
+      finding = insert_finding(ctx.run, entry)
+
+      for rule_id <- Enum.reverse(Rules.ids()) do
+        insert_detail_result(ctx.run, entry, rule_id)
+      end
+
+      insert_detail_result(ctx.run, entry(ctx, "JE-OTHER-ENTRY"), "round_amount")
+      set_status(ctx.run, :completed)
+      other_run = insert_test_run(ctx.ledger_import, ctx.preparer)
+      insert_detail_result(other_run, entry, "round_amount")
+
+      results = Testing.list_rule_results(ctx.scope, finding)
+      assert Enum.map(results, & &1.rule_id) == Rules.ids()
+
+      assert Enum.all?(
+               results,
+               &(&1.test_run_id == ctx.run.id and &1.journal_entry_id == entry.id)
+             )
+    end
+
+    test "does not return hits to non-members or trust a substituted engagement id", ctx do
+      entry = entry(ctx, "JE-PRIVATE")
+      finding = insert_finding(ctx.run, entry)
+      insert_detail_result(ctx.run, entry, "round_amount")
+      assert Testing.list_rule_results(ctx.outsider, finding) == []
+      other_engagement = insert_engagement(ctx.outsider.user)
+      insert_member(other_engagement, ctx.outsider.user, :preparer)
+
+      assert Testing.list_rule_results(ctx.outsider, %{
+               finding
+               | engagement_id: other_engagement.id
+             }) == []
+    end
+  end
+
+  defp insert_detail_line(entry, number) do
+    Repo.insert!(%Tickmark.Ledger.JournalLine{
+      journal_entry_id: entry.id,
+      ledger_import_id: entry.ledger_import_id,
+      line_number: number,
+      account_code: "1020",
+      account_name: "보통예금",
+      description: "합성 전표 행",
+      debit: Decimal.new("1000000")
+    })
+  end
+
+  defp insert_timed_triage(finding, at, hash_char) do
+    %Tickmark.Triage.AiTriage{finding_id: finding.id, inserted_at: at}
+    |> Tickmark.Triage.AiTriage.changeset(
+      valid_ai_triage_attrs(%{input_hash: String.duplicate(hash_char, 64)})
+    )
+    |> Repo.insert!()
+  end
+
+  defp insert_timed_conclusion(finding, preparer, at) do
+    %Tickmark.Review.Conclusion{finding_id: finding.id, preparer_id: preparer.id, inserted_at: at}
+    |> Tickmark.Review.Conclusion.changeset(%{outcome: :no_exception, comment: "증빙 확인 완료"})
+    |> Repo.insert!()
+  end
+
+  defp insert_detail_decision(finding, conclusion, reviewer) do
+    %Tickmark.Review.ReviewDecision{
+      finding_id: finding.id,
+      conclusion_id: conclusion.id,
+      preparer_id: conclusion.preparer_id,
+      reviewer_id: reviewer.id
+    }
+    |> Tickmark.Review.ReviewDecision.changeset(%{decision: :rejected, comment: "추가 확인 요청"})
+    |> Repo.insert!()
+  end
+
+  defp insert_detail_result(run, entry, rule_id) do
+    Repo.insert!(%Tickmark.Testing.RuleResult{
+      test_run_id: run.id,
+      journal_entry_id: entry.id,
+      rule_id: rule_id,
+      score: 10,
+      reason: "합성 룰 근거"
+    })
+  end
+
   defp set_status(run, status), do: run |> Ecto.Changeset.change(status: status) |> Repo.update!()
 
   defp insert_rule(run, rule_id) do
