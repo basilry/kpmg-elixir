@@ -7,10 +7,11 @@ defmodule Tickmark.Jobs.FailureHandlerTest do
   import Tickmark.SchemaFixtures
 
   alias Tickmark.Accounts.Scope
+  alias Tickmark.AuditTrail.AuditEvent
   alias Tickmark.Jobs.FailureHandler
   alias Tickmark.Ledger.LedgerImport
   alias Tickmark.Testing
-  alias Tickmark.Testing.{RuleWorker, TestRun, TestRunRule}
+  alias Tickmark.Testing.{Finding, RuleWorker, TestRun, TestRunRule}
 
   @moduletag :capture_log
   @event [:oban, :job, :exception]
@@ -91,6 +92,35 @@ defmodule Tickmark.Jobs.FailureHandlerTest do
     assert Repo.get!(LedgerImport, pending.id).status == :pending
   end
 
+  test "marks a queued finding failed when its triage job gave up", ctx do
+    finding = queued_finding(ctx)
+
+    execute(%Oban.Job{
+      worker: "Tickmark.Triage.TriageWorker",
+      args: %{"finding_id" => finding.id},
+      attempt: 5,
+      max_attempts: 5
+    })
+
+    assert Repo.get!(Finding, finding.id).triage_status == :failed
+
+    assert %{payload: %{"reason" => "worker_crashed"}} =
+             Repo.get_by!(AuditEvent, action: "ai_triage.failed", subject_id: finding.id)
+  end
+
+  test "leaves a queued finding alone while its triage job will be retried", ctx do
+    finding = queued_finding(ctx)
+
+    execute(%Oban.Job{
+      worker: "Tickmark.Triage.TriageWorker",
+      args: %{"finding_id" => finding.id},
+      attempt: 2,
+      max_attempts: 5
+    })
+
+    assert Repo.get!(Finding, finding.id).triage_status == :queued
+  end
+
   test "ignores other workers and events without a job" do
     execute(%Oban.Job{worker: "Tickmark.Elsewhere", args: %{}, attempt: 3, max_attempts: 3})
     :telemetry.execute(@event, %{}, %{no_job: true})
@@ -142,4 +172,10 @@ defmodule Tickmark.Jobs.FailureHandlerTest do
 
   defp get_rule(run, rule_id),
     do: Repo.get_by!(TestRunRule, test_run_id: run.id, rule_id: rule_id)
+
+  defp queued_finding(ctx) do
+    run = insert_test_run(ctx.ledger_import, ctx.preparer)
+    entry = insert_journal_entry(ctx.ledger_import)
+    insert_finding(run, entry, %{triage_status: :queued})
+  end
 end
