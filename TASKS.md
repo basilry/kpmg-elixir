@@ -13,8 +13,8 @@
 |---|---|---|---|---|---|
 | W1 | 3.2 | `Tickmark.Triage` (건별/일괄 요청, `triage_finding/1`, `mark_failed/2`), TriageWorker, FailureHandler 분기 | Claude `claude-fable-5-1` xhigh | `feature/m3-triage` | 진행 중 |
 | W2 | 4.1 | `Tickmark.Review` (`submit_conclusion/3`, `decide/4`), SoD 테스트 | Codex `gpt-6-astra` xhigh | `feature/m4-review` | 병합 (cf88e39) |
-| W3 | 4.2 | `AuditTrail.list_events/3`, S6 AuditLive | Codex `gpt-6.1-sol` max | `feature/m4-audit-log` | 진행 중 |
-| W4 | 3.3 | `Testing.get_finding!/2`, `list_rule_results/2`, S5 FindingLive 표시 | Codex `gpt-6.1-sol` max | `feature/m3-finding-show` | 진행 중 |
+| W3 | 4.2 | `AuditTrail.list_events/3`, S6 AuditLive | Codex `gpt-6.1-sol` max | `feature/m4-audit-log` | 병합 (80dc408) |
+| W4 | 3.3 | `Testing.get_finding!/2`, `list_rule_results/2`, S5 FindingLive 표시 | Codex `gpt-6.1-sol` max | `feature/m3-finding-show` | 병합 (34c247e) |
 | W5 | 2.4, 2.6 | Runner 경유 정답 라벨 시험, S2 단추 테스트, `audit_appended` 보강, DuplicateEntry 느린 쿼리 | Codex `gpt-6.1-sol` max | `feature/m2-wrapup` | 진행 중 |
 
 ## 메인 세션 다음 할 일
@@ -23,6 +23,7 @@
 - [x] 라운드 4 선행 작업: `AI.model/0` (fa8a3c1), `broadcast_appended/1` 과 `:triage_requested` 무시 절 (f0769f5), 계약
 - [ ] 워커 결과 검토 후 하나씩 병합, 병합마다 `mix precommit`
 - [ ] 라운드 4b (W1, W2, W4 병합 뒤): S5 동작 (트리아지 요청, 결론 제출, 승인/반려), S4 AI 열과 일괄 요청 (3.4), Presence (4.3, 4.4), 통합 테스트
+- [ ] 4b 에서 S5 를 고칠 때 `finding_live/components.ex` (610줄) 를 영역별로 나눈다
 - [ ] S1-S6 브라우저 확인
 - [ ] 라운드 4 devlog (2026-10-20-1), WBS 와 이 파일 갱신
 - [x] README 초안 (WBS 6.1 당김. M6 에 데모 GIF 와 최종 상태 반영)
@@ -43,3 +44,4 @@
 - 2026-10-20: A 병합, 라운드 4 선행 작업, 라운드 4a 배정 (W1-W5)
 - 2026-10-20: README 초안 (6.1) 추가
 - 2026-10-20: W2 병합
+- 2026-10-20: W3, W4 병합
