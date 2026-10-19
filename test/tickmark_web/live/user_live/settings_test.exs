@@ -12,8 +12,8 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
         |> log_in_user(user_fixture())
         |> live(~p"/users/settings")
 
-      assert html =~ "Change Email"
-      assert html =~ "Save Password"
+      assert html =~ "이메일 변경"
+      assert html =~ "비밀번호 저장"
     end
 
     test "redirects if user is not logged in", %{conn: conn} do
@@ -21,7 +21,7 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
 
       assert {:redirect, %{to: path, flash: flash}} = redirect
       assert path == ~p"/users/log-in"
-      assert %{"error" => "You must log in to access this page."} = flash
+      assert %{"error" => "로그인이 필요합니다."} = flash
     end
 
     test "redirects if user is not in sudo mode", %{conn: conn} do
@@ -33,7 +33,7 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
         |> live(~p"/users/settings")
         |> follow_redirect(conn, ~p"/users/log-in")
 
-      assert conn.resp_body =~ "You must re-authenticate to access this page."
+      assert conn.resp_body =~ "다시 로그인해야 이 페이지를 볼 수 있습니다."
     end
   end
 
@@ -55,7 +55,7 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
         })
         |> render_submit()
 
-      assert result =~ "A link to confirm your email"
+      assert result =~ "새 이메일로 확인 링크를 보냈습니다. 메일의 링크로 변경을 완료하세요."
       assert Accounts.get_user_by_email(user.email)
     end
 
@@ -70,8 +70,8 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
           "user" => %{"email" => "with spaces"}
         })
 
-      assert result =~ "Change Email"
-      assert result =~ "must have the @ sign and no spaces"
+      assert result =~ "이메일 변경"
+      assert result =~ "공백 없이 @를 포함한 이메일을 입력하세요."
     end
 
     test "renders errors with invalid data (phx-submit)", %{conn: conn, user: user} do
@@ -84,8 +84,8 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
         })
         |> render_submit()
 
-      assert result =~ "Change Email"
-      assert result =~ "did not change"
+      assert result =~ "이메일 변경"
+      assert result =~ "기존 값과 같습니다."
     end
   end
 
@@ -118,7 +118,7 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
       assert get_session(new_password_conn, :user_token) != get_session(conn, :user_token)
 
       assert Phoenix.Flash.get(new_password_conn.assigns.flash, :info) =~
-               "Password updated successfully"
+               "비밀번호를 변경했습니다."
 
       assert Accounts.get_user_by_email_and_password(user.email, new_password)
     end
@@ -136,9 +136,9 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
           }
         })
 
-      assert result =~ "Save Password"
-      assert result =~ "should be at least 12 character(s)"
-      assert result =~ "does not match password"
+      assert result =~ "비밀번호 저장"
+      assert result =~ "12자 이상이어야 합니다."
+      assert result =~ "비밀번호가 일치하지 않습니다."
     end
 
     test "renders errors with invalid data (phx-submit)", %{conn: conn} do
@@ -154,9 +154,9 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
         })
         |> render_submit()
 
-      assert result =~ "Save Password"
-      assert result =~ "should be at least 12 character(s)"
-      assert result =~ "does not match password"
+      assert result =~ "비밀번호 저장"
+      assert result =~ "12자 이상이어야 합니다."
+      assert result =~ "비밀번호가 일치하지 않습니다."
     end
   end
 
@@ -179,7 +179,7 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
       assert {:live_redirect, %{to: path, flash: flash}} = redirect
       assert path == ~p"/users/settings"
       assert %{"info" => message} = flash
-      assert message == "Email changed successfully."
+      assert message == "이메일을 변경했습니다."
       refute Accounts.get_user_by_email(user.email)
       assert Accounts.get_user_by_email(email)
 
@@ -188,7 +188,7 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
       assert {:live_redirect, %{to: path, flash: flash}} = redirect
       assert path == ~p"/users/settings"
       assert %{"error" => message} = flash
-      assert message == "Email change link is invalid or it has expired."
+      assert message == "이메일 변경 링크가 잘못됐거나 만료됐습니다."
     end
 
     test "does not update email with invalid token", %{conn: conn, user: user} do
@@ -196,7 +196,7 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
       assert {:live_redirect, %{to: path, flash: flash}} = redirect
       assert path == ~p"/users/settings"
       assert %{"error" => message} = flash
-      assert message == "Email change link is invalid or it has expired."
+      assert message == "이메일 변경 링크가 잘못됐거나 만료됐습니다."
       assert Accounts.get_user_by_email(user.email)
     end
 
@@ -206,7 +206,7 @@ defmodule TickmarkWeb.UserLive.SettingsTest do
       assert {:redirect, %{to: path, flash: flash}} = redirect
       assert path == ~p"/users/log-in"
       assert %{"error" => message} = flash
-      assert message == "You must log in to access this page."
+      assert message == "로그인이 필요합니다."
     end
   end
 end

@@ -7,71 +7,79 @@ defmodule TickmarkWeb.UserLive.Login do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-sm space-y-4">
-        <div class="text-center">
-          <.header>
-            <p>Log in</p>
-            <:subtitle>
-              <%= if @current_scope do %>
-                You need to reauthenticate to perform sensitive actions on your account.
-              <% else %>
-                Don't have an account? <.link
-                  navigate={~p"/users/register"}
-                  class="font-semibold text-brand hover:underline"
-                  phx-no-format
-                >Sign up</.link> for an account now.
-              <% end %>
-            </:subtitle>
-          </.header>
-        </div>
+      <section
+        id="login-page"
+        aria-labelledby="login-title"
+        class="mx-auto max-w-sm space-y-6 rounded-box border border-base-300 bg-base-100 p-6 text-sm"
+      >
+        <header class="space-y-2">
+          <h1 id="login-title" class="text-xl font-semibold">로그인</h1>
+          <p class="text-muted">
+            <%= if @current_scope do %>
+              계속하려면 다시 로그인하세요.
+            <% else %>
+              계정이 없나요?
+              <.link
+                id="registration-link"
+                navigate={~p"/users/register"}
+                class="font-semibold text-primary hover:underline"
+              >회원가입</.link>
+            <% end %>
+          </p>
+        </header>
 
-        <div :if={local_mail_adapter?()} class="alert alert-info">
-          <.icon name="hero-information-circle" class="size-6 shrink-0" />
+        <div :if={local_mail_adapter?()} id="local-mail-notice" class="alert alert-info alert-outline">
+          <.icon name="hero-information-circle" class="size-5 shrink-0" />
           <div>
-            <p>You are running the local mail adapter.</p>
+            <p>개발 환경의 메일은 로컬 메일함에 저장됩니다.</p>
             <p>
-              To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
+              보낸 메일은 <.link href="/dev/mailbox" class="underline">개발 메일함</.link>에서 확인하세요.
             </p>
           </div>
         </div>
 
         <.form
-          :let={f}
           for={@form}
           id="login_form_magic"
           action={~p"/users/log-in"}
           phx-submit="submit_magic"
+          class="space-y-4"
         >
           <.input
             readonly={!!@current_scope}
-            field={f[:email]}
+            field={@form[:email]}
+            id="login_form_magic_email"
             type="email"
-            label="Email"
+            label="이메일"
             autocomplete="username"
             spellcheck="false"
             required
             phx-mounted={JS.focus()}
           />
-          <.button class="btn btn-primary w-full">
-            Log in with email <span aria-hidden="true">→</span>
+          <.button id="login-magic-submit" class="btn btn-primary w-full">
+            로그인 링크 받기
           </.button>
         </.form>
 
-        <div class="divider">or</div>
+        <div class="flex items-center gap-3 text-xs text-muted">
+          <span class="h-px flex-1 bg-base-300" aria-hidden="true" /> 또는
+          <span class="h-px flex-1 bg-base-300" aria-hidden="true" />
+        </div>
 
         <.form
-          :let={f}
           for={@form}
           id="login_form_password"
           action={~p"/users/log-in"}
           phx-submit="submit_password"
           phx-trigger-action={@trigger_submit}
+          class="space-y-4"
         >
           <.input
             readonly={!!@current_scope}
-            field={f[:email]}
+            field={@form[:email]}
+            id="login_form_password_email"
             type="email"
-            label="Email"
+            label="이메일"
             autocomplete="username"
             spellcheck="false"
             required
@@ -79,18 +87,16 @@ defmodule TickmarkWeb.UserLive.Login do
           <.input
             field={@form[:password]}
             type="password"
-            label="Password"
+            label="비밀번호"
             autocomplete="current-password"
             spellcheck="false"
           />
-          <.button class="btn btn-primary w-full" name={@form[:remember_me].name} value="true">
-            Log in and stay logged in <span aria-hidden="true">→</span>
-          </.button>
-          <.button class="btn btn-primary btn-soft w-full mt-2">
-            Log in only this time
+          <.input field={@form[:remember_me]} type="checkbox" label="로그인 상태 유지" />
+          <.button id="login-password-submit" class="btn btn-primary w-full">
+            비밀번호로 로그인
           </.button>
         </.form>
-      </div>
+      </section>
     </Layouts.app>
     """
   end
@@ -120,7 +126,7 @@ defmodule TickmarkWeb.UserLive.Login do
     end
 
     info =
-      "If your email is in our system, you will receive instructions for logging in shortly."
+      "등록된 이메일이라면 로그인 링크를 보냈습니다. 메일함을 확인하세요."
 
     {:noreply,
      socket

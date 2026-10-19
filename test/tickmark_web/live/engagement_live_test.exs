@@ -75,12 +75,12 @@ defmodule TickmarkWeb.EngagementLiveTest do
       }
 
       html = view |> form("#engagement-form", engagement: invalid) |> render_change()
-      assert html =~ "can&#39;t be blank"
-      assert html =~ "must be greater than or equal to 2000"
-      assert html =~ "must be greater than 0"
+      assert html =~ "회사명을 입력하세요."
+      assert html =~ "2000에서 2100 사이로 입력하세요."
+      assert html =~ "0보다 큰 금액을 입력하세요."
 
       html = view |> form("#engagement-form", engagement: invalid) |> render_submit()
-      assert html =~ "can&#39;t be blank"
+      assert html =~ "회사명을 입력하세요."
       assert has_element?(view, "#engagement-form")
     end
 

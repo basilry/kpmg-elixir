@@ -1,0 +1,11 @@
+msgid ""
+msgstr ""
+"Language: ko\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "close"
+msgstr "닫기"
+
+msgid "Actions"
+msgstr "작업"
