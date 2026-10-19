@@ -38,7 +38,6 @@ defmodule Tickmark.Testing.Rules.DuplicateEntry do
 
     groups_query =
       from c in subquery(candidates),
-        where: not is_nil(c.counterparty) and c.counterparty != "",
         group_by: [c.counterparty, c.amount, c.debit_accounts, c.credit_accounts],
         having: count() > 1,
         select: %{
@@ -123,24 +122,23 @@ defmodule Tickmark.Testing.Rules.DuplicateEntry do
   defp candidates(%RuleContext{ledger_import_id: import_id, params: params}) do
     minimum = Decimal.new(params["duplicate_min_amount"])
 
-    # A scalar subquery looks up one header by its primary key. Returning NULL
-    # for an excluded source also removes that entry from the duplicate index.
-    counterparty =
-      from e in JournalEntry,
-        where: e.id == parent_as(:lines).journal_entry_id,
-        where: e.ledger_import_id == ^import_id and e.source in ^params["apply_sources"],
-        select: e.counterparty
-
-    # Aggregate the lines once, before grouping duplicate keys. Sorted DISTINCT
-    # arrays retain the side and ignore line order and per-line allocations.
+    # Join headers to individual lines before aggregating. A correlated header
+    # subquery was repeated for both the output and the counterparty filters;
+    # a join to an already aggregated subquery can repeat the entire aggregate
+    # when fresh imports have no useful planner statistics. The header selects
+    # the import; lines are found by their journal_entry_id foreign key. An
+    # extra line import filter can cause the whole import's bitmap to be built
+    # again for every header when the planner underestimates the new rows.
     from l in JournalLine,
-      as: :lines,
-      where: l.ledger_import_id == ^import_id,
-      group_by: l.journal_entry_id,
+      join: e in JournalEntry,
+      on: e.id == l.journal_entry_id,
+      where: e.ledger_import_id == ^import_id and e.source in ^params["apply_sources"],
+      where: not is_nil(e.counterparty) and e.counterparty != "",
+      group_by: [l.journal_entry_id, e.counterparty],
       having: sum(l.debit) >= ^minimum,
       select: %{
         id: l.journal_entry_id,
-        counterparty: coalesce(subquery(counterparty), ""),
+        counterparty: e.counterparty,
         amount: sum(l.debit),
         debit_accounts:
           fragment(
