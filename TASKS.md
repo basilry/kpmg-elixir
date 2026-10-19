@@ -5,7 +5,7 @@
 - MVP: 2026-10-23 (D-3)
 - 지원 마감: 2026-10-25 (D-5)
 
-## 진행 중: 라운드 4a (M3 트리아지 + M4 검토, 감사 로그) + 4b 선행 (W6)
+## 진행 중: 라운드 5 (화면 셸, 인증 화면, 명세 문서) + 4b 선행 (W6)
 
 계약: [아키텍처 문서 12.2](docs/architecture/2026-10-17-4-시스템-구조와-데이터-모델.md) (2.1, 4.2, 5.5.1, 6, 7, 8 장). 통합 브랜치는 `feature/m2-rule-engine`.
 
@@ -16,7 +16,11 @@
 | W3 | 4.2 | `AuditTrail.list_events/3`, S6 AuditLive | Codex `gpt-6.1-sol` max | `feature/m4-audit-log` | 병합 (80dc408) |
 | W4 | 3.3 | `Testing.get_finding!/2`, `list_rule_results/2`, S5 FindingLive 표시 | Codex `gpt-6.1-sol` max | `feature/m3-finding-show` | 병합 (34c247e) |
 | W5 | 2.4, 2.6 | Runner 경유 정답 라벨 시험, S2 단추 테스트, `audit_appended` 보강, DuplicateEntry 느린 쿼리 | Codex `gpt-6.1-sol` max | `feature/m2-wrapup` | 병합 (824b89b) |
-| W6 | 4.3 (일부) | S5 결론 제출, 승인/반려 2단계, `components.ex` 분리 ([계약 12.3](docs/architecture/2026-10-17-4-시스템-구조와-데이터-모델.md)) | Codex `gpt-6.1-sol` max | `feature/m4-finding-actions` | 진행 중 |
+| W6 | 4.3 (일부) | S5 결론 제출, 승인/반려 2단계, `components.ex` 분리 ([계약 12.3](docs/architecture/2026-10-17-4-시스템-구조와-데이터-모델.md)) | Codex `gpt-6.1-sol` max | `feature/m4-finding-actions` | 진행 중 (마무리) |
+| F1 | 5.2 | 공통 상단 바, 디자인 토큰 (`app.css`), 홈, 404, 한글 연결 끊김 문구 ([계약 12.4](docs/architecture/2026-10-17-4-시스템-구조와-데이터-모델.md)) | Codex `gpt-6.1-sol` max (fast) | `feature/ui-shell` | 진행 중 |
+| F2 | 5.2 | 로그인, 회원가입, 설정 화면 한글화와 디자인, Gettext ko (검증 문구) | Codex `gpt-6.1-sol` max (fast) | `feature/ui-auth` | 진행 중 |
+| D1 | - | 요구사항 명세서, 기능 정의서 | Codex `gpt-6-astra` max (fast) | `docs/requirements-spec` | 진행 중 |
+| D2 | - | API 연동 규격서 | Codex `gpt-6-astra` max (fast) | `docs/api-spec` | 진행 중 |
 
 ## 메인 세션 다음 할 일
 
@@ -24,7 +28,9 @@
 - [x] 라운드 4 선행 작업: `AI.model/0` (fa8a3c1), `broadcast_appended/1` 과 `:triage_requested` 무시 절 (f0769f5), 계약
 - [ ] 워커 결과 검토 후 하나씩 병합, 병합마다 `mix precommit`
 - [ ] 라운드 4b (W1 병합으로 시작 가능): S5 AI 분석 요청 단추, S4 AI 열과 일괄 요청 (3.4), Presence 와 상단 바 (4.3, 4.4), 검토 대기열과 '다음 미판단', 통합 테스트. S5 결론 제출과 승인/반려, `components.ex` 분리는 W6
-- [ ] S2 `start_run` 이 import 의 engagement 가 현재 engagement 와 같은지 확인 (W5 발견, W5 병합 뒤 `engagement_live/show.ex`)
+- [x] S2 `start_run` 이 import 의 engagement 가 현재 engagement 와 같은지 확인 (W5 발견, a6a52c0)
+- [x] 테스트 간헐 타임아웃 원인 (async TRUNCATE 테스트의 잠금 대기열) 제거 (9e7dbfd)
+- [ ] W6 병합 뒤 S5 의 `Layouts.app` 에 `engagement` 연결 (F1 병합 뒤)
 - [ ] S1-S6 브라우저 확인
 - [ ] 라운드 4 devlog (2026-10-20-1), WBS 와 이 파일 갱신
 - [x] README 초안 (WBS 6.1 당김. M6 에 데모 GIF 와 최종 상태 반영)
@@ -48,3 +54,4 @@
 - 2026-10-20: PR #2 병합 (1.19 완료), W6 배정, 배포 조건 (무료, Vercel 선호) 반영, W5 발견 (S2 start_run engagement 확인) 추가
 - 2026-10-20: 배포 검토 문서 연결, Render + Neon 제안
 - 2026-10-20: W5, W1 병합
+- 2026-10-20: S2 start_run 확인 완료, 라운드 5 배정 (F1, F2, D1, D2)
