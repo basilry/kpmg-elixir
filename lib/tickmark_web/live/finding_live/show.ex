@@ -141,7 +141,7 @@ defmodule TickmarkWeb.FindingLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app flash={@flash} current_scope={@current_scope} engagement={@engagement}>
       <div id="s5" class="min-w-0 space-y-5 pb-6 text-sm">
         <header id="finding-header" class="space-y-3">
           <nav

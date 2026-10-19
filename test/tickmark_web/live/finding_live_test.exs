@@ -156,6 +156,20 @@ defmodule TickmarkWeb.FindingLiveTest do
            )
   end
 
+  test "the top bar links back to the engagement and its audit log", ctx do
+    {:ok, view, _html} = open_finding(ctx)
+    engagement_path = ~p"/engagements/#{ctx.engagement}"
+
+    assert has_element?(
+             view,
+             "#topbar-engagement[href='#{engagement_path}']",
+             ctx.engagement.client_name
+           )
+
+    assert has_element?(view, "#topbar-audit[href='#{engagement_path}/audit']", "감사 로그")
+    refute has_element?(view, "#topbar [aria-current=page]")
+  end
+
   test "shows an unrequested AI card with no preselected human conclusion", ctx do
     {:ok, view, _html} = open_finding(ctx)
     assert has_element?(view, "#ai-triage-card.border-dashed", "이 제안은 판단이 아닙니다. 결론은 작성자가 입력합니다.")
