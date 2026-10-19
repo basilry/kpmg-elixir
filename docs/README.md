@@ -21,6 +21,7 @@
 | [2026-10-19-5-AI-클라이언트](devlog/2026-10-19-5-AI-클라이언트.md) | 워커 D 보고: AI Client behaviour, Fake, Anthropic, 트리아지 프롬프트, 금지 표현 검사 |
 | [2026-10-19-6-라운드-3-통합](devlog/2026-10-19-6-라운드-3-통합.md) | 라운드 3 B, C, D 병합, D 오탐 후속, S1 두 열, S2 통계와 실행 목록, 스트림 학습 포인트, A 병합과 교착 수정 |
 | [2026-10-20-1-라운드-4-계약과-통합](devlog/2026-10-20-1-라운드-4-계약과-통합.md) | 라운드 4 선행 작업 (`AI.model/0`, `broadcast_appended/1`), M3/M4 계약 결정과 트레이드오프, 워커 5명 배정 (진행 중) |
+| [2026-10-20-3-Review와-직무분리](devlog/2026-10-20-3-Review와-직무분리.md) | W2: `submit_conclusion/3`, `decide/4`, lock-first, stale/self_review 순서, DB backstop 테스트, 실제 연결 경합 검증의 제한 |
 
 ## planning - 기획
 
