@@ -566,10 +566,10 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
   <h2 class="sec-title" id="inv-t">1. 화면 목록</h2>
   <p class="lead">라우트는 모두 로그인 필요 <code>live_session :require_authenticated_user</code> 안에 있다. S2-S6은 <code>get_engagement!/2</code>가 멤버가 아니면 <code>Ecto.NoResultsError</code>를 내서 404가 된다.</p>
   <nav class="toc" aria-label="화면 바로 가기">
-    <a href="#s1"><b>S1 감사 대상 목록</b><code>/engagements</code><span class="xs muted">구현됨 (열 2개 대기)</span></a>
-    <a href="#s2"><b>S2 감사 대상 상세</b><code>/engagements/:id</code><span class="xs muted">구현됨 (통계, 실행 목록 대기)</span></a>
-    <a href="#s3"><b>S3 GL 적재</b><code>/engagements/:id/imports/new</code><span class="xs muted">스텁</span></a>
-    <a href="#s4"><b>S4 테스트 실행</b><code>/engagements/:id/runs/:run_id</code><span class="xs muted">스텁</span></a>
+    <a href="#s1"><b>S1 감사 대상 목록</b><code>/engagements</code><span class="xs muted">구현됨</span></a>
+    <a href="#s2"><b>S2 감사 대상 상세</b><code>/engagements/:id</code><span class="xs muted">구현됨 (presence 대기)</span></a>
+    <a href="#s3"><b>S3 GL 적재</b><code>/engagements/:id/imports/new</code><span class="xs muted">구현됨</span></a>
+    <a href="#s4"><b>S4 테스트 실행</b><code>/engagements/:id/runs/:run_id</code><span class="xs muted">구현됨 (AI, 판단 열 대기)</span></a>
     <a href="#s5"><b>S5 전표 검토</b><code>/engagements/:id/findings/:finding_id</code><span class="xs muted">스텁</span></a>
     <a href="#s6"><b>S6 감사 로그</b><code>/engagements/:id/audit</code><span class="xs muted">스텁</span></a>
   </nav>
@@ -579,8 +579,8 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
     <tbody>
       <tr><td class="semibold">S1</td><td class="mono">EngagementLive.Index<br>(:index, :new)</td><td>로그인 사용자 전원</td><td class="muted">없음</td><td class="mono">Engagements.list_engagements/1<br>create_engagement/2, change_engagement/2</td><td><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>구현됨</span></td></tr>
       <tr><td class="semibold">S2</td><td class="mono">EngagementLive.Show<br>(:show)</td><td>멤버 (추가 폼은 생성자만)</td><td class="mono">engagement:#{id}</td><td class="mono">get_engagement!/2, list_members/2, add_member/4<br>Ledger.list_imports/2, Testing.list_test_runs/2, start_test_run/3</td><td><span class="st st-warning"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>일부</span></td></tr>
-      <tr><td class="semibold">S3</td><td class="mono">ImportLive.New<br>(:new)</td><td>작성자</td><td class="mono">engagement:#{id}</td><td class="mono">Ledger.create_import/3, generate_sample_import/3, get_import!/2</td><td><span class="st st-neutral"><svg class="ic"><use href="#i-clock"/></svg>스텁</span></td></tr>
-      <tr><td class="semibold">S4</td><td class="mono">TestRunLive.Show<br>(:show)</td><td>멤버 (트리아지는 작성자)</td><td class="mono">test_run:#{run_id}<br>engagement:#{id}</td><td class="mono">Testing.get_test_run!/2, subscribe_test_run/2, list_findings/3<br>Triage.request_triage/2</td><td><span class="st st-neutral"><svg class="ic"><use href="#i-clock"/></svg>스텁</span></td></tr>
+      <tr><td class="semibold">S3</td><td class="mono">ImportLive.New<br>(:new)</td><td>작성자</td><td class="mono">engagement:#{id}</td><td class="mono">Ledger.create_import/3, generate_sample_import/3, get_import!/2</td><td><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>구현됨</span></td></tr>
+      <tr><td class="semibold">S4</td><td class="mono">TestRunLive.Show<br>(:show)</td><td>멤버 (트리아지는 작성자)</td><td class="mono">test_run:#{run_id}<br>engagement:#{id}</td><td class="mono">Testing.get_test_run!/2, subscribe_test_run/2, list_findings/3<br>Triage.request_triage/2</td><td><span class="st st-warning"><svg class="ic"><use href="#i-exclamation-triangle"/></svg>일부</span></td></tr>
       <tr><td class="semibold">S5</td><td class="mono">FindingLive.Show<br>(:show)</td><td>작성자 (판단), 검토자 (서명)</td><td class="mono">engagement:#{id}<br>engagement:#{id}:presence</td><td class="mono">Testing.get_finding!/2, Triage.request_finding_triage/2<br>Review.submit_conclusion/3, decide/4</td><td><span class="st st-neutral"><svg class="ic"><use href="#i-clock"/></svg>스텁</span></td></tr>
       <tr><td class="semibold">S6</td><td class="mono">AuditLive.Index<br>(:index)</td><td>멤버 (읽기 전용)</td><td class="mono">engagement:#{id}</td><td class="mono">AuditTrail.list_events/3</td><td><span class="st st-neutral"><svg class="ic"><use href="#i-clock"/></svg>스텁</span></td></tr>
     </tbody>
@@ -780,7 +780,7 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
     <div><dt>권한</dt><dd>로그인 사용자 전원</dd></div>
     <div><dt>데이터</dt><dd class="mono">Engagements.list_engagements/1</dd></div>
     <div><dt>구독</dt><dd>없음</dd></div>
-    <div><dt>구현</dt><dd>구현됨. 최근 테스트, 검토 큐 열은 아직 없다</dd></div>
+    <div><dt>구현</dt><dd>구현됨 (최근 테스트, 검토 큐 열은 WBS 2.5)</dd></div>
   </dl></div>
 
   <h3 class="sub" id="s1-main">S1.1 기본 화면</h3>
@@ -806,8 +806,8 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
   <tr><td><span class="mk" aria-hidden="true">1</span></td><td class="semibold nowrap">페이지 제목</td><td>"감사 대상". 페이지의 h1.</td><td>-</td></tr>
   <tr><td><span class="mk" aria-hidden="true">2</span></td><td class="semibold nowrap">새 감사 대상</td><td><code>patch</code>로 <code>/engagements/new</code>. 목록 위에 인라인 패널을 연다. 모달이 아니다. 패널이 열려 있으면 단추를 숨긴다.</td><td>로그인 사용자 전원</td></tr>
   <tr><td><span class="mk" aria-hidden="true">3</span></td><td class="semibold nowrap">목록 표</td><td>내가 멤버인 감사 대상만. 최근에 만든 순(<code>inserted_at</code> 내림차순). 회사명을 누르면 S2.</td><td>-</td></tr>
-  <tr><td><span class="mk" aria-hidden="true">4</span></td><td class="semibold nowrap">최근 테스트</td><td>가장 최근 실행의 상태. 실행 중, 완료, 일부 실패(<code>completed_with_errors</code>). 실행이 없으면 "-".</td><td>구현 대기</td></tr>
-  <tr><td><span class="mk" aria-hidden="true">5</span></td><td class="semibold nowrap">검토 큐(건)</td><td>최근 실행에서 점수가 <code>triage_threshold</code>(25) 이상인 발견 수. 실행 중이거나 실행이 없으면 "-".</td><td>구현 대기</td></tr>
+  <tr><td><span class="mk" aria-hidden="true">4</span></td><td class="semibold nowrap">최근 테스트</td><td>가장 최근 실행의 상태. 실행 중, 완료, 일부 실패(<code>completed_with_errors</code>). 실행이 없으면 "-".</td><td><code>Testing.latest_run_summaries/1</code></td></tr>
+  <tr><td><span class="mk" aria-hidden="true">5</span></td><td class="semibold nowrap">검토 큐(건)</td><td>최근 실행에서 점수가 <code>triage_threshold</code>(25) 이상인 발견 수. 실행 중이거나 실행이 없으면 "-".</td><td><code>Testing.latest_run_summaries/1</code></td></tr>
   <tr><td><span class="mk" aria-hidden="true">6</span></td><td class="semibold nowrap">내 역할</td><td>작성자 또는 검토자. 테두리 배지.</td><td>-</td></tr>
   </tbody></table></div>
 
@@ -857,7 +857,7 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
     <div><dt>권한</dt><dd>멤버 (<code>:view</code>). 멤버 추가는 생성자만</dd></div>
     <div class="wide"><dt>데이터</dt><dd class="mono">Engagements.get_engagement!/2, list_members/2, Ledger.list_imports/2, Testing.list_test_runs/2</dd></div>
     <div><dt>구독</dt><dd class="mono">engagement:#{id}</dd></div>
-    <div><dt>구현</dt><dd>구현됨. 통계, 실행 목록, 행 행동, presence는 아직 없다</dd></div>
+    <div><dt>구현</dt><dd>구현됨 (통계, 실행 목록, 행 행동은 WBS 2.6). presence는 아직 없다</dd></div>
   </dl></div>
 
   <h3 class="sub" id="s2-main">S2.1 기본 화면</h3>
@@ -929,11 +929,11 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
   <tr><td><span class="mk" aria-hidden="true">1</span></td><td class="semibold nowrap">이동 경로</td><td>감사 대상 / 회사명 FY연도. 첫 항목은 S1 링크.</td><td>-</td></tr>
   <tr><td><span class="mk" aria-hidden="true">2</span></td><td class="semibold nowrap">제목과 개요</td><td>회사명과 회계연도가 h1. 아래 줄에 결산일과 수행중요성.</td><td>-</td></tr>
   <tr><td><span class="mk" aria-hidden="true">3</span></td><td class="semibold nowrap">머리 행동</td><td>감사 로그(보조, 멤버 전원)와 GL 불러오기(primary, S3).</td><td>GL 불러오기는 <code>:import_ledger</code></td></tr>
-  <tr><td><span class="mk" aria-hidden="true">4</span></td><td class="semibold nowrap">통계</td><td>전표와 라인은 가장 최근에 성공한 적재 기준. 검토 큐, 경미 적중, 승인은 가장 최근에 끝난 실행 기준. 기준값은 실행 시점의 <code>triage_threshold</code> 스냅샷. 끝난 실행이 없으면 "-".</td><td>집계 함수가 계약에 없다 (C-07)</td></tr>
+  <tr><td><span class="mk" aria-hidden="true">4</span></td><td class="semibold nowrap">통계</td><td>전표와 라인은 가장 최근에 성공한 적재 기준. 검토 큐, 경미 적중, 승인은 가장 최근에 끝난 실행 기준. 기준값은 실행 시점의 <code>triage_threshold</code> 스냅샷. 끝난 실행이 없으면 "-".</td><td><code>Testing.count_findings/2</code> (C-07 해결)</td></tr>
   <tr><td><span class="mk" aria-hidden="true">5</span></td><td class="semibold nowrap">멤버 표</td><td>이름, 이메일, 역할. 내 행에 "(나)". 추가한 순서(<code>inserted_at</code> 오름차순).</td><td>이름 열은 C-05 결정에 따른다</td></tr>
   <tr><td><span class="mk" aria-hidden="true">6</span></td><td class="semibold nowrap">멤버 추가 폼</td><td>이메일, 역할(기본값 검토자), 추가. 제출 중에는 "추가 중".</td><td>생성자만 (<code>:manage_members</code>)</td></tr>
   <tr><td><span class="mk" aria-hidden="true">7</span></td><td class="semibold nowrap">GL 적재 표</td><td>새 적재가 위. 출처는 CSV면 파일명, 합성이면 "합성 GL, 시드 N". 상태는 대기, 적재 중, 완료, 실패. 실패 행의 파일명은 S3 결과로 가는 링크이고 오류 수는 빨간 숫자. 완료 행에 테스트 실행 단추.</td><td>단추는 <code>:start_test_run</code>, 그 적재에 실행 중인 테스트가 없을 때만</td></tr>
-  <tr><td><span class="mk" aria-hidden="true">8</span></td><td class="semibold nowrap">테스트 실행 표</td><td>새 실행이 위. 시작 시각, 상태(실행 중, 완료, 일부 실패), 끝난 룰 / 전체 룰, 적중 전표, 검토 큐, 열기(S4).</td><td>지금은 빈 상태 문구만 있다</td></tr>
+  <tr><td><span class="mk" aria-hidden="true">8</span></td><td class="semibold nowrap">테스트 실행 표</td><td>새 실행이 위. 시작 시각, 상태(실행 중, 완료, 일부 실패), 끝난 룰 / 전체 룰, 적중 전표, 검토 큐, 열기(S4).</td><td>룰 열은 실패한 룰도 끝난 룰로 센다 (S4 진행 요약과 같은 기준). S2.2 "실행 일부 실패"의 7 / 8은 구현에서 8 / 8로 보인다</td></tr>
   </tbody></table></div>
 
   <h3 class="sub" id="s2-states">S2.2 상태 변형</h3>
@@ -971,7 +971,7 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
     <div><dt>권한</dt><dd>작성자 (<code>:import_ledger</code>)</dd></div>
     <div class="wide"><dt>데이터</dt><dd class="mono">Ledger.create_import/3, Ledger.generate_sample_import/3, Ledger.get_import!/2, Testing.start_test_run/3</dd></div>
     <div><dt>구독</dt><dd class="mono">engagement:#{id}</dd></div>
-    <div><dt>구현</dt><dd>자리만 있다. 10/19 작업</dd></div>
+    <div><dt>구현</dt><dd>구현됨 (WBS 2.3)</dd></div>
   </dl></div>
 
   <h3 class="sub" id="s3-main">S3.1 기본 화면</h3>
@@ -1121,7 +1121,7 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
     <div><dt>권한</dt><dd>멤버 (<code>:view</code>). 트리아지 요청은 작성자</dd></div>
     <div class="wide"><dt>데이터</dt><dd class="mono">Testing.get_test_run!/2, Testing.list_findings/3, Triage.request_triage/2</dd></div>
     <div><dt>구독</dt><dd class="mono">test_run:#{run_id}, engagement:#{id}</dd></div>
-    <div><dt>구현</dt><dd>자리만 있다</dd></div>
+    <div><dt>구현</dt><dd>구현됨 (WBS 2.3). AI 위험도, 작성자 판단 열은 M3, M4에서 채운다</dd></div>
   </dl></div>
 
   <h3 class="sub" id="s4-main">S4.1 기본 화면</h3>
@@ -1586,7 +1586,7 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
   <tr><td>C-04</td><td>시각 title</td><td><code>kst_time</code>의 title이 ISO 8601</td><td>title을 "YYYY-MM-DD HH:MM:SS UTC"로 맞춘다</td></tr>
   <tr><td>C-05</td><td>사람 이름</td><td>users에 이름이 없고 이메일만 있다</td><td><code>users.display_name</code>을 더할지 정한다. 안 더하면 이메일을 그대로 쓴다</td></tr>
   <tr><td>C-06</td><td>검증 문구</td><td>Ecto 영어 기본 문구</td><td>changeset에서 한국어 메시지를 지정하거나 gettext <code>ko</code></td></tr>
-  <tr><td>C-07</td><td>S2 통계</td><td>실행별 집계 함수가 계약에 없다</td><td>Testing에 요약 함수를 하나 더한다 (이름 확인 필요)</td></tr>
+  <tr><td>C-07</td><td>S2 통계</td><td>해결 (2026-10-19). <code>count_findings/2</code>가 review_queue, minor, approved를 돌려준다</td><td>S2 실행 행과 통계, S4 탭이 함께 쓴다</td></tr>
   <tr><td>C-08</td><td>S4 더 보기</td><td><code>list_findings/3</code>에 페이지 옵션이 없다</td><td><code>limit</code>와 커서(점수, 금액, id) 옵션. 검토 큐 52건이면 MVP는 한 번에 읽어도 된다</td></tr>
   <tr><td>C-09</td><td>경미 적중 AI</td><td><code>request_finding_triage/2</code>가 기준 미만을 거부하지 않는다</td><td><code>:below_threshold</code> 오류를 더해 서버에서도 막는다. 화면에서 단추만 숨기면 직접 호출로 우회된다</td></tr>
   <tr><td>C-10</td><td>자기 검토 기록</td><td><code>authorize(:review_conclusion)</code>가 먼저라 작성자는 <code>:forbidden</code>이 된다. <code>:self_review</code>와 <code>review.denied</code>는 역할이 바뀐 사용자만 닿는다</td><td>방어 코드로 남긴다. 시안 S6 #74는 바꿨다. 작성자의 시도까지 기록하려면 <code>:forbidden</code>에서도 <code>review.denied</code>를 남긴다</td></tr>
@@ -1610,6 +1610,7 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
 <section class="doc-sec" id="changelog" aria-labelledby="cl-t">
   <h2 class="sec-title" id="cl-t">Changelog</h2>
   <ul class="bullets">
+    <li>2026-10-19 v1.2: 구현 상태 갱신 (S1 열 2개, S2 통계와 실행 목록과 행 행동, S3, S4). C-07 해결. S2 룰 열 기준을 S4와 맞췄다.</li>
     <li>2026-10-19 v1.1: 시안의 데이터, 마크업 오류를 고친 결과를 부록 C에 반영.</li>
     <li>2026-10-17 v1: 최초 작성. S1-S6 기본 화면, 상태 변형, 좁은 화면(S5), 이벤트 표, 부록 A 문구, B 감사 이벤트, C 미결 사항 C-01-C-13.</li>
   </ul>

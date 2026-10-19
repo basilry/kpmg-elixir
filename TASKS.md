@@ -12,18 +12,18 @@
 | 워커 | WBS | 작업 | 에이전트 / 모델 | 브랜치 | 상태 |
 |---|---|---|---|---|---|
 | A | 2.1 | `start_test_run`, RuleWorker, 완료 감지, FailureHandler | Claude `claude-fable-5-1` xhigh | `feature/m2-testing-runner` | 진행 중 |
-| B | 2.2, 2.4 | 룰 7종, 레지스트리 등록, 정답 라벨 시험 | Codex `gpt-6-astra` xhigh | `feature/m2-rules` | 진행 중 |
-| C | 2.3 | S3 ImportLive, S4 TestRunLive, `TickmarkWeb.Format` | Codex `gpt-6.1-sol` max | `feature/m2-screens` | 진행 중 |
-| D | 3.1 | `Tickmark.AI` (Client, Anthropic, Fake, Prompts, `input_hash/1`) | Codex `gpt-6.1-sol` max | `feature/m3-ai-client` | 진행 중 |
+| B | 2.2, 2.4 | 룰 7종, 레지스트리 등록, 정답 라벨 시험 | Codex `gpt-6-astra` xhigh | `feature/m2-rules` | 병합 (ff95ad8) |
+| C | 2.3 | S3 ImportLive, S4 TestRunLive, `TickmarkWeb.Format` | Codex `gpt-6.1-sol` max | `feature/m2-screens` | 병합 (af65bb3) |
+| D | 3.1 | `Tickmark.AI` (Client, Anthropic, Fake, Prompts, `input_hash/1`) | Codex `gpt-6.1-sol` max | `feature/m3-ai-client` | 병합 (3706032) |
 
 ## 메인 세션 다음 할 일
 
 - [x] 2.0 선행 작업과 계약 확정
-- [ ] 워커 결과 검토 (diff 와 검증 출력 직접 확인) 후 하나씩 병합, 병합마다 `mix precommit`
+- [ ] 워커 결과 검토 (diff 와 검증 출력 직접 확인) 후 하나씩 병합, 병합마다 `mix precommit` (B, C, D 완료. A 남음)
 - [ ] 2.4 Runner 를 거친 정답 라벨 시험 (A, B 병합 뒤)
-- [ ] 2.5 S1 "최근 테스트", "검토 큐" 열
-- [ ] 2.6 S2 실행 목록, "테스트 실행" 단추, stat_row
-- [ ] 라운드 3 devlog, WBS 와 이 파일 갱신
+- [x] 2.5 S1 "최근 테스트", "검토 큐" 열
+- [ ] 2.6 S2 실행 목록, "테스트 실행" 단추, stat_row (구현 완료. 단추 클릭 테스트와 브라우저 확인은 A 병합 뒤)
+- [ ] 라운드 3 devlog, WBS 와 이 파일 갱신 (devlog -6 작성. A 병합 뒤 마무리)
 
 ## 사용자 결정 대기
 
@@ -39,3 +39,4 @@
 ## Changelog
 
 - 2026-10-19: 최초 작성 (WBS 기준). 라운드 3 배정과 메인 할 일
+- 2026-10-19: B, C, D 병합, 2.5 완료, 2.6 구현 반영
