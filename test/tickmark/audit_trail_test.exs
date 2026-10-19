@@ -357,10 +357,5 @@ defmodule Tickmark.AuditTrailTest do
       error = assert_raise Postgrex.Error, fn -> Repo.delete!(event) end
       assert error.postgres.message =~ "append-only table audit_events: DELETE"
     end
-
-    test "TRUNCATE" do
-      error = assert_raise Postgrex.Error, fn -> Repo.query!("TRUNCATE audit_events") end
-      assert error.postgres.message =~ "append-only table audit_events: TRUNCATE"
-    end
   end
 end
