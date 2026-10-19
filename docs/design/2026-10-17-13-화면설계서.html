@@ -525,7 +525,7 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
   <div class="grid-2">
     <div class="card"><dl class="facts">
       <div><dt>문서</dt><dd class="mono">2026-10-17-13-화면설계서</dd></div>
-      <div><dt>버전</dt><dd>v1, 2026-10-17</dd></div>
+      <div><dt>버전</dt><dd>v1.1, 2026-10-19</dd></div>
       <div><dt>대상 범위</dt><dd>MVP 화면 S1-S6, 데스크톱 1024px 이상</dd></div>
       <div><dt>데이터</dt><dd>합성 데이터. 누리정밀 주식회사 FY2025, 시드 20251231</dd></div>
       <div class="wide"><dt>기준 문서</dt><dd class="stack" style="gap:2px">
@@ -1603,16 +1603,14 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
     <li>S4: 트리아지 바 문구가 디자인 문서 5.5와 시안에서 조금 다르다. 이 설계서는 시안을 따랐다.</li>
     <li>S4: 탭 <code>?tab=</code>, 필터 <code>?status=</code>, 50건씩 더 보기는 제안이다.</li>
     <li>S5: 디자인 문서 4.2는 concluded에서 바로 edit 모드다. 이 설계서는 제출 직후 read_only로 보이고 "결론 다시 쓰기"를 눌러야 열린다 (제안).</li>
-    <li>S5: 시안의 숨은 <code>ai_triage_id</code>가 빈 값인데 AI 제안이 보이는 상태다. 보인 제안의 id가 들어가야 한다.</li>
-    <li>S6: 시안 #74 <code>review.denied</code>를 승인 이벤트로 바꿨다 (C-10).</li>
-    <li>시안 데이터: 라인 수 19,794는 19,804로, "기본 시드"는 "시드 20251231"로 고친다. "목표 라인 수" 줄은 지운다.</li>
-    <li>시안 마크업: 마지막 section 뒤에 짝 없는 <code>&lt;/main&gt;</code>이 하나 더 있다.</li>
+    <li>시안은 2026-10-19에 고쳤다. 라인 수를 19,804로, 출처를 "시드 20251231"로 바꾸고 "목표 라인 수" 칸을 지웠다. S5 숨은 <code>ai_triage_id</code>에 보인 제안의 id를 넣고, S6 #74 <code>review.denied</code>를 박검토의 승인으로 바꿨다 (C-10). 짝 없는 <code>&lt;/main&gt;</code>도 지웠다.</li>
   </ul>
 </section>
 
 <section class="doc-sec" id="changelog" aria-labelledby="cl-t">
   <h2 class="sec-title" id="cl-t">Changelog</h2>
   <ul class="bullets">
+    <li>2026-10-19 v1.1: 시안의 데이터, 마크업 오류를 고친 결과를 부록 C에 반영.</li>
     <li>2026-10-17 v1: 최초 작성. S1-S6 기본 화면, 상태 변형, 좁은 화면(S5), 이벤트 표, 부록 A 문구, B 감사 이벤트, C 미결 사항 C-01-C-13.</li>
   </ul>
 </section>

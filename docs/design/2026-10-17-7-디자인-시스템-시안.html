@@ -890,7 +890,7 @@ legend { padding: 0; margin-bottom: 8px; font-size: 16px; line-height: 24px; fon
       <div class="spec-body col">
         <div class="stats">
           <div class="stat"><span class="label">전표</span><span class="stat-v">8,341<small>건</small></span></div>
-          <div class="stat"><span class="label">라인</span><span class="stat-v">19,794<small>건</small></span></div>
+          <div class="stat"><span class="label">라인</span><span class="stat-v">19,804<small>건</small></span></div>
           <div class="stat"><span class="label">검토 큐</span><span class="stat-v">52<small>건</small></span><span class="xs muted">점수 25 이상</span></div>
           <div class="stat"><span class="label">경미 적중</span><span class="stat-v">213<small>건</small></span><span class="xs muted">점수 25 미만</span></div>
           <div class="stat"><span class="label">승인</span><span class="stat-v">4<small>/ 52</small></span></div>
@@ -1285,7 +1285,7 @@ legend { padding: 0; margin-bottom: 8px; font-size: 16px; line-height: 24px; fon
           </div>
           <div class="stats">
             <div class="stat"><span class="label">전표</span><span class="stat-v">8,341<small>건</small></span></div>
-            <div class="stat"><span class="label">라인</span><span class="stat-v">19,794<small>건</small></span></div>
+            <div class="stat"><span class="label">라인</span><span class="stat-v">19,804<small>건</small></span></div>
             <div class="stat"><span class="label">검토 큐</span><span class="stat-v">52<small>건</small></span><span class="xs muted">점수 25 이상</span></div>
             <div class="stat"><span class="label">경미 적중</span><span class="stat-v">213<small>건</small></span><span class="xs muted">점수 25 미만</span></div>
             <div class="stat"><span class="label">승인</span><span class="stat-v">4<small>/ 52</small></span></div>
@@ -1317,7 +1317,7 @@ legend { padding: 0; margin-bottom: 8px; font-size: 16px; line-height: 24px; fon
                 <caption class="sr-only">GL 적재 목록</caption>
                 <thead><tr><th scope="col">출처</th><th scope="col">상태</th><th scope="col" class="right">전표</th><th scope="col" class="right">라인</th><th scope="col" class="right">차변 합계(원)</th><th scope="col" class="right">대변 합계(원)</th><th scope="col" class="right">오류</th><th scope="col" class="right">경고</th><th scope="col">해시</th><th scope="col">적재 시각</th><th scope="col"><span class="sr-only">행동</span></th></tr></thead>
                 <tbody>
-                  <tr><td>합성 GL, 기본 시드</td><td><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span></td><td class="right num">8,341</td><td class="right num">19,794</td><td class="right money">386,214,905,000</td><td class="right money">386,214,905,000</td><td class="right num">0</td><td class="right num">0</td><td class="mono">3f9a0c7e</td><td class="num">2026-10-19 09:55</td><td><button class="btn btn-sm" type="button"><svg class="ic"><use href="#i-play"/></svg>테스트 실행</button></td></tr>
+                  <tr><td>합성 GL, 시드 20251231</td><td><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span></td><td class="right num">8,341</td><td class="right num">19,804</td><td class="right money">386,214,905,000</td><td class="right money">386,214,905,000</td><td class="right num">0</td><td class="right num">0</td><td class="mono">3f9a0c7e</td><td class="num">2026-10-19 09:55</td><td><button class="btn btn-sm" type="button"><svg class="ic"><use href="#i-play"/></svg>테스트 실행</button></td></tr>
                   <tr><td><a class="mono" href="#s3">gl_2025_draft.csv</a></td><td><span class="st st-error"><svg class="ic"><use href="#i-x-circle"/></svg>실패</span></td><td class="right muted">-<span class="sr-only">없음</span></td><td class="right muted">-<span class="sr-only">없음</span></td><td class="right muted">-<span class="sr-only">없음</span></td><td class="right muted">-<span class="sr-only">없음</span></td><td class="right num t-error">4</td><td class="right num">1</td><td class="mono">b71d02e5</td><td class="num">2026-10-19 09:48</td><td></td></tr>
                 </tbody>
               </table>
@@ -1413,17 +1413,16 @@ legend { padding: 0; margin-bottom: 8px; font-size: 16px; line-height: 24px; fon
           <nav class="tabs" aria-label="적재 방식"><a class="tab" href="#s3"><svg class="ic"><use href="#i-arrow-up-tray"/></svg>CSV 업로드</a><a class="tab tab-active" href="#s3b" aria-current="page"><svg class="ic"><use href="#i-document-text"/></svg>합성 GL 생성</a></nav>
           <form class="panel" action="#" onsubmit="return false">
             <div class="form-grid" style="max-width:560px">
-              <label class="field"><span class="label">시드 (정수)</span><input class="input num" inputmode="numeric" placeholder="비우면 기본 시드"></label>
-              <label class="field"><span class="label">목표 라인 수</span><input class="input num" inputmode="numeric" value="20,000"></label>
+              <label class="field"><span class="label">시드 (정수)</span><input class="input num" inputmode="numeric" placeholder="비우면 20251231"></label>
             </div>
-            <p class="row gap-1-5 xs muted"><svg class="ic ic-xs"><use href="#i-information-circle"/></svg>같은 시드면 같은 GL이 나옵니다. 룰 테스트의 기대 건수는 기본 시드 기준입니다.</p>
+            <p class="row gap-1-5 xs muted"><svg class="ic ic-xs"><use href="#i-information-circle"/></svg>같은 시드면 같은 GL이 나옵니다. 룰 테스트의 기대 건수는 시드 20251231 기준입니다.</p>
             <div><button class="btn btn-sm" type="submit">생성</button></div>
           </form>
           <div class="panel">
-            <div class="row between"><div class="row gap-1-5"><span class="medium">합성 GL, 기본 시드</span><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span></div><span class="xs muted num">2026-10-19 09:55, 해시 3f9a0c7e</span></div>
+            <div class="row between"><div class="row gap-1-5"><span class="medium">합성 GL, 시드 20251231</span><span class="st st-success"><svg class="ic"><use href="#i-check"/></svg>완료</span></div><span class="xs muted num">2026-10-19 09:55, 해시 3f9a0c7e</span></div>
             <div class="stats">
               <div class="stat"><span class="label">전표</span><span class="stat-v">8,341<small>건</small></span></div>
-              <div class="stat"><span class="label">라인</span><span class="stat-v">19,794<small>건</small></span></div>
+              <div class="stat"><span class="label">라인</span><span class="stat-v">19,804<small>건</small></span></div>
               <div class="stat" style="grid-column: span 2"><span class="label">차변 합계 = 대변 합계</span><span class="stat-v money">386,214,905,000<small>원</small></span></div>
               <div class="stat"><span class="label">경고</span><span class="stat-v">0<small>건</small></span></div>
             </div>
@@ -1596,7 +1595,7 @@ legend { padding: 0; margin-bottom: 8px; font-size: 16px; line-height: 24px; fon
                 </details>
               </section>
               <form class="human-box" action="#" onsubmit="return false" aria-label="작성자 판단">
-                <input type="hidden" name="ai_triage_id" value="">
+                <input type="hidden" name="ai_triage_id" value="a3d91f60-2b7c-4e85-9f14-6c0b8e2d71a5">
                 <fieldset><legend>작성자 판단</legend>
                   <div class="opts">
                     <label class="opt"><input class="radio" type="radio" name="o-s5" value="no_exception"><span class="badge badge-outline badge-success"><svg class="ic"><use href="#i-check-circle"/></svg>이상 없음</span></label>
@@ -1655,7 +1654,7 @@ legend { padding: 0; margin-bottom: 8px; font-size: 16px; line-height: 24px; fon
             <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#77</span><time class="xs muted num" datetime="2026-10-19T02:20:05Z" title="2026-10-19 02:20:05 UTC">2026-10-19 11:20:05</time><span class="medium">김작성</span><span>AI 제안 요청</span><code class="xs muted">ai_triage.requested</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-005590</a><span class="muted">다시 요청</span></div></div></li>
             <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#76</span><time class="xs muted num" datetime="2026-10-19T02:18:40Z" title="2026-10-19 02:18:40 UTC">2026-10-19 11:18:40</time><span class="medium">박검토</span><span>반려</span><code class="xs muted">review.rejected</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-007702</a><span>급여대장과 대사한 결과를 받은 뒤 다시 제출해 주세요.</span></div></div></li>
             <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#75</span><time class="xs muted num" datetime="2026-10-19T02:15:02Z" title="2026-10-19 02:15:02 UTC">2026-10-19 11:15:02</time><span class="medium">이작성</span><span>결론 제출</span><code class="xs muted">conclusion.submitted</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-000958</a><span class="muted">이상 없음</span></div><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>payload</summary><dl class="kv"><dt>conclusion_id</dt><dd class="mono">a2c4e6f8-1b3d-4f5a-8c7e-9d0b2a4c6e81</dd><dt>outcome</dt><dd class="mono">"no_exception"</dd></dl></details></div></li>
-            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#74</span><time class="xs muted num" datetime="2026-10-19T02:13:20Z" title="2026-10-19 02:13:20 UTC">2026-10-19 11:13:20</time><span class="medium">김작성</span><span>검토 거부됨</span><code class="xs muted">review.denied</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-003871</a><span class="t-error">직무분리: 자신의 결론은 승인, 반려할 수 없음</span><code class="xs muted">self_review</code></div></div></li>
+            <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#74</span><time class="xs muted num" datetime="2026-10-19T02:13:20Z" title="2026-10-19 02:13:20 UTC">2026-10-19 11:13:20</time><span class="medium">박검토</span><span>승인</span><code class="xs muted">review.approved</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-003871</a></div></div></li>
             <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#73</span><time class="xs muted num" datetime="2026-10-19T02:11:58Z" title="2026-10-19 02:11:58 UTC">2026-10-19 11:11:58</time><span class="medium">이작성</span><span>결론 제출</span><code class="xs muted">conclusion.submitted</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-006640</a><span class="muted">추가 확인 필요</span></div><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>payload</summary><dl class="kv"><dt>conclusion_id</dt><dd class="mono">7f1e3d5c-9b2a-4c8e-a6f4-0d2b4e6a8c13</dd><dt>outcome</dt><dd class="mono">"needs_follow_up"</dd></dl></details></div></li>
             <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#72</span><time class="xs muted num" datetime="2026-10-19T02:09:26Z" title="2026-10-19 02:09:26 UTC">2026-10-19 11:09:26</time><span class="medium">김작성</span><span>결론 제출</span><code class="xs muted">conclusion.submitted</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-003871</a><span class="muted">예외</span></div><details><summary><svg class="ic ic-xs chev"><use href="#i-chevron-right"/></svg>payload</summary><dl class="kv"><dt>conclusion_id</dt><dd class="mono">c8a0e2b4-6d1f-4a3c-9e5b-7f2d4a6c8e05</dd><dt>outcome</dt><dd class="mono">"exception"</dd></dl></details></div></li>
             <li class="ev"><span class="ev-ic ev-user" title="사람"><svg class="ic"><use href="#i-user-circle"/></svg></span><div class="ev-body"><div class="ev-top"><span class="ev-seq">#71</span><time class="xs muted num" datetime="2026-10-19T02:07:40Z" title="2026-10-19 02:07:40 UTC">2026-10-19 11:07:40</time><span class="medium">박검토</span><span>승인</span><code class="xs muted">review.approved</code></div><div class="row gap-1-5 xs"><span class="muted">대상</span><a class="mono" href="#s5">JE-005033</a></div></div></li>
@@ -1712,6 +1711,5 @@ legend { padding: 0; margin-bottom: 8px; font-size: 16px; line-height: 24px; fon
     });
   })();
 </script>
-</main>
 </body>
 </html>
