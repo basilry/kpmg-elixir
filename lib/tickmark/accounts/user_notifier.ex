@@ -22,19 +22,15 @@ defmodule Tickmark.Accounts.UserNotifier do
   Deliver instructions to update a user email.
   """
   def deliver_update_email_instructions(user, url) do
-    deliver(user.email, "Update email instructions", """
+    deliver(user.email, "[Tickmark] 이메일 변경 확인", """
 
-    ==============================
+    Tickmark 이메일 변경 안내
 
-    Hi #{user.email},
-
-    You can change your email by visiting the URL below:
+    #{user.email} 계정의 이메일을 변경하려면 아래 링크를 눌러 주세요.
 
     #{url}
 
-    If you didn't request this change, please ignore this.
-
-    ==============================
+    요청하지 않았다면 이 메일을 무시하세요.
     """)
   end
 
@@ -49,36 +45,28 @@ defmodule Tickmark.Accounts.UserNotifier do
   end
 
   defp deliver_magic_link_instructions(user, url) do
-    deliver(user.email, "Log in instructions", """
+    deliver(user.email, "[Tickmark] 로그인 링크", """
 
-    ==============================
+    Tickmark 로그인 안내
 
-    Hi #{user.email},
-
-    You can log into your account by visiting the URL below:
+    #{user.email} 계정으로 로그인하려면 아래 링크를 눌러 주세요.
 
     #{url}
 
-    If you didn't request this email, please ignore this.
-
-    ==============================
+    요청하지 않았다면 이 메일을 무시하세요.
     """)
   end
 
   defp deliver_confirmation_instructions(user, url) do
-    deliver(user.email, "Confirmation instructions", """
+    deliver(user.email, "[Tickmark] 회원가입 확인", """
 
-    ==============================
+    Tickmark 회원가입 안내
 
-    Hi #{user.email},
-
-    You can confirm your account by visiting the URL below:
+    #{user.email} 계정을 확인하고 로그인하려면 아래 링크를 눌러 주세요.
 
     #{url}
 
-    If you didn't create an account with us, please ignore this.
-
-    ==============================
+    요청하지 않았다면 이 메일을 무시하세요.
     """)
   end
 end

@@ -8,36 +8,51 @@ defmodule TickmarkWeb.UserLive.Registration do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-sm">
-        <div class="text-center">
-          <.header>
-            Register for an account
-            <:subtitle>
-              Already registered?
-              <.link navigate={~p"/users/log-in"} class="font-semibold text-brand hover:underline">
-                Log in
-              </.link>
-              to your account now.
-            </:subtitle>
-          </.header>
-        </div>
+      <section
+        id="registration-page"
+        aria-labelledby="registration-title"
+        class="mx-auto max-w-sm space-y-6 rounded-box border border-base-300 bg-base-100 p-6 text-sm"
+      >
+        <header class="space-y-2">
+          <h1 id="registration-title" class="text-xl font-semibold">회원가입</h1>
+          <p class="text-muted">
+            이미 계정이 있나요?
+            <.link
+              id="login-link"
+              navigate={~p"/users/log-in"}
+              class="font-semibold text-primary hover:underline"
+            >
+              로그인
+            </.link>
+          </p>
+        </header>
 
-        <.form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
+        <.form
+          for={@form}
+          id="registration_form"
+          phx-submit="save"
+          phx-change="validate"
+          class="space-y-4"
+        >
           <.input
             field={@form[:email]}
             type="email"
-            label="Email"
+            label="이메일"
             autocomplete="username"
             spellcheck="false"
             required
             phx-mounted={JS.focus()}
           />
 
-          <.button phx-disable-with="Creating account..." class="btn btn-primary w-full">
-            Create an account
+          <.button
+            id="registration-submit"
+            phx-disable-with="만드는 중..."
+            class="btn btn-primary w-full"
+          >
+            계정 만들기
           </.button>
         </.form>
-      </div>
+      </section>
     </Layouts.app>
     """
   end
@@ -68,7 +83,7 @@ defmodule TickmarkWeb.UserLive.Registration do
          socket
          |> put_flash(
            :info,
-           "An email was sent to #{user.email}, please access it to confirm your account."
+           "확인 메일을 #{user.email} 로 보냈습니다. 메일의 링크로 로그인하세요."
          )
          |> push_navigate(to: ~p"/users/log-in")}
 

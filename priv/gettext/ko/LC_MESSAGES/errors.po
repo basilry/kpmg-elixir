@@ -1,0 +1,96 @@
+# Ecto와 User changeset의 동적 오류 문구. 한국어는 복수형을 구분하지 않는다.
+msgid ""
+msgstr ""
+"Language: ko\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "can't be blank"
+msgstr "필수 입력 항목입니다."
+
+msgid "has already been taken"
+msgstr "이미 사용 중입니다."
+
+msgid "is invalid"
+msgstr "올바른 값이 아닙니다."
+
+msgid "must be accepted"
+msgstr "동의가 필요합니다."
+
+msgid "has invalid format"
+msgstr "올바른 형식이 아닙니다."
+
+msgid "has an invalid entry"
+msgstr "올바르지 않은 항목이 있습니다."
+
+msgid "is reserved"
+msgstr "사용할 수 없는 값입니다."
+
+msgid "does not match confirmation"
+msgstr "확인 값이 일치하지 않습니다."
+
+msgid "is still associated with this entry"
+msgstr "연결된 항목이 남아 있습니다."
+
+msgid "are still associated with this entry"
+msgstr "연결된 항목이 남아 있습니다."
+
+msgid "should have %{count} item(s)"
+msgid_plural "should have %{count} item(s)"
+msgstr[0] "%{count}개 항목이어야 합니다."
+
+msgid "should be %{count} character(s)"
+msgid_plural "should be %{count} character(s)"
+msgstr[0] "%{count}자여야 합니다."
+
+msgid "should be %{count} byte(s)"
+msgid_plural "should be %{count} byte(s)"
+msgstr[0] "%{count}바이트여야 합니다."
+
+msgid "should have at least %{count} item(s)"
+msgid_plural "should have at least %{count} item(s)"
+msgstr[0] "%{count}개 이상의 항목이 필요합니다."
+
+msgid "should be at least %{count} character(s)"
+msgid_plural "should be at least %{count} character(s)"
+msgstr[0] "%{count}자 이상이어야 합니다."
+
+msgid "should be at least %{count} byte(s)"
+msgid_plural "should be at least %{count} byte(s)"
+msgstr[0] "%{count}바이트 이상이어야 합니다."
+
+msgid "should have at most %{count} item(s)"
+msgid_plural "should have at most %{count} item(s)"
+msgstr[0] "%{count}개 이하의 항목이어야 합니다."
+
+msgid "should be at most %{count} character(s)"
+msgid_plural "should be at most %{count} character(s)"
+msgstr[0] "%{count}자 이하여야 합니다."
+
+msgid "should be at most %{count} byte(s)"
+msgid_plural "should be at most %{count} byte(s)"
+msgstr[0] "%{count}바이트 이하여야 합니다."
+
+msgid "must be less than %{number}"
+msgstr "%{number}보다 작아야 합니다."
+
+msgid "must be greater than %{number}"
+msgstr "%{number}보다 커야 합니다."
+
+msgid "must be less than or equal to %{number}"
+msgstr "%{number} 이하여야 합니다."
+
+msgid "must be greater than or equal to %{number}"
+msgstr "%{number} 이상이어야 합니다."
+
+msgid "must be equal to %{number}"
+msgstr "%{number}이어야 합니다."
+
+msgid "must have the @ sign and no spaces"
+msgstr "공백 없이 @를 포함한 이메일을 입력하세요."
+
+msgid "does not match password"
+msgstr "비밀번호가 일치하지 않습니다."
+
+msgid "did not change"
+msgstr "기존 값과 같습니다."

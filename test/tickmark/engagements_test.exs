@@ -74,10 +74,10 @@ defmodule Tickmark.EngagementsTest do
       assert {:error, %Ecto.Changeset{} = changeset} = Engagements.create_engagement(scope, attrs)
 
       errors = errors_on(changeset)
-      assert errors.client_name == ["can't be blank"]
-      assert errors.period_end_date == ["can't be blank"]
-      assert errors.fiscal_year == ["must be greater than or equal to 2000"]
-      assert errors.performance_materiality == ["must be greater than 0"]
+      assert errors.client_name == ["회사명을 입력하세요."]
+      assert errors.period_end_date == ["결산일을 선택하세요."]
+      assert errors.fiscal_year == ["2000에서 2100 사이로 입력하세요."]
+      assert errors.performance_materiality == ["0보다 큰 금액을 입력하세요."]
 
       assert Repo.aggregate(Engagement, :count) == 0
       assert Repo.aggregate(Member, :count) == 0
