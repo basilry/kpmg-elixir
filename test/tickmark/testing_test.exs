@@ -122,6 +122,53 @@ defmodule Tickmark.TestingTest do
     end
   end
 
+  describe "latest_run_summaries/1" do
+    test "uses the newest run and that run's own threshold", ctx do
+      older = set_status(ctx.run, :completed)
+      insert_finding(older, entry(ctx, "JE-001"), %{score: 40})
+
+      newer =
+        ctx.ledger_import
+        |> insert_test_run(ctx.preparer, %{
+          triage_threshold: 30,
+          started_at: DateTime.add(older.started_at, 60)
+        })
+        |> set_status(:completed_with_errors)
+
+      insert_finding(newer, entry(ctx, "JE-002"), %{score: 30})
+      insert_finding(newer, entry(ctx, "JE-003"), %{score: 29})
+
+      assert Testing.latest_run_summaries(ctx.scope) == %{
+               ctx.engagement.id => %{status: :completed_with_errors, review_queue: 1}
+             }
+    end
+
+    test "has no review queue while the newest run is running", ctx do
+      assert Testing.latest_run_summaries(ctx.scope) == %{
+               ctx.engagement.id => %{status: :running, review_queue: nil}
+             }
+    end
+
+    test "leaves out engagements without runs and engagements of others", ctx do
+      set_status(ctx.run, :completed)
+      no_runs = insert_engagement(ctx.preparer, %{client_name: "실행없음"})
+      insert_member(no_runs, ctx.preparer, :preparer)
+
+      other = user_fixture()
+      others = insert_engagement(other)
+      insert_member(others, other, :preparer)
+      others |> insert_ledger_import(other) |> insert_test_run(other)
+
+      assert Testing.latest_run_summaries(ctx.scope) == %{
+               ctx.engagement.id => %{status: :completed, review_queue: 0}
+             }
+
+      assert Testing.latest_run_summaries(ctx.outsider) == %{}
+    end
+  end
+
+  defp set_status(run, status), do: run |> Ecto.Changeset.change(status: status) |> Repo.update!()
+
   defp insert_rule(run, rule_id) do
     %TestRunRule{test_run_id: run.id}
     |> TestRunRule.create_changeset(%{rule_id: rule_id})

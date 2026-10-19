@@ -12,6 +12,7 @@ defmodule Tickmark.Testing do
 
   alias Tickmark.Accounts.Scope
   alias Tickmark.Engagements
+  alias Tickmark.Engagements.Member
   alias Tickmark.Ledger.LedgerImport
   alias Tickmark.Repo
   alias Tickmark.Testing.{Finding, Rules, Runner, TestRun}
@@ -133,6 +134,48 @@ defmodule Tickmark.Testing do
       :error ->
         %{review_queue: 0, minor: 0}
     end
+  end
+
+  @doc """
+  The newest run of every engagement the scope belongs to, for the S1 list.
+  `review_queue` counts findings at or above that run's threshold and is nil
+  while the run is still running. Engagements without a run are left out.
+  Two queries, however many engagements there are.
+  """
+  @spec latest_run_summaries(Scope.t()) :: %{
+          Ecto.UUID.t() => %{
+            status: :running | :completed | :completed_with_errors,
+            review_queue: non_neg_integer() | nil
+          }
+        }
+  def latest_run_summaries(%Scope{user: %{id: user_id}}) do
+    # DISTINCT ON keeps the first row of each engagement in ORDER BY order,
+    # so the newest run wins. Ecto puts the distinct column first in ORDER BY.
+    latest =
+      Repo.all(
+        from r in TestRun,
+          join: m in Member,
+          on: m.engagement_id == r.engagement_id and m.user_id == ^user_id,
+          distinct: r.engagement_id,
+          order_by: [desc: r.started_at, desc: r.id]
+      )
+
+    finished_ids = for run <- latest, run.status != :running, do: run.id
+
+    review_counts =
+      Repo.all(
+        from f in Finding,
+          join: r in assoc(f, :test_run),
+          where: f.test_run_id in ^finished_ids and f.score >= r.triage_threshold,
+          group_by: f.test_run_id,
+          select: {f.test_run_id, count(f.id)}
+      )
+      |> Map.new()
+
+    Map.new(latest, fn run ->
+      review_queue = if run.status == :running, do: nil, else: Map.get(review_counts, run.id, 0)
+      {run.engagement_id, %{status: run.status, review_queue: review_queue}}
+    end)
   end
 
   defp fetch_visible_run(scope, id) do
