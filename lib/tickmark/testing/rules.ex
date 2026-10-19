@@ -6,7 +6,14 @@ defmodule Tickmark.Testing.Rules do
   """
 
   @rules [
-    {"approval_control_gap", Tickmark.Testing.Rules.ApprovalControlGap}
+    {"weekend_holiday_posting", Tickmark.Testing.Rules.WeekendHolidayPosting},
+    {"off_hours_entry", Tickmark.Testing.Rules.OffHoursEntry},
+    {"round_amount", Tickmark.Testing.Rules.RoundAmount},
+    {"period_end_manual", Tickmark.Testing.Rules.PeriodEndManual},
+    {"approval_control_gap", Tickmark.Testing.Rules.ApprovalControlGap},
+    {"backdated_posting", Tickmark.Testing.Rules.BackdatedPosting},
+    {"rare_account_pair", Tickmark.Testing.Rules.RareAccountPair},
+    {"duplicate_entry", Tickmark.Testing.Rules.DuplicateEntry}
   ]
 
   # Test-only rules from config/test.exs (empty elsewhere). fetch/1 finds them
