@@ -36,7 +36,7 @@ defmodule TickmarkWeb.FindingLive.ConclusionPanel do
           for={@form}
           id="conclusion-form"
           phx-change="validate"
-          phx-submit="validate"
+          phx-submit="submit"
           class="space-y-3"
         >
           <.input
@@ -45,6 +45,9 @@ defmodule TickmarkWeb.FindingLive.ConclusionPanel do
             type="hidden"
             value={@form[:ai_triage_id].value || ""}
           />
+          <div id="conclusion-ai-triage-errors" class="text-xs text-error">
+            <p :for={{message, _opts} <- @form[:ai_triage_id].errors}>{message}</p>
+          </div>
           <fieldset aria-describedby="conclusion-outcome-errors">
             <legend class="mb-2 text-xs font-medium">판단</legend>
             <div class="flex flex-wrap gap-3">
@@ -86,7 +89,12 @@ defmodule TickmarkWeb.FindingLive.ConclusionPanel do
             <p id="conclusion-comment-help">AI 제안을 본 상태로 제출하면 그 제안이 결론에 연결됩니다.</p>
             <span id="conclusion-character-count" class="tabular-nums">{@comment_length} / 2000</span>
           </div>
-          <button id="conclusion-submit" type="submit" disabled class="btn btn-primary btn-sm">결론 제출</button>
+          <button
+            id="conclusion-submit"
+            type="submit"
+            phx-disable-with="제출 중..."
+            class="btn btn-primary btn-sm"
+          >결론 제출</button>
         </.form>
       <% else %>
         <div id="conclusion-summary" class="space-y-2">
