@@ -195,10 +195,12 @@ TICKMARK_DEMO_PASSWORD='12자 이상의 비밀번호' mix ecto.reset   # 개발 
 | `ANTHROPIC_API_KEY` | 있으면 실제 Claude API로 트리아지한다. `config/runtime.exs`에서만 읽고 테스트 환경에서는 읽지 않는다 | 없음 (Fake 클라이언트) |
 | `ANTHROPIC_MODEL` | 트리아지 모델 ID | `claude-opus-5-5` |
 | `TICKMARK_DEMO_PASSWORD` | 시드를 돌릴 때 데모 계정 두 개에 줄 비밀번호 (12자 이상) | 없음 (메일 로그인 링크만) |
+| `TICKMARK_SEED_ON_BOOT` | 운영 release 가 부팅할 때 데모 데이터를 만든다 (이미 있으면 건너뜀) | 꺼짐 |
+| `DATABASE_SSL` | 운영에서 `false` 면 DB TLS 를 끈다 (로컬 DB 로 이미지를 돌릴 때만) | 켜짐 |
 | `TICKMARK_IMPORT_DIR` | 업로드하거나 생성한 GL 파일을 두는 디렉터리 | 시스템 임시 디렉터리 아래 `tickmark_imports` |
 | `PORT` | HTTP 포트 | `4000` |
 
-키는 셸 환경 변수로만 넘긴다. `.env` 파일은 커밋하지 않는다. 운영 환경은 Phoenix 기본 변수(`DATABASE_URL`, `SECRET_KEY_BASE`, `PHX_HOST`, `PHX_SERVER`)가 추가로 필요하다.
+키는 셸 환경 변수로만 넘긴다. `.env` 파일은 커밋하지 않는다. 운영 환경은 Phoenix 기본 변수(`DATABASE_URL`, `SECRET_KEY_BASE`)가 추가로 필요하다. `PHX_HOST` 가 없으면 Render 의 `RENDER_EXTERNAL_HOSTNAME` 을 쓴다.
 
 ### 테스트
 
@@ -208,7 +210,13 @@ mix precommit          # 커밋 전 검증: 경고 0 컴파일, 미사용 deps �
 mix ecto.reset         # 개발 DB 초기화
 ```
 
-테스트는 Fake AI 클라이언트와 `Req.Test`로 외부 API를 부르지 않는다. 여러 작업 트리에서 동시에 돌릴 때는 `MIX_TEST_PARTITION=<번호>`로 테스트 DB를 나눈다. 2026-10-20 기준 584개 테스트가 통과한다.
+테스트는 Fake AI 클라이언트와 `Req.Test`로 외부 API를 부르지 않는다. 여러 작업 트리에서 동시에 돌릴 때는 `MIX_TEST_PARTITION=<번호>`로 테스트 DB를 나눈다. 2026-10-25 기준 588개 테스트가 통과한다.
+
+## 배포
+
+Render Free (앱, Docker) + Neon Free (PostgreSQL) 로 배포한다. 저장소에는 `Dockerfile`, `render.yaml` (Blueprint), `rel/overlays/bin/start` (마이그레이션 뒤 서버 시작) 가 있다. 무료 플랜은 셸이 없어 첫 부팅 때 `Tickmark.Demo` 가 데모 데이터를 직접 만든다. 운영은 메일을 보내지 않으므로 데모 계정의 비밀번호로 로그인한다.
+
+계정 만들기부터 확인까지의 순서, 환경 변수, 제약은 [배포 가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md)에 있다. 데모 비밀번호와 DB 주소는 저장소에 두지 않는다.
 
 ## 디렉터리 구조
 
@@ -236,13 +244,13 @@ refs/                      Phoenix 1.8 LLM 가이드라인 원문
 
 메인 세션(오케스트레이터)이 작업을 나누고 공유 계약(스키마, 함수 시그니처, PubSub 메시지)을 먼저 문서로 확정한 뒤, AI 팀 에이전트들이 각자 git worktree와 브랜치에서 병렬로 구현한다. 메인 세션이 diff와 테스트 출력을 직접 확인하고 하나씩 병합한다. 작업 원칙은 [AGENTS.md](AGENTS.md)에 있다.
 
-## 진행 상황 (2026-10-20)
+## 진행 상황 (2026-10-25)
 
 - M0 기반, M1 데이터 기반과 GL 적재: 완료
 - M2 룰 엔진과 실시간 진행률: 완료
 - M3 AI 트리아지: 전표 단위 요청 (S5 단추) 과 결과 표시 완료. S4 일괄 요청과 AI 열은 개발 중
 - M4 결론, 승인/반려, 감사 로그(S6): 완료. 동시 접속 표시(Presence)는 개발 중
-- M5 공통 셸, 홈, 인증 화면, 데모 시드: 완료. 배포는 대상 검토 중
+- M5 공통 셸, 홈, 인증 화면, 데모 시드: 완료. 배포는 Render + Neon 으로 저장소 준비 완료, 계정 연결 대기
 - M6 README, 문서 위키, 요구사항 명세서, 기능 정의서, API 연동 규격서: 완료. 데모 GIF 는 대기
 
 세부 일정과 담당은 [WBS](docs/planning/2026-10-17-8-WBS와-마일스톤.md)를 따른다.

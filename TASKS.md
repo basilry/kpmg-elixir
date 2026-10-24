@@ -38,15 +38,18 @@
 - [x] 문서 위키 `/docs` 와 상단 바 링크 (6.5, 1a2ef4b)
 - [x] 라운드 4, 5 와 문서 위키 devlog (2026-10-20-1, -14, -15), WBS 와 이 파일 갱신
 - [ ] D1 의 FN 과 D2 의 IF 교차 링크
+- [x] 배포 준비 (5.4): release, Dockerfile, 부팅 시드 `Tickmark.Demo`, 운영 메일 안내, `render.yaml`, 로컬 prod release 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md), [devlog](docs/devlog/2026-10-25-2-배포-준비.md))
+- [ ] 첫 배포 로그와 외부 접속 확인 (사용자 단계 뒤), 5.4 완료 표기
 - [x] README 초안 (WBS 6.1 당김. M6 에 데모 GIF 와 최종 상태 반영)
 
 ## 사용자 결정 대기
 
-- 배포 대상 (WBS 5.1, 10/22 전): [검토](docs/planning/2026-10-20-8-배포-대상-검토.md) 결과 Render Free (앱) + Neon Free (DB) 제안. Vercel 은 LiveView 연결 5분 제한, Oban 정지 문제로 정적 소개 페이지에만. 결정되면 사용자가 계정을 만든다
+- 배포 대상: 10/25 Render Free + Neon Free 로 결정 (5.1 완료)
+- 사용자 단계 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 4장): PR 병합, Neon 프로젝트 (Singapore, 직접 연결), `mix phx.gen.secret`, Render Blueprint 에 값 세 개 입력
 
 ## 다음 라운드 (M5-M6)
 
-- 5.1, 5.4 배포 (5.1 결정 뒤)
+- 5.4 외부 접속 확인 (사용자 단계 뒤)
 - 6.2 데모 GIF, 6.3 공개 전 점검과 저장소 공개 전환, 6.4 제출 자료
 
 ## Changelog
@@ -63,3 +66,4 @@
 - 2026-10-20: S2 start_run 확인 완료, 라운드 5 배정 (F1, F2, D1, D2)
 - 2026-10-20: W6 병합 (2718ff9, 546 통과)
 - 2026-10-20: 라운드 5 병합 (F1 4115351, F2 1e0574d, D1 60781a3, D2 164788e, 563 통과), 데모 시드, S5 AI 요청 단추, 문서 위키 (1a2ef4b, 584 통과). 라운드 4b 나머지와 S3 확인을 남김
+- 2026-10-25: 배포 대상 결정 (Render + Neon), 배포 준비 완료와 사용자 단계 반영 (588 통과)
