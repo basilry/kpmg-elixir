@@ -38,6 +38,10 @@ if config_env() != :test do
       api_key: api_key,
       model: System.get_env("ANTHROPIC_MODEL", "claude-opus-5-5")
   end
+
+  # Password for the two demo users that Tickmark.Demo creates. Without it they
+  # can only log in by magic link, and production sends no mail.
+  config :tickmark, :demo_password, System.get_env("TICKMARK_DEMO_PASSWORD")
 end
 
 if config_env() == :dev do
@@ -91,6 +95,10 @@ if config_env() == :prod do
       """
 
   host = System.get_env("PHX_HOST") || "example.com"
+
+  # The free host has no shell, so the release seeds the demo itself
+  # (Tickmark.Demo). It does nothing once the demo data exists.
+  config :tickmark, :seed_demo_on_boot, System.get_env("TICKMARK_SEED_ON_BOOT") in ~w(true 1)
 
   config :tickmark, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
