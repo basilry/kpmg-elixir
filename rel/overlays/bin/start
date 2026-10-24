@@ -1,0 +1,9 @@
+#!/bin/sh
+# Container entry point: run pending migrations, then start the server.
+# The free host has no shell or one-off jobs, so migrations run on every boot.
+# Ecto skips migrations that already ran.
+set -eu
+
+cd -P -- "$(dirname -- "$0")"
+./migrate
+exec ./server

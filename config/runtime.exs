@@ -75,7 +75,9 @@ if config_env() == :prod do
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
   config :tickmark, Tickmark.Repo,
-    # ssl: true,
+    # Neon requires TLS. Postgrex verifies the certificate and host name.
+    # DATABASE_SSL=false is only for running the image against a local DB.
+    ssl: System.get_env("DATABASE_SSL") != "false",
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     # For machines with several cores, consider starting multiple pools of `pool_size`
@@ -94,7 +96,10 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "example.com"
+  # Render sets RENDER_EXTERNAL_HOSTNAME. The LiveView socket checks the
+  # origin against this host, so a wrong value breaks every live page.
+  host =
+    System.get_env("PHX_HOST") || System.get_env("RENDER_EXTERNAL_HOSTNAME") || "example.com"
 
   # The free host has no shell, so the release seeds the demo itself
   # (Tickmark.Demo). It does nothing once the demo data exists.
