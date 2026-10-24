@@ -27,6 +27,14 @@ defmodule TickmarkWeb.UserLive.Registration do
           </p>
         </header>
 
+        <div :if={mail_off?()} id="mail-off-notice" class="alert alert-info alert-outline">
+          <.icon name="hero-information-circle" class="size-5 shrink-0" />
+          <p>
+            이 데모 서버는 메일을 보내지 않아, 가입해도 로그인 링크를 받을 수 없습니다.
+            안내받은 데모 계정으로 로그인하세요.
+          </p>
+        </div>
+
         <.form
           for={@form}
           id="registration_form"
@@ -101,5 +109,10 @@ defmodule TickmarkWeb.UserLive.Registration do
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     form = to_form(changeset, as: "user")
     assign(socket, form: form)
+  end
+
+  # Production logs mail instead of sending it (config/prod.exs).
+  defp mail_off? do
+    Application.get_env(:tickmark, Tickmark.Mailer)[:adapter] == Swoosh.Adapters.Logger
   end
 end

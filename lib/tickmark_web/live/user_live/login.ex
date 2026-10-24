@@ -38,6 +38,14 @@ defmodule TickmarkWeb.UserLive.Login do
           </div>
         </div>
 
+        <div :if={mail_off?()} id="mail-off-notice" class="alert alert-info alert-outline">
+          <.icon name="hero-information-circle" class="size-5 shrink-0" />
+          <div>
+            <p>이 데모 서버는 메일을 보내지 않아 로그인 링크가 가지 않습니다.</p>
+            <p>안내받은 데모 계정의 이메일과 비밀번호로 아래에서 로그인하세요.</p>
+          </div>
+        </div>
+
         <.form
           for={@form}
           id="login_form_magic"
@@ -136,5 +144,10 @@ defmodule TickmarkWeb.UserLive.Login do
 
   defp local_mail_adapter? do
     Application.get_env(:tickmark, Tickmark.Mailer)[:adapter] == Swoosh.Adapters.Local
+  end
+
+  # Production logs mail instead of sending it (config/prod.exs).
+  defp mail_off? do
+    Application.get_env(:tickmark, Tickmark.Mailer)[:adapter] == Swoosh.Adapters.Logger
   end
 end

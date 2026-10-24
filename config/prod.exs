@@ -25,6 +25,11 @@ config :swoosh, api_client: Swoosh.ApiClient.Req
 # Disable Swoosh Local Memory Storage
 config :swoosh, local: false
 
+# The demo deployment sends no mail. The Logger adapter writes only the
+# recipient (never the login link) to the log, and the log-in and register
+# pages say to use the demo accounts. Swap in a real adapter here to send mail.
+config :tickmark, Tickmark.Mailer, adapter: Swoosh.Adapters.Logger
+
 # Do not print debug messages in production
 config :logger, level: :info
 
