@@ -242,7 +242,7 @@ mix ecto.reset         # 개발 DB 초기화
 | `TICKMARK_DEMO_PASSWORD` | 데모 계정 두 개의 비밀번호 (12자 이상). 부팅 시드가 쓴다 | Render 대시보드 |
 | `TICKMARK_SEED_ON_BOOT` | `true`면 부팅 때 데모 데이터를 만든다 | `render.yaml` |
 | `DATABASE_SSL` | `false`면 DB TLS를 끈다. 로컬 DB로 release를 돌려 볼 때만 쓴다 | 넣지 않음 (기본 켬) |
-| `PHX_HOST` | 외부 호스트 이름. 없으면 Render가 넣는 `RENDER_EXTERNAL_HOSTNAME`을 쓴다 | 넣지 않음 |
+| `PHX_HOST` | 외부 호스트 이름 (커스텀 도메인 `tickmark.6esk.com`). 없으면 Render가 넣는 `RENDER_EXTERNAL_HOSTNAME`을 쓴다. LiveView 소켓은 이 값과 Render 주소를 모두 허용한다 (`check_origin`) | Render 대시보드 (커스텀 도메인을 쓸 때) |
 | `ANTHROPIC_API_KEY` | 없으면 Fake 클라이언트로 트리아지한다 | 넣지 않음 |
 
 Render 대시보드 값은 저장소, 문서, 채팅에 남기지 않는다. 데모 URL과 계정은 지원서로만 전달한다. 무료 서버는 15분 동안 접속이 없으면 잠들고, 다음 첫 접속은 깨우느라 1분쯤 걸린다.

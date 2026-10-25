@@ -96,10 +96,19 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  # Render sets RENDER_EXTERNAL_HOSTNAME. The LiveView socket checks the
-  # origin against this host, so a wrong value breaks every live page.
-  host =
-    System.get_env("PHX_HOST") || System.get_env("RENDER_EXTERNAL_HOSTNAME") || "example.com"
+  # Render sets RENDER_EXTERNAL_HOSTNAME. PHX_HOST is the custom domain
+  # (tickmark.6esk.com) once one is connected. Generated links use `host`.
+  render_host = System.get_env("RENDER_EXTERNAL_HOSTNAME")
+  host = System.get_env("PHX_HOST") || render_host || "example.com"
+
+  # The LiveView socket rejects any origin missing from this list, and
+  # without it Phoenix allows only `host`. Listing both keeps the Render
+  # address working after PHX_HOST moves to the custom domain.
+  check_origin =
+    [host, render_host]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
+    |> Enum.map(&("https://" <> &1))
 
   # The free host has no shell, so the release seeds the demo itself
   # (Tickmark.Demo). It does nothing once the demo data exists.
@@ -109,6 +118,7 @@ if config_env() == :prod do
 
   config :tickmark, TickmarkWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
+    check_origin: check_origin,
     http: [
       # Enable IPv6 and bind on all interfaces.
       # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
