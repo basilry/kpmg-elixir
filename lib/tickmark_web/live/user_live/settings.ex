@@ -9,62 +9,79 @@ defmodule TickmarkWeb.UserLive.Settings do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="text-center">
-        <.header>
-          Account Settings
-          <:subtitle>Manage your account email address and password settings</:subtitle>
-        </.header>
+      <div id="settings-page" class="mx-auto max-w-xl space-y-6 text-sm">
+        <header class="space-y-2">
+          <h1 id="settings-title" class="text-xl font-semibold">계정 설정</h1>
+          <p class="text-muted">이메일과 비밀번호를 변경할 수 있습니다.</p>
+        </header>
+
+        <section
+          aria-labelledby="email-settings-title"
+          class="rounded-box border border-base-300 bg-base-100 p-6"
+        >
+          <h2 id="email-settings-title" class="mb-4 text-base font-semibold">이메일 변경</h2>
+          <.form
+            for={@email_form}
+            id="email_form"
+            phx-submit="update_email"
+            phx-change="validate_email"
+            class="space-y-4"
+          >
+            <.input
+              field={@email_form[:email]}
+              type="email"
+              label="새 이메일"
+              autocomplete="username"
+              spellcheck="false"
+              required
+            />
+            <.button id="email-update-submit" variant="primary" phx-disable-with="변경 중...">이메일 변경</.button>
+          </.form>
+        </section>
+
+        <section
+          aria-labelledby="password-settings-title"
+          class="rounded-box border border-base-300 bg-base-100 p-6"
+        >
+          <h2 id="password-settings-title" class="mb-4 text-base font-semibold">비밀번호 변경</h2>
+          <.form
+            for={@password_form}
+            id="password_form"
+            action={~p"/users/update-password"}
+            method="post"
+            phx-change="validate_password"
+            phx-submit="update_password"
+            phx-trigger-action={@trigger_submit}
+            class="space-y-4"
+          >
+            <input
+              name={@password_form[:email].name}
+              type="hidden"
+              id="hidden_user_email"
+              spellcheck="false"
+              value={@current_email}
+            />
+            <.input
+              field={@password_form[:password]}
+              type="password"
+              label="새 비밀번호"
+              autocomplete="new-password"
+              spellcheck="false"
+              required
+            />
+            <.input
+              field={@password_form[:password_confirmation]}
+              type="password"
+              label="새 비밀번호 확인"
+              autocomplete="new-password"
+              spellcheck="false"
+            />
+            <.button id="password-update-submit" variant="primary" phx-disable-with="저장 중...">
+              비밀번호 저장
+            </.button>
+          </.form>
+        </section>
       </div>
-
-      <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
-        <.input
-          field={@email_form[:email]}
-          type="email"
-          label="Email"
-          autocomplete="username"
-          spellcheck="false"
-          required
-        />
-        <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
-      </.form>
-
-      <div class="divider" />
-
-      <.form
-        for={@password_form}
-        id="password_form"
-        action={~p"/users/update-password"}
-        method="post"
-        phx-change="validate_password"
-        phx-submit="update_password"
-        phx-trigger-action={@trigger_submit}
-      >
-        <input
-          name={@password_form[:email].name}
-          type="hidden"
-          id="hidden_user_email"
-          spellcheck="false"
-          value={@current_email}
-        />
-        <.input
-          field={@password_form[:password]}
-          type="password"
-          label="New password"
-          autocomplete="new-password"
-          spellcheck="false"
-          required
-        />
-        <.input
-          field={@password_form[:password_confirmation]}
-          type="password"
-          label="Confirm new password"
-          autocomplete="new-password"
-          spellcheck="false"
-        />
-        <.button variant="primary" phx-disable-with="Saving...">
-          Save Password
-        </.button>
-      </.form>
     </Layouts.app>
     """
   end
@@ -74,10 +91,10 @@ defmodule TickmarkWeb.UserLive.Settings do
     socket =
       case Accounts.update_user_email(socket.assigns.current_scope.user, token) do
         {:ok, _user} ->
-          put_flash(socket, :info, "Email changed successfully.")
+          put_flash(socket, :info, "이메일을 변경했습니다.")
 
         {:error, _} ->
-          put_flash(socket, :error, "Email change link is invalid or it has expired.")
+          put_flash(socket, :error, "이메일 변경 링크가 잘못됐거나 만료됐습니다.")
       end
 
     {:ok, push_navigate(socket, to: ~p"/users/settings")}
@@ -90,6 +107,7 @@ defmodule TickmarkWeb.UserLive.Settings do
 
     socket =
       socket
+      |> assign(:page_title, "계정 설정")
       |> assign(:current_email, user.email)
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
@@ -124,7 +142,7 @@ defmodule TickmarkWeb.UserLive.Settings do
           &url(~p"/users/settings/confirm-email/#{&1}")
         )
 
-        info = "A link to confirm your email change has been sent to the new address."
+        info = "새 이메일로 확인 링크를 보냈습니다. 메일의 링크로 변경을 완료하세요."
         {:noreply, socket |> put_flash(:info, info)}
 
       changeset ->

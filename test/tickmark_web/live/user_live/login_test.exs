@@ -6,11 +6,16 @@ defmodule TickmarkWeb.UserLive.LoginTest do
 
   describe "login page" do
     test "renders login page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/users/log-in")
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
 
-      assert html =~ "Log in"
-      assert html =~ "Sign up"
-      assert html =~ "Log in with email"
+      assert has_element?(lv, "#login-title", "로그인")
+      assert page_title(lv) == "로그인 | Tickmark"
+      assert has_element?(lv, "#registration-link", "회원가입")
+      assert has_element?(lv, "#login_form_magic")
+      assert has_element?(lv, "#login_form_password")
+      assert has_element?(lv, "#login-magic-submit", "로그인 링크 받기")
+      assert has_element?(lv, "#login-password-submit", "비밀번호로 로그인")
+      assert has_element?(lv, "#login_form_password label", "로그인 상태 유지")
     end
   end
 
@@ -25,7 +30,7 @@ defmodule TickmarkWeb.UserLive.LoginTest do
         |> render_submit()
         |> follow_redirect(conn, ~p"/users/log-in")
 
-      assert html =~ "If your email is in our system"
+      assert html =~ "등록된 이메일이라면 로그인 링크를 보냈습니다. 메일함을 확인하세요."
 
       assert Tickmark.Repo.get_by!(Tickmark.Accounts.UserToken, user_id: user.id).context ==
                "login"
@@ -39,7 +44,7 @@ defmodule TickmarkWeb.UserLive.LoginTest do
         |> render_submit()
         |> follow_redirect(conn, ~p"/users/log-in")
 
-      assert html =~ "If your email is in our system"
+      assert html =~ "등록된 이메일이라면 로그인 링크를 보냈습니다. 메일함을 확인하세요."
     end
   end
 
@@ -57,6 +62,23 @@ defmodule TickmarkWeb.UserLive.LoginTest do
       conn = submit_form(form, conn)
 
       assert redirected_to(conn) == ~p"/"
+      assert conn.resp_cookies["_tickmark_web_user_remember_me"]
+    end
+
+    test "does not remember the user when the checkbox is unchecked", %{conn: conn} do
+      user = user_fixture() |> set_password()
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      form =
+        form(lv, "#login_form_password",
+          user: %{email: user.email, password: valid_user_password(), remember_me: false}
+        )
+
+      conn = submit_form(form, conn)
+
+      assert redirected_to(conn) == ~p"/"
+      assert get_session(conn, :user_token)
+      refute conn.resp_cookies["_tickmark_web_user_remember_me"]
     end
 
     test "redirects to login page with a flash error if credentials are invalid", %{
@@ -70,7 +92,7 @@ defmodule TickmarkWeb.UserLive.LoginTest do
       render_submit(form, %{user: %{remember_me: true}})
 
       conn = follow_trigger_action(form, conn)
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid email or password"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "이메일 또는 비밀번호가 맞지 않습니다."
       assert redirected_to(conn) == ~p"/users/log-in"
     end
   end
@@ -81,11 +103,11 @@ defmodule TickmarkWeb.UserLive.LoginTest do
 
       {:ok, _login_live, login_html} =
         lv
-        |> element("main a", "Sign up")
+        |> element("#registration-link")
         |> render_click()
         |> follow_redirect(conn, ~p"/users/register")
 
-      assert login_html =~ "Register"
+      assert login_html =~ "회원가입"
     end
   end
 
@@ -96,11 +118,11 @@ defmodule TickmarkWeb.UserLive.LoginTest do
     end
 
     test "shows login page with email filled in", %{conn: conn, user: user} do
-      {:ok, _lv, html} = live(conn, ~p"/users/log-in")
+      {:ok, lv, html} = live(conn, ~p"/users/log-in")
 
-      assert html =~ "You need to reauthenticate"
-      refute html =~ "Register"
-      assert html =~ "Log in with email"
+      assert html =~ "계속하려면 다시 로그인하세요."
+      refute has_element?(lv, "#registration-link")
+      assert html =~ "로그인 링크 받기"
 
       assert html =~
                ~s(<input type="email" name="user[email]" id="login_form_magic_email" value="#{user.email}")

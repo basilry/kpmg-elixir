@@ -26,6 +26,20 @@ config :tickmark, TickmarkWeb.Endpoint,
 # Jobs are inserted but not run; tests drain or perform them explicitly
 config :tickmark, Oban, testing: :manual
 
+# Rules only tests can run (design doc 2.2). Modules live in test/support.
+config :tickmark, Tickmark.Testing.Rules,
+  extra_rules: [
+    {"test_skip", Tickmark.TestRules.Skip},
+    {"test_error", Tickmark.TestRules.Error},
+    {"test_raise", Tickmark.TestRules.Raise}
+  ]
+
+# Anthropic client tests go through Req.Test, never the network (design doc 7.2).
+# The key is a placeholder so request headers can be built; it is not a credential.
+config :tickmark, Tickmark.AI,
+  req_options: [plug: {Req.Test, Tickmark.AI.Anthropic}],
+  api_key: "test-placeholder-key"
+
 # In test we don't send emails
 config :tickmark, Tickmark.Mailer, adapter: Swoosh.Adapters.Test
 

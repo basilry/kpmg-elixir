@@ -199,8 +199,9 @@ defmodule Tickmark.Ledger do
     end)
     |> transact_or_remove(path)
     |> case do
-      {:ok, %{ledger_import: ledger_import}} ->
+      {:ok, %{ledger_import: ledger_import, audit_event: event}} ->
         broadcast_update(ledger_import)
+        AuditTrail.broadcast_appended(event)
         {:ok, ledger_import}
 
       {:error, _step, error, _changes} ->
@@ -282,8 +283,9 @@ defmodule Tickmark.Ledger do
     end)
     |> Repo.transact()
     |> case do
-      {:ok, %{succeeded: loaded}} ->
+      {:ok, %{succeeded: loaded, audit_event: event}} ->
         broadcast_update(loaded)
+        AuditTrail.broadcast_appended(event)
         {:ok, loaded}
 
       {:error, :summary, summary, _changes} ->
@@ -309,8 +311,9 @@ defmodule Tickmark.Ledger do
     end)
     |> Repo.transact()
     |> case do
-      {:ok, %{failed: failed}} ->
+      {:ok, %{failed: failed, audit_event: event}} ->
         broadcast_update(failed)
+        AuditTrail.broadcast_appended(event)
         {:ok, failed}
 
       {:error, _step, error, _changes} ->

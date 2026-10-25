@@ -8,36 +8,59 @@ defmodule TickmarkWeb.UserLive.Registration do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="mx-auto max-w-sm">
-        <div class="text-center">
-          <.header>
-            Register for an account
-            <:subtitle>
-              Already registered?
-              <.link navigate={~p"/users/log-in"} class="font-semibold text-brand hover:underline">
-                Log in
-              </.link>
-              to your account now.
-            </:subtitle>
-          </.header>
+      <section
+        id="registration-page"
+        aria-labelledby="registration-title"
+        class="mx-auto max-w-sm space-y-6 rounded-box border border-base-300 bg-base-100 p-6 text-sm"
+      >
+        <header class="space-y-2">
+          <h1 id="registration-title" class="text-xl font-semibold">회원가입</h1>
+          <p class="text-muted">
+            이미 계정이 있나요?
+            <.link
+              id="login-link"
+              navigate={~p"/users/log-in"}
+              class="font-semibold text-primary hover:underline"
+            >
+              로그인
+            </.link>
+          </p>
+        </header>
+
+        <div :if={mail_off?()} id="mail-off-notice" class="alert alert-info alert-outline">
+          <.icon name="hero-information-circle" class="size-5 shrink-0" />
+          <p>
+            이 데모 서버는 메일을 보내지 않아, 가입해도 로그인 링크를 받을 수 없습니다.
+            안내받은 데모 계정으로 로그인하세요.
+          </p>
         </div>
 
-        <.form for={@form} id="registration_form" phx-submit="save" phx-change="validate">
+        <.form
+          for={@form}
+          id="registration_form"
+          phx-submit="save"
+          phx-change="validate"
+          class="space-y-4"
+        >
           <.input
             field={@form[:email]}
             type="email"
-            label="Email"
+            label="이메일"
             autocomplete="username"
             spellcheck="false"
             required
             phx-mounted={JS.focus()}
           />
 
-          <.button phx-disable-with="Creating account..." class="btn btn-primary w-full">
-            Create an account
+          <.button
+            id="registration-submit"
+            phx-disable-with="만드는 중..."
+            class="btn btn-primary w-full"
+          >
+            계정 만들기
           </.button>
         </.form>
-      </div>
+      </section>
     </Layouts.app>
     """
   end
@@ -51,7 +74,8 @@ defmodule TickmarkWeb.UserLive.Registration do
   def mount(_params, _session, socket) do
     changeset = Accounts.change_user_email(%User{}, %{}, validate_unique: false)
 
-    {:ok, assign_form(socket, changeset), temporary_assigns: [form: nil]}
+    {:ok, socket |> assign(page_title: "회원가입") |> assign_form(changeset),
+     temporary_assigns: [form: nil]}
   end
 
   @impl true
@@ -68,7 +92,7 @@ defmodule TickmarkWeb.UserLive.Registration do
          socket
          |> put_flash(
            :info,
-           "An email was sent to #{user.email}, please access it to confirm your account."
+           "확인 메일을 #{user.email} 로 보냈습니다. 메일의 링크로 로그인하세요."
          )
          |> push_navigate(to: ~p"/users/log-in")}
 
@@ -85,5 +109,10 @@ defmodule TickmarkWeb.UserLive.Registration do
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     form = to_form(changeset, as: "user")
     assign(socket, form: form)
+  end
+
+  # Production logs mail instead of sending it (config/prod.exs).
+  defp mail_off? do
+    Application.get_env(:tickmark, Tickmark.Mailer)[:adapter] == Swoosh.Adapters.Logger
   end
 end

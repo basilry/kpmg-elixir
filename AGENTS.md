@@ -50,7 +50,7 @@
   ```bash
   find docs -name "$(date +%F)-*.md" | sed -E 's#.*/[0-9]{4}-[0-9]{2}-[0-9]{2}-([0-9]+)-.*#\1#' | sort -n | tail -1
   ```
-- **예외**: `docs/README.md`(색인), 루트의 `AGENTS.md`, `CLAUDE.md`, `README.md`.
+- **예외**: `docs/README.md`(색인), 루트의 `AGENTS.md`, `CLAUDE.md`, `README.md`, `TASKS.md`(지금 할 일 목록. 원본은 WBS 문서이고 Changelog 를 둔다).
 - **갱신**: 계속 살아있는 문서(데이터 모델, 디자인 시스템 등)는 같은 파일을 고치고 문서 맨 아래 `## Changelog`에 날짜와 변경 요약을 남긴다. 파일명은 바꾸지 않는다. 내용이 근본적으로 바뀌면 새 문서를 만들고, 기존 문서 맨 위에 `> 대체됨: [새 문서](상대경로)`를 적는다.
 - 문서 간 링크는 상대 경로로 건다.
 

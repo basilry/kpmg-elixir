@@ -24,6 +24,11 @@ config :tickmark,
   ecto_repos: [Tickmark.Repo],
   generators: [timestamp_type: :utc_datetime, binary_id: true]
 
+# The UI is Korean only. Validation and auth messages are translated in
+# priv/gettext/ko (screen design C-06). A msgid without a ko entry falls back
+# to the English text.
+config :tickmark, TickmarkWeb.Gettext, default_locale: "ko", locales: ~w(ko en)
+
 # Background jobs (Oban OSS). Queue sizes follow the architecture doc 5.1.
 config :tickmark, Oban,
   engine: Oban.Engines.Basic,

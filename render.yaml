@@ -1,0 +1,29 @@
+# Render Blueprint for the Tickmark demo (deploy guide: docs/planning/).
+#
+# The database is Neon Free, outside Render. Values marked `sync: false` are
+# asked for once in the dashboard when the Blueprint is created and are never
+# stored in this repository.
+services:
+  - type: web
+    name: tickmark
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    branch: main
+    autoDeployTrigger: commit
+    envVars:
+      # Neon direct (non-pooled) connection string. Oban uses LISTEN/NOTIFY,
+      # which the pooled endpoint does not support.
+      - key: DATABASE_URL
+        sync: false
+      # Generate with `mix phx.gen.secret`. Render's generateValue is too
+      # short for Phoenix (it needs at least 64 bytes).
+      - key: SECRET_KEY_BASE
+        sync: false
+      # Password for the two demo users, 12 characters or more.
+      - key: TICKMARK_DEMO_PASSWORD
+        sync: false
+      # Seeds the demo once on first boot (Tickmark.Demo). Later boots skip it.
+      - key: TICKMARK_SEED_ON_BOOT
+        value: "true"

@@ -38,6 +38,10 @@ if config_env() != :test do
       api_key: api_key,
       model: System.get_env("ANTHROPIC_MODEL", "claude-opus-5-5")
   end
+
+  # Password for the two demo users that Tickmark.Demo creates. Without it they
+  # can only log in by magic link, and production sends no mail.
+  config :tickmark, :demo_password, System.get_env("TICKMARK_DEMO_PASSWORD")
 end
 
 if config_env() == :dev do
@@ -52,7 +56,10 @@ if config_env() == :dev do
         ~r"priv/gettext/.*\.po$"E,
         # Router, Controllers, LiveViews and LiveComponents
         ~r"lib/tickmark_web/router\.ex$"E,
-        ~r"lib/tickmark_web/(controllers|live|components)/.*\.(ex|heex)$"E
+        ~r"lib/tickmark_web/(controllers|live|components)/.*\.(ex|heex)$"E,
+        # Project documents shown in the docs wiki
+        ~r"docs/.*\.(md|html)$"E,
+        ~r"(README|TASKS|AGENTS)\.md$"E
       ]
     ]
 end
@@ -68,7 +75,9 @@ if config_env() == :prod do
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
   config :tickmark, Tickmark.Repo,
-    # ssl: true,
+    # Neon requires TLS. Postgrex verifies the certificate and host name.
+    # DATABASE_SSL=false is only for running the image against a local DB.
+    ssl: System.get_env("DATABASE_SSL") != "false",
     url: database_url,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     # For machines with several cores, consider starting multiple pools of `pool_size`
@@ -87,7 +96,14 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  host = System.get_env("PHX_HOST") || "example.com"
+  # Render sets RENDER_EXTERNAL_HOSTNAME. The LiveView socket checks the
+  # origin against this host, so a wrong value breaks every live page.
+  host =
+    System.get_env("PHX_HOST") || System.get_env("RENDER_EXTERNAL_HOSTNAME") || "example.com"
+
+  # The free host has no shell, so the release seeds the demo itself
+  # (Tickmark.Demo). It does nothing once the demo data exists.
+  config :tickmark, :seed_demo_on_boot, System.get_env("TICKMARK_SEED_ON_BOOT") in ~w(true 1)
 
   config :tickmark, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
