@@ -3,7 +3,7 @@
 - 작성일: 2026-10-25
 - 작성자: 메인 세션
 - 관련: [배포 대상 검토](2026-10-20-8-배포-대상-검토.md) (결정: A), [WBS와 마일스톤](2026-10-17-8-WBS와-마일스톤.md) 5.1, 5.4, [배포 준비 devlog](../devlog/2026-10-25-2-배포-준비.md)
-- 상태: 배포 완료 (2026-10-25 첫 배포 `main` ce33571, 지금 9629df7). 주소 https://tickmark-e0ki.onrender.com. 17:53 사용자가 인스턴스를 Free 에서 0.5c-512mb (유료) 로 바꿨다. 결과는 5.2, 5.3절, 기록은 [첫 배포 devlog](../devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md)
+- 상태: 배포 완료 (2026-10-25 첫 배포 `main` ce33571, 지금 d4c3733). 주소 https://tickmark-e0ki.onrender.com. 17:53 사용자가 인스턴스를 Free 에서 0.5c-512mb (유료) 로 바꿨다. 커스텀 도메인 `www.tickmark.6esk.com` 은 인증서가 없어 아직 열리지 않고, 그 주소의 LiveView 403 은 코드로 고쳤다 (병합 뒤 확인). 결과는 5.2-5.4절, 기록은 [첫 배포 devlog](../devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md)
 
 ## 1. 구성
 
@@ -31,7 +31,7 @@
 | `lib/tickmark/demo.ex` | 시드 로직 (`seeds.exs` 에서 옮김). `seed/0`, `seed_on_boot/0` |
 | `render.yaml` | Blueprint. 웹 서비스 `tickmark`, `plan: free`, `region: singapore`, `branch: main`. 플랜은 대시보드에서 0.5c-512mb 로 바뀌어 지금은 이 값과 다르다 (5.3절) |
 | `config/runtime.exs` | DB `ssl` (기본 켬), `RENDER_EXTERNAL_HOSTNAME` 대체값, `TICKMARK_DEMO_PASSWORD`, `TICKMARK_SEED_ON_BOOT` |
-| `config/prod.exs` | 메일러를 `Swoosh.Adapters.Logger` 로. 수신자만 로그에 남고 로그인 링크는 남지 않는다 |
+| `config/prod.exs` | 메일러를 `Swoosh.Adapters.Logger` 로. 수신자만 로그에 남고 로그인 링크는 남지 않는다. LiveView 소켓 출처 확인을 요청 호스트 기준으로 (`check_origin: :conn`, 5.4절) |
 
 ## 3. 환경 변수
 
@@ -128,6 +128,28 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 - **`render.yaml` 과 어긋남**: `render.yaml` 은 아직 `plan: free` 다. Render 문서상 대시보드에서 바꾼 값이 Blueprint 와 다르면 다음 Blueprint 동기화가 덮어쓴다. 자동 동기화는 `render.yaml` 을 바꾼 push 에만 돌아서, 이번 두 병합은 플랜을 건드리지 않았다. `render.yaml` 을 고치는 PR 에서는 `plan` 을 대시보드와 맞추거나 (0.5c-512mb 에 해당하는 값 이름은 확인 필요), Blueprint 설정에서 Auto Sync 를 끈다. Free 로 돌아갈 뜻이면 그대로 둔다.
 - **겹친 배포**: 연달아 병합하면 앞 배포가 취소된다. 뒤 커밋이 앞 커밋을 포함하므로 결과는 같다.
 
+### 5.4 PR #6 재배포와 커스텀 도메인 (2026-10-25)
+
+18:10 PR #6 (문서) 를 담은 d4c3733 이 배포됐다. 이어서 서비스에 커스텀 도메인이 연결된 것을 보고 외부에서 확인했다. 시각은 KST.
+
+| 항목 | 결과 |
+|---|---|
+| 재배포 | d4c3733, Auto-Deploy 59.3초, 18:10 Live. 부팅 로그는 5.3절과 같음 (`Migrations already up`, Bandit, 시드 건너뜀) |
+| 외부 HTTP | `/`, `/users/log-in`, `/docs` 200, `/engagements` 302, http 는 https 로 301, `#mail-off-notice` 있음. `/docs` 의 이 가이드에 5.3절이 보임. LiveView 연결됨, 콘솔 오류 0 |
+| 커스텀 도메인 | 대시보드 서비스 머리글의 주 URL 이 `www.tickmark.6esk.com` 이고 도메인이 2개 더 있다고 나온다. Settings 의 Custom Domains 칸은 열리지 않아 목록과 인증서 상태는 확인 필요. DNS 는 `www.tickmark.6esk.com`, `tickmark.6esk.com` 둘 다 CNAME `tickmark-e0ki.onrender.com` |
+| `tickmark.6esk.com` | 인증서 있음 (CN=tickmark.6esk.com, Google Trust Services WE1). https 로 열면 `https://www.tickmark.6esk.com/` 로 301 |
+| `www.tickmark.6esk.com` | TLS 핸드셰이크 실패 (SSL alert 40). 이 이름의 인증서가 아직 없는 것으로 보인다 (확인 필요). http 로 열면 Render 앞단 (`Server: cloudflare`) 이 같은 호스트의 https 로 301 |
+| LiveView 출처 (d4c3733) | onrender 주소의 `/live/websocket` 에 Origin 헤더만 바꿔 WebSocket 업그레이드를 보냄. Origin `https://tickmark-e0ki.onrender.com` 101, `https://www.tickmark.6esk.com` 403 (18:20 재확인). www 인증서가 나와도 그 주소의 LiveView 화면은 연결되지 않는 상태였다 |
+
+- **원인**: Phoenix 소켓의 기본 출처 확인 (`check_origin: true`) 은 Origin 의 호스트를 endpoint `url` 호스트와만 비교한다. `url` 호스트는 `PHX_HOST` 가 없으면 `RENDER_EXTERNAL_HOSTNAME` (onrender 주소) 다. 일반 HTTP 요청은 이 확인을 거치지 않아 다른 도메인에서도 200 이 나온다.
+- **수정**: `config/prod.exs` 에 `check_origin: :conn`. Origin 의 스킴, 호스트, 포트가 요청 자체와 같을 때만 소켓을 연다. `runtime.exs` 의 `url` 호스트는 그대로 두고 주석만 고쳤다.
+- **검토한 대안**: Render 에 `PHX_HOST=www.tickmark.6esk.com` 을 넣으면 코드 변경은 없지만 onrender 주소의 LiveView 가 끊긴다. 허용 목록 (`check_origin: ["//tickmark-e0ki.onrender.com", "//www.tickmark.6esk.com"]`) 은 가장 좁지만 도메인이 바뀔 때마다 고쳐야 한다. 두 주소를 다 살리고 목록 관리가 없는 `:conn` 을 골랐다.
+- **보안**: 출처 확인은 다른 사이트의 페이지가 사용자의 쿠키로 소켓을 여는 것 (cross-site WebSocket hijacking) 을 막는다. 그런 페이지에서 브라우저는 그 사이트를 Origin 으로, 우리 주소를 Host 로 보내므로 `:conn` 에서도 거부된다. 둘을 같게 만들려면 공격자 도메인이 우리 서버를 가리켜야 하는데, 그때 브라우저는 우리 도메인의 세션 쿠키를 보내지 않는다.
+- **프록시 뒤 스킴과 포트**: Render 는 TLS 를 앞단에서 끝내고 앱에는 http 로 보낸다. 그대로면 요청은 http, 80 이고 Origin 은 https, 443 이라 `:conn` 이 모두 거부한다. `force_ssl` 의 `rewrite_on: [:x_forwarded_proto]` 가 스킴과 포트를 https, 443 으로 고치고, Phoenix endpoint 는 `Plug.SSL` 을 소켓 처리 (`socket_dispatch`) 보다 먼저 둔다. 그래서 소켓은 고쳐진 값을 본다.
+- **테스트**: `test/tickmark_web/socket_origin_test.exs` (4개). `config/prod.exs` 를 `Config.Reader` 로 읽어 값이 `:conn` 인지 본다. 운영의 `rewrite_on` 으로 프록시 요청을 흉내 내 두 주소는 통과, 다른 사이트, 접미사 위장 (`www.tickmark.6esk.com.evil.example`), http Origin 은 403 인지 본다. 기본값 `true` 가 url 호스트가 아닌 도메인을 거부하는 것도 남겼다. `prod.exs` 에서 `rewrite_on` 을 비우면 2개, `check_origin` 을 지우면 1개가 실패하는 것을 확인했다.
+- **병합 뒤 확인**: 같은 업그레이드 요청에서 Origin `https://www.tickmark.6esk.com` 이 101 인지, onrender 주소가 계속 101 인지 본다. 브라우저로 www 를 여는 것은 인증서가 나온 뒤다 (Render 대시보드 Custom Domains 에서 www 상태 확인, 사용자).
+- **학습 포인트**: 소켓 연결은 라우터를 거치지 않는다. endpoint 의 `socket` 선언을 `plug :socket_dispatch` 가 라우터보다 먼저 처리하므로, 라우터 파이프라인 대신 endpoint 설정과 소켓 옵션 (`check_origin`, `connect_info`) 이 이 요청을 다룬다. `check_origin` 값은 런타임에 endpoint 설정에서 읽어 처음 한 번 캐시한다.
+
 ## 6. 알려진 제약과 대응
 
 | 제약 | 영향 | 대응 |
@@ -139,6 +161,7 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 | 포트를 못 찾는다는 배포 실패 | 서비스가 안 뜬다 | 10/25 첫 배포에서 `::` 바인딩으로 포트 10000 을 찾았다. 앞으로 실패하면 `runtime.exs` 의 `ip` 를 `{0, 0, 0, 0}` 으로 바꾼다 |
 | Free 의 CPU 0.15, 메모리 지표 없음 | 무거운 작업이 느리다. 메모리 여유를 볼 수 없다 | 시드 전체가 약 14초라 데모에는 충분했다. 0.5c-512mb 는 CPU 0.5 이고 Metrics 에서 메모리를 본다 (약 190 MB, 5.3절) |
 | `render.yaml` 의 `plan: free` 와 대시보드 플랜이 다름 | `render.yaml` 을 바꾼 push 가 동기화되면 Free 로 돌아간다 | `render.yaml` 을 고칠 때 `plan` 을 맞추거나 Auto Sync 를 끈다 (5.3절) |
+| 커스텀 도메인 `www.tickmark.6esk.com` 의 인증서 없음 | www 와, www 로 넘기는 `tickmark.6esk.com` 이 TLS 오류로 열리지 않는다 | 인증서가 나오기 전에는 지원서와 안내에 onrender 주소를 쓴다. 상태는 Render 대시보드 Custom Domains 에서 본다 (사용자). 그 주소의 LiveView 403 은 `check_origin: :conn` 으로 고쳤다 (5.4절) |
 | 데모 데이터를 처음 상태로 | - | Neon 에서 DB 를 지우고 다시 만든 뒤 Render 에서 다시 배포한다. 부팅 때 마이그레이션과 시드가 다시 돈다 |
 
 ## Changelog
@@ -146,3 +169,4 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 - 2026-10-25: 최초 작성. 구성, 환경 변수, 사용자 단계, 로컬 release 확인 결과, 제약
 - 2026-10-25: 첫 배포 결과 (5.2절). 상태를 배포 완료로, 확인 필요 다섯 가지 중 네 가지 해결 (Linux 메모리만 남음), 6장 Docker 와 포트 행 갱신, CPU 0.15 행 추가, `plug_crypto` 보안 권고. 4장 7단계를 "비밀번호만 지원서에" 로 분명히 함
 - 2026-10-25: 플랜 변경 (사용자, Free -> 0.5c-512mb) 과 `plug_crypto` 2.2.1 재배포 결과 (5.3절, 9629df7). Linux 메모리 확인 필요를 Render Metrics 로 해소. 6장 잠듦과 CPU 행 갱신, `render.yaml` 플랜 어긋남 행 추가. 상태 줄, 구성도, 2장 `render.yaml` 행, 4장 7단계 갱신
+- 2026-10-25: d4c3733 재배포와 커스텀 도메인 확인 (5.4절). www 인증서 없음, www Origin 의 LiveView 403 원인과 `check_origin: :conn` 수정, 테스트, 병합 뒤 확인 항목. 상태 줄, 2장 `config/prod.exs` 행, 6장 커스텀 도메인 행

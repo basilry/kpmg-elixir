@@ -96,8 +96,9 @@ if config_env() == :prod do
       You can generate one by calling: mix phx.gen.secret
       """
 
-  # Render sets RENDER_EXTERNAL_HOSTNAME. The LiveView socket checks the
-  # origin against this host, so a wrong value breaks every live page.
+  # Render sets RENDER_EXTERNAL_HOSTNAME. This host is used for generated
+  # URLs and the force_ssl redirect. The LiveView origin check uses the
+  # request host instead (check_origin: :conn in config/prod.exs).
   host =
     System.get_env("PHX_HOST") || System.get_env("RENDER_EXTERNAL_HOSTNAME") || "example.com"
 

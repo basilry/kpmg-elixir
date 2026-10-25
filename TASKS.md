@@ -41,6 +41,7 @@
 - [x] 배포 준비 (5.4): release, Dockerfile, 부팅 시드 `Tickmark.Demo`, 운영 메일 안내, `render.yaml`, 로컬 prod release 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md), [devlog](docs/devlog/2026-10-25-2-배포-준비.md))
 - [x] 첫 배포 로그와 외부 접속 확인, 5.4 완료 표기 (https://tickmark-e0ki.onrender.com, [devlog](docs/devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md))
 - [x] `plug_crypto` 2.2.0 -> 2.2.1 (EEF-CVE-2026-105963, MEDIUM), `mix precommit` 뒤 재배포 (PR #5, 9629df7 배포 확인, [가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.3절)
+- [ ] LiveView 출처 확인을 요청 호스트 기준으로 (`check_origin: :conn`, `fix/liveview-check-origin`). 병합 뒤 www Origin 으로 101 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.4절)
 - [x] README 초안 (WBS 6.1 당김. M6 에 데모 GIF 와 최종 상태 반영)
 
 ## 사용자 결정 대기
@@ -48,6 +49,7 @@
 - 배포 대상: 10/25 Render Free + Neon Free 로 결정 (5.1 완료). 같은 날 17:53 사용자가 Render 인스턴스를 0.5c-512mb (유료) 로 바꿈
 - 사용자 단계 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 4장): 10/25 모두 완료 (PR #3 병합, Neon, `mix phx.gen.secret`, Render Blueprint 값 세 개)
 - 플랜 유지 여부: 0.5c-512mb 를 유지하면 `render.yaml` 의 `plan: free` 를 맞추거나 Blueprint Auto Sync 를 끈다. Free 로 돌아가면 그대로 둔다 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.3절)
+- 커스텀 도메인: `www.tickmark.6esk.com` 은 인증서가 아직 없어 열리지 않는다. Render 대시보드 Custom Domains 에서 상태 확인. 나오기 전에는 지원서에 onrender 주소를 쓴다 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.4절)
 - 남은 사용자 일: 지원서에 URL, 데모 계정 기재 (6.4). 첫 접속 지연 안내는 Free 로 돌아갈 때만 적는다
 
 ## 다음 라운드 (M5-M6)
@@ -72,3 +74,4 @@
 - 2026-10-25: PR #3 (배포 준비까지) main 병합, README 최신화
 - 2026-10-25: Render 첫 배포와 외부 접속 확인 (5.4 완료), `plug_crypto` 갱신 할 일 추가
 - 2026-10-25: PR #4, #5 병합과 9629df7 재배포 확인 (`plug_crypto` 할 일 완료), 플랜 변경 (Free -> 0.5c-512mb) 반영, 플랜 유지 여부 결정 항목 추가
+- 2026-10-25: d4c3733 재배포 확인, 커스텀 도메인 인증서 확인 항목과 LiveView 출처 확인 수정 할 일 추가

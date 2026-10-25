@@ -19,6 +19,14 @@ config :tickmark, TickmarkWeb.Endpoint,
     ]
   ]
 
+# The LiveView socket accepts an Origin only when its scheme, host and port
+# match the request itself. The default compares the Origin host with the
+# endpoint url host, which rejects the same app served on a custom domain.
+# Cross-site pages are still rejected: a browser on another site sends that
+# site as the Origin, while the Host stays ours. Plug.SSL above rewrites the
+# scheme and port from x-forwarded-proto before the socket sees the request.
+config :tickmark, TickmarkWeb.Endpoint, check_origin: :conn
+
 # Configure Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Req
 
