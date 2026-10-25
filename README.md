@@ -26,7 +26,7 @@ GL 적재 -> 룰 8종 병렬 실행 -> 위험 점수로 전표 선별 -> AI 트�
 | 화면 | 경로 | 하는 일 | 상태 |
 |---|---|---|---|
 | 홈 | `/` | 제품 소개. 로그인한 상태면 `/engagements`로 보낸다 | 완료 |
-| 로그인, 회원가입, 계정 설정 | `/users/log-in`, `/users/register`, `/users/settings` | 메일 로그인 링크 또는 비밀번호 로그인 | 완료 |
+| 로그인, 회원가입, 계정 설정 | `/users/log-in`, `/users/register`, `/users/settings` | 메일 로그인 링크 또는 비밀번호 로그인. 운영 데모 서버는 메일을 보내지 않아 비밀번호로만 들어간다 | 완료 |
 | S1 감사 대상 목록 | `/engagements` | 감사 대상 생성, 내가 멤버인 대상과 최근 실행 상태 | 완료 |
 | S2 감사 대상 상세 | `/engagements/:id` | 멤버 관리, GL 적재 이력, 테스트 실행 | 완료 |
 | S3 GL 불러오기 | `/engagements/:id/imports/new` | CSV 업로드 또는 시드 기반 합성 GL 생성 | 완료 |
@@ -60,7 +60,7 @@ GL 적재 -> 룰 8종 병렬 실행 -> 위험 점수로 전표 선별 -> AI 트�
    v
  TickmarkWeb.Endpoint (Bandit) -> Router -> UserAuth (current_scope)
    |
-   +-- LiveViews: EngagementLive, ImportLive, TestRunLive, FindingLive, AuditLive
+   +-- LiveViews: EngagementLive, ImportLive, TestRunLive, FindingLive, AuditLive, DocsLive
    |       | 호출: 항상 scope 가 첫 인자              ^ handle_info
    v       v                                         |
  Contexts ----------------------------------------> Phoenix.PubSub (+ Presence)
@@ -105,12 +105,15 @@ GL 적재 -> 룰 8종 병렬 실행 -> 위험 점수로 전표 선별 -> AI 트�
 |---|---|---|
 | 언어/런타임 | Elixir, Erlang/OTP | 1.20.4, 29.1.2 (`.tool-versions`) |
 | 웹 | Phoenix, LiveView, PubSub, Presence | 1.8.15, 1.2.12 |
-| HTTP 서버 | Bandit | 1.13 |
-| 데이터 | Ecto SQL, PostgreSQL | 3.14.0, 16.4 |
+| HTTP 서버 | Bandit | 1.13.1 |
+| 데이터 | Ecto SQL, Postgrex, PostgreSQL | 3.14.0, 0.22.4, 16.4 |
 | 백그라운드 작업 | Oban (OSS 기능만) | 2.24.2 |
 | CSV | NimbleCSV | 1.3.0 |
-| LLM | Claude API (Req로 직접 호출) | Req 0.7 |
-| 프런트엔드 | Tailwind, esbuild (Phoenix 기본) | |
+| LLM | Claude API (Req로 직접 호출) | Req 0.7.5 |
+| 메일 | Swoosh (개발은 `/dev/mailbox`, 운영은 Logger 어댑터) | 1.29.0 |
+| 문서 위키 | MDEx (Markdown 렌더링) | 0.14.2 |
+| 프런트엔드 | Tailwind, daisyUI, Heroicons, esbuild (Phoenix 1.8 기본) | |
+| 배포 | Elixir release + Docker, Render Free (앱), Neon Free (PostgreSQL) | |
 
 2단계에서 검토하는 것: OpenTelemetry (관측성), Ash Framework (일부 영역), ClickHouse (대량 분개 분석), Terraform + Microsoft Azure (인프라).
 
@@ -195,12 +198,10 @@ TICKMARK_DEMO_PASSWORD='12자 이상의 비밀번호' mix ecto.reset   # 개발 
 | `ANTHROPIC_API_KEY` | 있으면 실제 Claude API로 트리아지한다. `config/runtime.exs`에서만 읽고 테스트 환경에서는 읽지 않는다 | 없음 (Fake 클라이언트) |
 | `ANTHROPIC_MODEL` | 트리아지 모델 ID | `claude-opus-5-5` |
 | `TICKMARK_DEMO_PASSWORD` | 시드를 돌릴 때 데모 계정 두 개에 줄 비밀번호 (12자 이상) | 없음 (메일 로그인 링크만) |
-| `TICKMARK_SEED_ON_BOOT` | 운영 release 가 부팅할 때 데모 데이터를 만든다 (이미 있으면 건너뜀) | 꺼짐 |
-| `DATABASE_SSL` | 운영에서 `false` 면 DB TLS 를 끈다 (로컬 DB 로 이미지를 돌릴 때만) | 켜짐 |
 | `TICKMARK_IMPORT_DIR` | 업로드하거나 생성한 GL 파일을 두는 디렉터리 | 시스템 임시 디렉터리 아래 `tickmark_imports` |
 | `PORT` | HTTP 포트 | `4000` |
 
-키는 셸 환경 변수로만 넘긴다. `.env` 파일은 커밋하지 않는다. 운영 환경은 Phoenix 기본 변수(`DATABASE_URL`, `SECRET_KEY_BASE`)가 추가로 필요하다. `PHX_HOST` 가 없으면 Render 의 `RENDER_EXTERNAL_HOSTNAME` 을 쓴다.
+키는 셸 환경 변수로만 넘긴다. `.env` 파일은 커밋하지 않는다. 운영 환경 변수는 아래 [배포](#배포)에 있다.
 
 ### 테스트
 
@@ -214,20 +215,55 @@ mix ecto.reset         # 개발 DB 초기화
 
 ## 배포
 
-Render Free (앱, Docker) + Neon Free (PostgreSQL) 로 배포한다. 저장소에는 `Dockerfile`, `render.yaml` (Blueprint), `rel/overlays/bin/start` (마이그레이션 뒤 서버 시작) 가 있다. 무료 플랜은 셸이 없어 첫 부팅 때 `Tickmark.Demo` 가 데모 데이터를 직접 만든다. 운영은 메일을 보내지 않으므로 데모 계정의 비밀번호로 로그인한다.
+무료 플랜으로 배포한다. `main`에 병합하면 Render가 Docker 이미지를 다시 빌드해 배포한다.
 
-계정 만들기부터 확인까지의 순서, 환경 변수, 제약은 [배포 가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md)에 있다. 데모 비밀번호와 DB 주소는 저장소에 두지 않는다.
+```
+브라우저 --HTTPS/WebSocket--> Render Free 웹 서비스 (Docker, Elixir release, Singapore)
+                                  |  TLS (인증서와 호스트 이름 검증)
+                                  v
+                              Neon Free PostgreSQL (직접 연결, Singapore)
+```
+
+| 파일 | 내용 |
+|---|---|
+| `Dockerfile` | `mix phx.gen.release --docker` 생성본. 문서 위키가 컴파일 시점에 읽는 `docs/`와 루트 문서를 함께 복사한다 |
+| `render.yaml` | Render Blueprint. 웹 서비스 하나 (`plan: free`, `branch: main`) |
+| `rel/overlays/bin/start` | 컨테이너 시작 명령. 마이그레이션을 돌린 뒤 서버를 띄운다 |
+| `lib/tickmark/demo.ex` | 데모 시드. `mix setup`과 운영 첫 부팅이 같은 코드를 쓴다 |
+
+무료 플랜은 셸과 one-off job이 없다. 그래서 컨테이너가 뜰 때마다 마이그레이션을 돌리고, `TICKMARK_SEED_ON_BOOT=true`면 서버가 뜬 뒤 `Tickmark.Demo`가 데모 데이터를 만든다. 데모 계정이 이미 있으면 아무것도 하지 않는다. 운영은 메일을 보내지 않으므로 (Swoosh Logger 어댑터, 수신자만 로그에 남는다) 데모 계정의 비밀번호로 로그인한다.
+
+운영 환경 변수:
+
+| 변수 | 용도 | 넣는 곳 |
+|---|---|---|
+| `DATABASE_URL` | Neon 직접 연결 문자열. pooled 연결은 Oban의 LISTEN/NOTIFY가 동작하지 않아 쓰지 않는다 | Render 대시보드 |
+| `SECRET_KEY_BASE` | 세션과 쿠키 서명 키. `mix phx.gen.secret`으로 만든다 | Render 대시보드 |
+| `TICKMARK_DEMO_PASSWORD` | 데모 계정 두 개의 비밀번호 (12자 이상). 부팅 시드가 쓴다 | Render 대시보드 |
+| `TICKMARK_SEED_ON_BOOT` | `true`면 부팅 때 데모 데이터를 만든다 | `render.yaml` |
+| `DATABASE_SSL` | `false`면 DB TLS를 끈다. 로컬 DB로 release를 돌려 볼 때만 쓴다 | 넣지 않음 (기본 켬) |
+| `PHX_HOST` | 외부 호스트 이름. 없으면 Render가 넣는 `RENDER_EXTERNAL_HOSTNAME`을 쓴다 | 넣지 않음 |
+| `ANTHROPIC_API_KEY` | 없으면 Fake 클라이언트로 트리아지한다 | 넣지 않음 |
+
+Render 대시보드 값은 저장소, 문서, 채팅에 남기지 않는다. 데모 URL과 계정은 지원서로만 전달한다. 무료 서버는 15분 동안 접속이 없으면 잠들고, 다음 첫 접속은 깨우느라 1분쯤 걸린다.
+
+계정 만들기부터 첫 배포 확인까지의 순서, 로컬 release 확인 결과, 제약과 대안은 [배포 가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md)에 있다.
 
 ## 디렉터리 구조
 
 ```
 lib/tickmark/              도메인 컨텍스트 (accounts, engagements, ledger, testing, triage, review, audit_trail, ai)
 lib/tickmark/testing/rules/ 분개 테스트 룰 8종 (룰 하나에 파일 하나)
-lib/tickmark_web/live/     LiveView 화면 (S1-S6)
+lib/tickmark/demo.ex       데모 시드 (mix setup, 운영 첫 부팅)
+lib/tickmark/release.ex    release 안에서 마이그레이션 (Mix 없이)
+lib/tickmark_web/live/     LiveView 화면 (S1-S6, 인증, 문서 위키)
 priv/repo/migrations/      스키마, DB 제약, append-only 트리거
+priv/repo/seeds.exs        Tickmark.Demo 호출
+rel/overlays/bin/          release 시작 스크립트 (start, server, migrate)
 test/                      ExUnit, LiveView 테스트
 docs/                      기획, 설계, 디자인, 도메인, 개발 기록 (색인: docs/README.md)
 refs/                      Phoenix 1.8 LLM 가이드라인 원문
+Dockerfile, render.yaml    배포 이미지와 Render Blueprint
 ```
 
 ## 문서
@@ -235,6 +271,7 @@ refs/                      Phoenix 1.8 LLM 가이드라인 원문
 - [docs 색인](docs/README.md): 카테고리별 전체 문서 목록. 앱을 띄우면 `/docs` (상단 바의 "문서") 에서 같은 문서를 읽을 수 있다
 - [요구사항 명세서](docs/planning/2026-10-20-9-요구사항-명세서.md), [기능 정의서](docs/planning/2026-10-20-10-기능-정의서.md), [API 연동 규격서](docs/architecture/2026-10-20-11-API-연동-규격서.md)
 - [MVP 범위와 일정](docs/planning/2026-10-17-2-MVP-범위와-일정.md), [WBS와 마일스톤](docs/planning/2026-10-17-8-WBS와-마일스톤.md), [TASKS.md](TASKS.md) (지금 할 일)
+- [배포 대상 검토](docs/planning/2026-10-20-8-배포-대상-검토.md), [배포 가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md)
 - [시스템 구조와 데이터 모델](docs/architecture/2026-10-17-4-시스템-구조와-데이터-모델.md)
 - [분개 테스트 룰과 감사 용어](docs/domain/2026-10-17-3-분개테스트-룰과-감사-용어.md)
 - [디자인 시스템](docs/design/2026-10-17-5-디자인-시스템.md), [화면설계서](docs/design/2026-10-17-13-화면설계서.html)
@@ -250,7 +287,7 @@ refs/                      Phoenix 1.8 LLM 가이드라인 원문
 - M2 룰 엔진과 실시간 진행률: 완료
 - M3 AI 트리아지: 전표 단위 요청 (S5 단추) 과 결과 표시 완료. S4 일괄 요청과 AI 열은 개발 중
 - M4 결론, 승인/반려, 감사 로그(S6): 완료. 동시 접속 표시(Presence)는 개발 중
-- M5 공통 셸, 홈, 인증 화면, 데모 시드: 완료. 배포는 Render + Neon 으로 저장소 준비 완료, 계정 연결 대기
+- M5 공통 셸, 홈, 인증 화면, 데모 시드: 완료. 배포는 Render + Neon으로 정했고, 배포 설정을 `main`에 병합했다 (PR #3). Render, Neon 계정 연결과 외부 접속 확인이 남았다
 - M6 README, 문서 위키, 요구사항 명세서, 기능 정의서, API 연동 규격서: 완료. 데모 GIF 는 대기
 
 세부 일정과 담당은 [WBS](docs/planning/2026-10-17-8-WBS와-마일스톤.md)를 따른다.

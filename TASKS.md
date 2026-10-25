@@ -45,7 +45,7 @@
 ## 사용자 결정 대기
 
 - 배포 대상: 10/25 Render Free + Neon Free 로 결정 (5.1 완료)
-- 사용자 단계 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 4장): PR 병합, Neon 프로젝트 (Singapore, 직접 연결), `mix phx.gen.secret`, Render Blueprint 에 값 세 개 입력
+- 사용자 단계 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 4장): ~~PR 병합~~ (PR #3, 10/25), Neon 프로젝트 (Singapore, 직접 연결), `mix phx.gen.secret`, Render Blueprint 에 값 세 개 입력
 
 ## 다음 라운드 (M5-M6)
 
@@ -67,3 +67,4 @@
 - 2026-10-20: W6 병합 (2718ff9, 546 통과)
 - 2026-10-20: 라운드 5 병합 (F1 4115351, F2 1e0574d, D1 60781a3, D2 164788e, 563 통과), 데모 시드, S5 AI 요청 단추, 문서 위키 (1a2ef4b, 584 통과). 라운드 4b 나머지와 S3 확인을 남김
 - 2026-10-25: 배포 대상 결정 (Render + Neon), 배포 준비 완료와 사용자 단계 반영 (588 통과)
+- 2026-10-25: PR #3 (배포 준비까지) main 병합, README 최신화
