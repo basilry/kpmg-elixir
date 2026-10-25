@@ -3,7 +3,7 @@
 - 작성일: 2026-10-25
 - 작성자: 메인 세션
 - 관련: [배포 대상 검토](2026-10-20-8-배포-대상-검토.md) (결정: A), [WBS와 마일스톤](2026-10-17-8-WBS와-마일스톤.md) 5.1, 5.4, [배포 준비 devlog](../devlog/2026-10-25-2-배포-준비.md)
-- 상태: 저장소 준비 완료. 사용자 단계 (4장) 대기
+- 상태: 배포 완료 (2026-10-25, `main` ce33571). 주소 https://tickmark-e0ki.onrender.com. 결과는 5.2절, 기록은 [첫 배포 devlog](../devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md)
 
 ## 1. 구성
 
@@ -61,9 +61,11 @@
    - `Running TickmarkWeb.Endpoint with Bandit ...`
    - `demo seed: created 누리정밀 주식회사 FY2025, GL import succeeded, test run completed`
 6. **외부 접속 확인**: `https://<서비스 이름>.onrender.com/users/log-in` 에서 `kim.writer@example.com` 과 데모 비밀번호로 로그인한다. 화면 위의 "메일을 보내지 않습니다" 안내가 보이면 운영 설정이 들어간 것이다. S1 업무 목록, S2 적재와 룰 실행, S4 finding, S5 결론, S6 감사 로그, `/docs` 위키를 연다. 검토자는 `park.reviewer@example.com` 으로 같은 비밀번호를 쓴다.
-7. **지원서**: URL 과 데모 계정을 지원서에만 적는다. 첫 접속은 잠든 서버를 깨우느라 1분쯤 걸린다고 함께 적는다.
+7. **지원서**: URL 과 데모 계정을 지원서에 적는다. 데모 비밀번호는 지원서에만 적고 저장소와 문서에는 남기지 않는다 (URL 과 계정 이메일은 문서에 있어도 된다). 첫 접속은 잠든 서버를 깨우느라 1분쯤 걸린다고 함께 적는다.
 
-## 5. 로컬 확인 결과 (2026-10-25)
+## 5. 확인 결과
+
+### 5.1 로컬 release (2026-10-25)
 
 Docker 데몬이 꺼져 있어 이미지 빌드는 하지 않았다. 대신 같은 prod release 를 저장소 사본에서 빌드해 (`MIX_ENV=prod`, macOS arm64) 로컬 PostgreSQL 의 새 DB 에 `DATABASE_SSL=false` 로 붙여 돌렸다.
 
@@ -79,13 +81,31 @@ Docker 데몬이 꺼져 있어 이미지 빌드는 하지 않았다. 대신 같�
 | 로그인 메일 | 로그에 `New email delivered to kim.writer@example.com` 만, 링크는 0건 |
 | 메모리 | 빈 DB 에서 첫 부팅 시드 동안 BEAM 최대 RSS 약 291 MB (`+S 1:1`, 0.2초 간격 표본). 무료 512 MB 안 |
 
-확인하지 못한 것 (확인 필요):
+로컬에서 확인하지 못했던 다섯 가지는 5.2절의 첫 배포에서 네 가지가 풀렸다. Linux 메모리만 확인 필요로 남는다.
 
-- Docker 이미지 빌드. 기반 이미지 두 개 (`hexpm/elixir:1.20.4-erlang-29.1.2-debian-trixie-20261020-slim`, `debian:trixie-20261020-slim`) 는 Docker Hub API 에서 태그가 있고 amd64 이미지가 있는 것까지 확인했다.
-- Render 무료 플랜의 Docker 지원. 무료 인스턴스 문서와 Docker 문서 모두 제한을 말하지 않는다.
-- 0.1 CPU 에서의 첫 시드 시간. 로컬은 수 초였다. 단계마다 15분 한도를 두었다.
-- Neon 실제 TLS 연결. Postgrex 의 `ssl: true` 기본값 (시스템 CA 로 인증서 검증, SNI) 은 Neon 과 맞는다.
-- Linux 에서의 메모리. 위 수치는 macOS 기준이다.
+### 5.2 Render 첫 배포 (2026-10-25)
+
+Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main` ce33571 을 배포했다. 시각은 KST.
+
+| 항목 | 결과 |
+|---|---|
+| 무료 플랜 Docker | 막히지 않음. Blueprint 생성과 빌드가 그대로 진행 |
+| Docker 이미지 빌드 (amd64) | 성공, 09:35 시작부터 약 2분 30초. `deps.compile` 51.5초, 앱 111개 파일 컴파일. 경고는 `mix.exs` 의 xref exclude 사용 중단 안내 1건 |
+| 마이그레이션 | 10개 모두 실행, 약 1.5초. Neon 직접 연결에 TLS (`ssl: true`) 로 붙음 |
+| 서버 시작 | `Running TickmarkWeb.Endpoint with Bandit 1.13.1 at :::10000 (http)`. Render 가 포트 10000 을 찾음 (IPv6 `::` 바인딩 문제 없음) |
+| 부팅 시드 | 서버 시작 14초 뒤 `demo seed: created 누리정밀 주식회사 FY2025, GL import succeeded, test run completed`. 0.15 CPU 에서 약 14초 |
+| 상태 | 09:38 `Deploy succeeded`, Live. 재시작과 메모리 초과 이벤트 없음 |
+| 런타임 경고 | `libsctp.so.1` 이 없다는 ESOCK 경고 1건. SCTP 를 쓰지 않아 영향 없음 |
+| 외부 HTTP (curl) | `/` 200 (0.38초), `/users/log-in`, `/users/register`, `/docs` 200. `/engagements` 302 (로그인으로), 없는 경로 404, http 는 https 로 301. digest CSS, JS 200 |
+| 운영 설정 | 로그인 화면에 `#mail-off-notice` 있음, `#local-mail-notice` 없음 |
+| 응답 헤더 | HSTS (`max-age=31536000`), CSP (`base-uri 'self'; frame-ancestors 'self';`), `x-content-type-options: nosniff`, 세션 쿠키 `secure`, `HttpOnly`, `SameSite=Lax` |
+| 로그인 | 사용자가 `kim.writer@example.com` 과 데모 비밀번호로 로그인. 세 값이 맞게 들어간 것도 여기서 확인됨 (아래) |
+| 화면 (읽기만) | S1 누리정밀 FY2025 (최근 테스트 완료, 검토 큐 52), S2 전표 8,341건, 라인 19,804건, 적재 1건과 실행 1건, S4 룰 8/8 완료, 적중 전표 265건, 검토 큐 52, 경미 213, S5 JE2025-008261 (점수 55 = 10 + 20 + 25), S6 이벤트 #1-#6, `/docs` 위키. LiveView 연결됨, 콘솔 오류 0 |
+
+- **값 세 개 확인**: Render 는 Blueprint 생성 화면의 `sync: false` 값을 점 12개로 가려 배포 전에는 볼 수 없다. 대신 결과로 확인했다. 마이그레이션 성공은 `DATABASE_URL` 과 TLS, 세션 쿠키가 붙은 200 응답은 `SECRET_KEY_BASE` 가 64바이트 이상인 것, 로그인 성공은 `TICKMARK_DEMO_PASSWORD` 를 보여 준다.
+- **데모 데이터를 바꾸지 않음**: 확인은 페이지를 여는 것만 했다. 실행 시작, 결론 제출, 승인, AI 요청은 누르지 않았다. 감사 로그가 append-only 라 누르면 데모 데이터에 영구히 남는다.
+- **확인 필요**: Linux 에서의 메모리. 무료 플랜은 메모리, CPU 지표를 보여 주지 않는다. 시드 동안 메모리 초과 이벤트가 없었다는 것까지만 안다.
+- **보안 권고**: `mix deps.get` 이 `plug_crypto` 2.2.0 의 [EEF-CVE-2026-105963](https://osv.dev/vulnerability/EEF-CVE-2026-105963) (MEDIUM, GHSA-ffw9-w85g-f2vh) 을 알렸다. 타입이 틀린 인자로 `Plug.Crypto` 를 부르면 스택 트레이스 인자에 secret key base 가 나올 수 있다는 내용이다. 2.2.1 에서 고쳐졌다 (10/23). 후속으로 `mix deps.update plug_crypto` 뒤 재배포한다.
 
 ## 6. 알려진 제약과 대응
 
@@ -94,10 +114,12 @@ Docker 데몬이 꺼져 있어 이미지 빌드는 하지 않았다. 대신 같�
 | 15분 무접속 뒤 잠듦, 깨우기 약 1분 | 첫 접속이 느리다 | 면접 2-3분 전에 URL 을 연다. 열린 LiveView 탭이 heartbeat 를 보내 시연 중에는 잠들지 않는다 |
 | 메일 없음 | 새로 가입한 계정은 로그인 링크를 못 받는다 | 로그인, 회원가입 화면에 안내. 데모 계정만 쓴다 |
 | 디스크 없음 | 업로드한 GL 원본은 `/tmp` 에 있고 재시작 때 사라진다 | 적재된 분개는 DB 에 있어 화면은 그대로다. 적재 중에 재시작되면 그 적재는 실패로 끝날 수 있다 |
-| 무료 Docker 가 막힘 | 배포 불가 | Render 네이티브 Elixir 런타임 (Elixir 1.20, OTP 29 지원 확인 필요) 또는 [검토](2026-10-20-8-배포-대상-검토.md) 의 B 안 Fly.io 로 같은 Dockerfile 을 쓴다 |
-| 포트를 못 찾는다는 배포 실패 | 서비스가 안 뜬다 | Endpoint 는 생성 기본값대로 `::` 에 바인딩한다. 로그에 Bandit 줄이 있는데 실패하면 `runtime.exs` 의 `ip` 를 `{0, 0, 0, 0}` 으로 바꾼다 |
+| 무료 Docker 가 막힘 | 배포 불가 | 10/25 첫 배포에서는 막히지 않았다. 정책이 바뀌면 Render 네이티브 Elixir 런타임 (Elixir 1.20, OTP 29 지원 확인 필요) 또는 [검토](2026-10-20-8-배포-대상-검토.md) 의 B 안 Fly.io 로 같은 Dockerfile 을 쓴다 |
+| 포트를 못 찾는다는 배포 실패 | 서비스가 안 뜬다 | 10/25 첫 배포에서 `::` 바인딩으로 포트 10000 을 찾았다. 앞으로 실패하면 `runtime.exs` 의 `ip` 를 `{0, 0, 0, 0}` 으로 바꾼다 |
+| CPU 0.15, 메모리 지표 없음 | 무거운 작업이 느리다. 메모리 여유를 볼 수 없다 | 시드 전체가 약 14초라 데모에는 충분하다. 메모리는 재시작 이벤트로만 본다 |
 | 데모 데이터를 처음 상태로 | - | Neon 에서 DB 를 지우고 다시 만든 뒤 Render 에서 다시 배포한다. 부팅 때 마이그레이션과 시드가 다시 돈다 |
 
 ## Changelog
 
 - 2026-10-25: 최초 작성. 구성, 환경 변수, 사용자 단계, 로컬 release 확인 결과, 제약
+- 2026-10-25: 첫 배포 결과 (5.2절). 상태를 배포 완료로, 확인 필요 다섯 가지 중 네 가지 해결 (Linux 메모리만 남음), 6장 Docker 와 포트 행 갱신, CPU 0.15 행 추가, `plug_crypto` 보안 권고. 4장 7단계를 "비밀번호만 지원서에" 로 분명히 함

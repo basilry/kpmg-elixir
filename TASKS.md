@@ -39,17 +39,18 @@
 - [x] 라운드 4, 5 와 문서 위키 devlog (2026-10-20-1, -14, -15), WBS 와 이 파일 갱신
 - [ ] D1 의 FN 과 D2 의 IF 교차 링크
 - [x] 배포 준비 (5.4): release, Dockerfile, 부팅 시드 `Tickmark.Demo`, 운영 메일 안내, `render.yaml`, 로컬 prod release 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md), [devlog](docs/devlog/2026-10-25-2-배포-준비.md))
-- [ ] 첫 배포 로그와 외부 접속 확인 (사용자 단계 뒤), 5.4 완료 표기
+- [x] 첫 배포 로그와 외부 접속 확인, 5.4 완료 표기 (https://tickmark-e0ki.onrender.com, [devlog](docs/devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md))
+- [ ] `plug_crypto` 2.2.0 -> 2.2.1 (EEF-CVE-2026-105963, MEDIUM), `mix precommit` 뒤 재배포
 - [x] README 초안 (WBS 6.1 당김. M6 에 데모 GIF 와 최종 상태 반영)
 
 ## 사용자 결정 대기
 
 - 배포 대상: 10/25 Render Free + Neon Free 로 결정 (5.1 완료)
-- 사용자 단계 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 4장): ~~PR 병합~~ (PR #3, 10/25), Neon 프로젝트 (Singapore, 직접 연결), `mix phx.gen.secret`, Render Blueprint 에 값 세 개 입력
+- 사용자 단계 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 4장): 10/25 모두 완료 (PR #3 병합, Neon, `mix phx.gen.secret`, Render Blueprint 값 세 개)
+- 남은 사용자 일: 지원서에 URL, 데모 계정, 첫 접속 지연 안내 기재 (6.4)
 
 ## 다음 라운드 (M5-M6)
 
-- 5.4 외부 접속 확인 (사용자 단계 뒤)
 - 6.2 데모 GIF, 6.3 공개 전 점검과 저장소 공개 전환, 6.4 제출 자료
 
 ## Changelog
@@ -68,3 +69,4 @@
 - 2026-10-20: 라운드 5 병합 (F1 4115351, F2 1e0574d, D1 60781a3, D2 164788e, 563 통과), 데모 시드, S5 AI 요청 단추, 문서 위키 (1a2ef4b, 584 통과). 라운드 4b 나머지와 S3 확인을 남김
 - 2026-10-25: 배포 대상 결정 (Render + Neon), 배포 준비 완료와 사용자 단계 반영 (588 통과)
 - 2026-10-25: PR #3 (배포 준비까지) main 병합, README 최신화
+- 2026-10-25: Render 첫 배포와 외부 접속 확인 (5.4 완료), `plug_crypto` 갱신 할 일 추가
