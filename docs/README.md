@@ -35,6 +35,7 @@
 | [2026-10-20-15-문서-위키](devlog/2026-10-20-15-문서-위키.md) | `/docs` 문서 위키: 컴파일 시점 문서 목록, MDEx 렌더링과 링크 재작성, sandbox iframe 과 CSP, 검색과 목차 |
 | [2026-10-25-2-배포-준비](devlog/2026-10-25-2-배포-준비.md) | 배포 준비: release 와 Dockerfile, 부팅 시드 Task, 운영 메일 Logger 와 안내, render.yaml, 로컬 prod release 확인 |
 | [2026-10-25-3-Render-첫-배포와-외부-확인](devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md) | Render 첫 배포: 빌드와 부팅 로그, 가려진 Blueprint 값을 결과로 확인, 외부 HTTP 와 S1-S6 읽기 확인, `plug_crypto` 보안 권고 |
+| [2026-10-25-4-커스텀-도메인과-check_origin](devlog/2026-10-25-4-커스텀-도메인과-check_origin.md) | `tickmark.6esk.com` 점검 (DNS, 인증서, www 리다이렉트, 웹소켓 403), `check_origin` 으로 두 주소 허용, 남은 대시보드 단계 |
 
 ## planning - 기획
 
