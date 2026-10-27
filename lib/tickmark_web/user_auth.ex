@@ -54,8 +54,11 @@ defmodule TickmarkWeb.UserAuth do
       TickmarkWeb.Endpoint.broadcast(live_socket_id, "disconnect", %{})
     end
 
+    # The flag stops the home page from logging the visitor straight back in
+    # as the demo user (PageController). It lasts until the browser closes.
     conn
     |> renew_session(nil)
+    |> put_session(:demo_auto_login_off, true)
     |> delete_resp_cookie(@remember_me_cookie, @remember_me_options)
     |> redirect(to: ~p"/")
   end

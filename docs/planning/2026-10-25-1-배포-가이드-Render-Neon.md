@@ -3,7 +3,7 @@
 - 작성일: 2026-10-25
 - 작성자: 메인 세션
 - 관련: [배포 대상 검토](2026-10-20-8-배포-대상-검토.md) (결정: A), [WBS와 마일스톤](2026-10-17-8-WBS와-마일스톤.md) 5.1, 5.4, [배포 준비 devlog](../devlog/2026-10-25-2-배포-준비.md)
-- 상태: 배포 완료 (2026-10-25 첫 배포 `main` ce33571, 지금 d4c3733). 주소 https://tickmark-e0ki.onrender.com. 17:53 사용자가 인스턴스를 Free 에서 0.5c-512mb (유료) 로 바꿨다. 커스텀 도메인 `www.tickmark.6esk.com` 은 10-27 재확인 때 인증서가 있고 200 으로 열리지만, 그 주소의 LiveView 는 403 이다. 코드로 고쳤다 (PR #8, 병합 뒤 확인). 결과는 5.2-5.4절, 기록은 [첫 배포 devlog](../devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md)
+- 상태: 배포 완료 (2026-10-25 첫 배포 `main` ce33571, 지금 d4c3733). 주소 https://tickmark-e0ki.onrender.com. 17:53 사용자가 인스턴스를 Free 에서 0.5c-512mb (유료) 로 바꿨다. 커스텀 도메인 `www.tickmark.6esk.com` 은 10-27 재확인 때 인증서가 있고 200 으로 열리지만, 그 주소의 LiveView 는 403 이다. 코드로 고쳤다 (PR #8, 병합 뒤 확인). 10-27 에 메인화면 (`/`) 에 들어가면 데모 작성자로 자동 로그인하게 했다 (`feature/demo-auto-login`, PR #8 다음에 병합, 5.5절). 결과는 5.2-5.5절, 기록은 [첫 배포 devlog](../devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md)
 
 ## 1. 구성
 
@@ -28,10 +28,11 @@
 | `.dockerignore` | 생성본에 `.env`, `.env.*`, `.claude/` 제외 추가 |
 | `rel/overlays/bin/start` | 마이그레이션 뒤 서버 시작 |
 | `lib/tickmark/release.ex` | 생성본. `migrate/0`, `rollback/2` |
-| `lib/tickmark/demo.ex` | 시드 로직 (`seeds.exs` 에서 옮김). `seed/0`, `seed_on_boot/0` |
+| `lib/tickmark/demo.ex` | 시드 로직 (`seeds.exs` 에서 옮김). `seed/0`, `seed_on_boot/0`, 자동 로그인이 찾는 `preparer/0` |
+| `lib/tickmark_web/controllers/page_controller.ex`, `lib/tickmark_web/user_auth.ex` | 메인화면 자동 로그인과 로그아웃 뒤 멈춤 (5.5절) |
 | `render.yaml` | Blueprint. 웹 서비스 `tickmark`, `plan: free`, `region: singapore`, `branch: main`. 플랜은 대시보드에서 0.5c-512mb 로 바뀌어 지금은 이 값과 다르다 (5.3절) |
-| `config/runtime.exs` | DB `ssl` (기본 켬), `RENDER_EXTERNAL_HOSTNAME` 대체값, `TICKMARK_DEMO_PASSWORD`, `TICKMARK_SEED_ON_BOOT` |
-| `config/prod.exs` | 메일러를 `Swoosh.Adapters.Logger` 로. 수신자만 로그에 남고 로그인 링크는 남지 않는다. LiveView 소켓 출처 확인을 요청 호스트 기준으로 (`check_origin: :conn`, 5.4절) |
+| `config/runtime.exs` | DB `ssl` (기본 켬), `RENDER_EXTERNAL_HOSTNAME` 대체값, `TICKMARK_DEMO_PASSWORD`, `TICKMARK_SEED_ON_BOOT`, `TICKMARK_DEMO_AUTO_LOGIN` |
+| `config/prod.exs` | 메일러를 `Swoosh.Adapters.Logger` 로. 수신자만 로그에 남고 로그인 링크는 남지 않는다. LiveView 소켓 출처 확인을 요청 호스트 기준으로 (`check_origin: :conn`, 5.4절). 메인화면 자동 로그인 켬 (`:demo_auto_login`, 5.5절) |
 
 ## 3. 환경 변수
 
@@ -43,6 +44,7 @@
 | `SECRET_KEY_BASE` | Blueprint 생성 화면 (`sync: false`) | `mix phx.gen.secret` 출력 (64자) |
 | `TICKMARK_DEMO_PASSWORD` | Blueprint 생성 화면 (`sync: false`) | 데모 계정 두 개의 비밀번호, 12자 이상 |
 | `TICKMARK_SEED_ON_BOOT` | `render.yaml` | `true` |
+| `TICKMARK_DEMO_AUTO_LOGIN` | 넣지 않음 | 운영은 `config/prod.exs` 에서 켠다. `false` 나 `0` 을 넣으면 끈다. 개발은 기본이 꺼짐이고 `true` 나 `1` 로 켠다 (5.5절) |
 | `PORT`, `RENDER_EXTERNAL_HOSTNAME` | Render 가 자동으로 넣음 | - |
 | `ANTHROPIC_API_KEY` | 넣지 않음 | 없으면 Fake 클라이언트로 트리아지 |
 
@@ -60,8 +62,8 @@
    - `Migrated ...` (첫 부팅에만)
    - `Running TickmarkWeb.Endpoint with Bandit ...`
    - `demo seed: created 누리정밀 주식회사 FY2025, GL import succeeded, test run completed`
-6. **외부 접속 확인**: `https://<서비스 이름>.onrender.com/users/log-in` 에서 `kim.writer@example.com` 과 데모 비밀번호로 로그인한다. 화면 위의 "메일을 보내지 않습니다" 안내가 보이면 운영 설정이 들어간 것이다. S1 업무 목록, S2 적재와 룰 실행, S4 finding, S5 결론, S6 감사 로그, `/docs` 위키를 연다. 검토자는 `park.reviewer@example.com` 으로 같은 비밀번호를 쓴다.
-7. **지원서**: URL 과 데모 계정을 지원서에 적는다. 데모 비밀번호는 지원서에만 적고 저장소와 문서에는 남기지 않는다 (URL 과 계정 이메일은 문서에 있어도 된다). Free 플랜이면 첫 접속이 잠든 서버를 깨우느라 1분쯤 걸린다고 함께 적는다. 지금 플랜 (0.5c-512mb) 은 잠들지 않아 이 안내가 필요 없다 (5.3절).
+6. **외부 접속 확인**: `https://<서비스 이름>.onrender.com/` 을 열면 데모 작성자 `kim.writer@example.com` 으로 자동 로그인되어 S1 업무 목록이 뜬다 (5.5절). S2 적재와 룰 실행, S4 finding, S5 결론, S6 감사 로그, `/docs` 위키를 연다. 검토자는 오른쪽 위 메뉴에서 로그아웃한 뒤 `/users/log-in` 에서 `park.reviewer@example.com` 과 데모 비밀번호로 로그인한다. 로그인 화면 위의 "메일을 보내지 않습니다" 안내가 보이면 운영 설정이 들어간 것이다.
+7. **지원서**: URL 과 데모 계정을 지원서에 적는다. 데모 비밀번호는 검토자로 볼 때만 필요하다 (작성자는 자동 로그인). 비밀번호는 지원서에만 적고 저장소와 문서에는 남기지 않는다 (URL 과 계정 이메일은 문서에 있어도 된다). Free 플랜이면 첫 접속이 잠든 서버를 깨우느라 1분쯤 걸린다고 함께 적는다. 지금 플랜 (0.5c-512mb) 은 잠들지 않아 이 안내가 필요 없다 (5.3절).
 
 ## 5. 확인 결과
 
@@ -152,6 +154,31 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 - **기록**: DNS, CAA, 인증서 점검과 대안 비교는 [devlog](../devlog/2026-10-25-4-커스텀-도메인과-check_origin.md). 같은 문제를 환경 변수 목록으로 푼 PR #7 은 이 수정과 배타적이라 닫는다.
 - **학습 포인트**: 소켓 연결은 라우터를 거치지 않는다. endpoint 의 `socket` 선언을 `plug :socket_dispatch` 가 라우터보다 먼저 처리하므로, 라우터 파이프라인 대신 endpoint 설정과 소켓 옵션 (`check_origin`, `connect_info`) 이 이 요청을 다룬다. `check_origin` 값은 런타임에 endpoint 설정에서 읽어 처음 한 번 캐시한다.
 
+### 5.5 메인화면 자동 로그인 (2026-10-27)
+
+사용자 요청으로 메인화면에 들어가면 데모 작성자로 로그인하게 했다. 운영 배포는 합성 데이터만 담은 공개 데모 하나다. 결정과 대안은 [devlog](../devlog/2026-10-27-1-데모-자동-로그인.md) 에 있다.
+
+| 상황 | `GET /` 결과 |
+|---|---|
+| 로그인 안 함, 자동 로그인 켬, 데모 작성자 있음 | 작성자로 로그인 (새 세션 토큰). 302 `/` 를 거쳐 `/engagements`. 안내 메시지에 계정과 "검토자로 보려면 로그아웃한 뒤 로그인" |
+| 데모 시드 전 (작성자 없음) | 홈 화면 |
+| 이 브라우저에서 로그아웃한 뒤 | 홈 화면. 세션에 `:demo_auto_login_off` 가 남아 다시 로그인시키지 않는다. 세션 쿠키라 브라우저를 닫으면 사라지고, 다시 로그인해도 지워진다 |
+| 이미 로그인함 | 바뀌지 않음. `/engagements` 로 |
+| `/` 가 아닌 주소로 바로 들어옴 | 바뀌지 않음. 로그인 화면으로 |
+
+로컬 확인 (dev, `PORT=4010 TICKMARK_DEMO_AUTO_LOGIN=true`):
+
+| 항목 | 결과 |
+|---|---|
+| 브라우저 `/` | `/engagements` 에 누리정밀, 자동 로그인 안내 |
+| 오른쪽 위 메뉴의 로그아웃, 다시 `/` | 홈 화면 그대로 |
+| `demo_auto_login_test.exs` | 6개 통과. 변이 5개 (로그아웃 표시 제거, 표시 확인 제거, 설정 확인 제거, 변수 해석 느슨하게, 운영 기본값 끔) 가 각각 해당 테스트 하나에서 실패 |
+
+병합 뒤 확인 (메인 세션, PR #8 다음):
+
+- 시크릿 창에서 onrender 주소와 www 주소의 `/` 가 `/engagements` 로 가고 LiveView 가 붙는다 (5.4절의 101 확인과 함께).
+- 로그아웃 뒤 `/` 가 홈 화면에 머문다.
+
 ## 6. 알려진 제약과 대응
 
 | 제약 | 영향 | 대응 |
@@ -164,6 +191,10 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 | Free 의 CPU 0.15, 메모리 지표 없음 | 무거운 작업이 느리다. 메모리 여유를 볼 수 없다 | 시드 전체가 약 14초라 데모에는 충분했다. 0.5c-512mb 는 CPU 0.5 이고 Metrics 에서 메모리를 본다 (약 190 MB, 5.3절) |
 | `render.yaml` 의 `plan: free` 와 대시보드 플랜이 다름 | `render.yaml` 을 바꾼 push 가 동기화되면 Free 로 돌아간다 | `render.yaml` 을 고칠 때 `plan` 을 맞추거나 Auto Sync 를 끈다 (5.3절) |
 | 커스텀 도메인 `www.tickmark.6esk.com` 의 LiveView 403 | 10-27 기준 인증서는 있고 화면은 200 으로 그려지지만, LiveView 가 붙지 않아 화면이 동작하지 않는다. `tickmark.6esk.com` 은 www 로 301 | `check_origin: :conn` 으로 고쳤다 (5.4절, PR #8). 병합과 배포 뒤 101 을 확인하기 전에는 지원서와 안내에 onrender 주소를 쓴다 |
+| 공개 데모 자동 로그인: 방문자 모두가 작성자 | 방문자가 남긴 결론, 업로드, 테스트 실행이 Neon 과 append-only 감사 로그에 영구히 남고 다음 방문자에게 보인다 | 합성 데이터라 받아들인다. 어지러워지면 아래 "데모 데이터를 처음 상태로" 행대로 다시 만든다. 끄려면 Render 에 `TICKMARK_DEMO_AUTO_LOGIN=false` 를 넣고 다시 배포한다 (5.5절) |
+| 쿠키 없는 `GET /` 마다 세션 토큰 | 봇, 링크 미리보기, 상태 확인 요청도 `users_tokens` 에 행을 하나씩 남긴다. 토큰은 14일 뒤 무효가 되지만 지우는 job 은 없다 | 행이 작아 데모 기간에는 둔다. Render 상태 확인이 `/` 를 부르는지는 확인 필요 (`render.yaml` 에 `healthCheckPath` 없음). 늘어나면 만료 토큰 정리 job 을 더한다 |
+| 자동 로그인 직후 sudo 모드 | 로그인 뒤 10분 동안 설정 화면이 열려 방문자가 작성자 비밀번호를 바꿀 수 있다. 바꾸면 작성자의 세션이 모두 끊긴다. 이메일 변경은 확인 메일이 없어 끝나지 않는다 | 자동 로그인은 비밀번호를 쓰지 않아 다음 방문자는 그대로 들어온다. 지원서의 작성자 비밀번호만 안 맞게 된다. 검토자는 영향 없다 |
+| 검토자는 로그아웃 뒤에만 | 자동 로그인은 작성자만 한다 | 안내 메시지와 지원서에 적는다. 두 역할을 함께 보려면 다른 브라우저 (시크릿 창 포함) 에서 로그아웃하고 검토자로 로그인한다 |
 | 데모 데이터를 처음 상태로 | - | Neon 에서 DB 를 지우고 다시 만든 뒤 Render 에서 다시 배포한다. 부팅 때 마이그레이션과 시드가 다시 돈다 |
 
 ## Changelog
@@ -173,3 +204,4 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 - 2026-10-25: 플랜 변경 (사용자, Free -> 0.5c-512mb) 과 `plug_crypto` 2.2.1 재배포 결과 (5.3절, 9629df7). Linux 메모리 확인 필요를 Render Metrics 로 해소. 6장 잠듦과 CPU 행 갱신, `render.yaml` 플랜 어긋남 행 추가. 상태 줄, 구성도, 2장 `render.yaml` 행, 4장 7단계 갱신
 - 2026-10-25: d4c3733 재배포와 커스텀 도메인 확인 (5.4절). www 인증서 없음, www Origin 의 LiveView 403 원인과 `check_origin: :conn` 수정, 테스트, 병합 뒤 확인 항목. 상태 줄, 2장 `config/prod.exs` 행, 6장 커스텀 도메인 행
 - 2026-10-27: 커스텀 도메인 재확인 (5.4절). www 인증서 발급 확인, www 200, d4c3733 의 Origin www 403 그대로. PR #7 의 점검 기록을 devlog 2026-10-25-4 로 옮기고 링크. 상태 줄, 6장 커스텀 도메인 행
+- 2026-10-27: 메인화면 자동 로그인 (5.5절, `feature/demo-auto-login`). 2장 `demo.ex`, `runtime.exs`, `prod.exs` 행과 화면 코드 행, 3장 `TICKMARK_DEMO_AUTO_LOGIN` 행, 4장 6, 7단계 (작성자는 자동 로그인, 비밀번호는 검토자만), 6장 행 네 개, 상태 줄

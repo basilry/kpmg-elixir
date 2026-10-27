@@ -42,6 +42,11 @@ if config_env() != :test do
   # Password for the two demo users that Tickmark.Demo creates. Without it they
   # can only log in by magic link, and production sends no mail.
   config :tickmark, :demo_password, System.get_env("TICKMARK_DEMO_PASSWORD")
+
+  # On in production (config/prod.exs), off elsewhere. The variable overrides it.
+  if auto_login = System.get_env("TICKMARK_DEMO_AUTO_LOGIN") do
+    config :tickmark, :demo_auto_login, auto_login in ~w(true 1)
+  end
 end
 
 if config_env() == :dev do
