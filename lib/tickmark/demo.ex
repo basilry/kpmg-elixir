@@ -35,12 +35,15 @@ defmodule Tickmark.Demo do
   the logs instead of looking finished.
   """
   def seed do
-    if Accounts.get_user_by_email(@preparer_email) do
+    if preparer() do
       {:ok, :exists}
     else
       {:ok, create_demo()}
     end
   end
+
+  @doc "Returns the demo preparer, or nil before the demo is seeded."
+  def preparer, do: Accounts.get_user_by_email(@preparer_email)
 
   @doc "Runs `seed/0` and logs the outcome. Used by the boot task."
   def seed_on_boot do

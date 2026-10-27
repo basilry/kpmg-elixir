@@ -27,6 +27,11 @@ config :tickmark, TickmarkWeb.Endpoint,
 # scheme and port from x-forwarded-proto before the socket sees the request.
 config :tickmark, TickmarkWeb.Endpoint, check_origin: :conn
 
+# The only production deployment is the public demo (deploy guide). The home
+# page logs visitors in as the demo preparer once Tickmark.Demo has created
+# that user. Set TICKMARK_DEMO_AUTO_LOGIN=false to turn it off.
+config :tickmark, :demo_auto_login, true
+
 # Configure Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Req
 
