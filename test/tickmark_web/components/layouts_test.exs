@@ -127,6 +127,24 @@ defmodule TickmarkWeb.LayoutsTest do
            |> Enum.count() == 1
   end
 
+  test "flash notices start below the top bar and under its layer, so the user menu stays usable" do
+    document = render_shell(%{current_scope: @scope, flash: %{"info" => "데모 작성자로 로그인했습니다."}})
+
+    topbar_z = document |> class_list("#topbar") |> z_index()
+    toasts = LazyHTML.query(document, "#flash-group .toast")
+
+    assert document |> LazyHTML.query("#topbar-user-menu") |> Enum.count() == 1
+    assert document |> LazyHTML.query("#flash-info") |> Enum.count() == 1
+    assert Enum.count(toasts) == 3
+
+    for class <- LazyHTML.attribute(toasts, "class") do
+      classes = String.split(class)
+
+      assert "top-16" in classes
+      assert z_index(classes) < topbar_z
+    end
+  end
+
   test "KST display retains the ISO datetime and gives a readable UTC title" do
     document =
       render_component(&Components.kst_time/1, at: ~U[2025-12-31 15:42:10.123456Z])
@@ -145,15 +163,26 @@ defmodule TickmarkWeb.LayoutsTest do
   end
 
   defp render_shell(attrs \\ %{}) do
-    assigns = Map.merge(%{current_scope: nil, engagement: nil, active: nil, presence: []}, attrs)
+    defaults = %{current_scope: nil, engagement: nil, active: nil, presence: [], flash: %{}}
 
-    render_component(&shell/1, assigns) |> LazyHTML.from_fragment()
+    render_component(&shell/1, Map.merge(defaults, attrs)) |> LazyHTML.from_fragment()
+  end
+
+  defp class_list(document, selector) do
+    document |> LazyHTML.query(selector) |> LazyHTML.attribute("class") |> hd() |> String.split()
+  end
+
+  defp z_index(classes) do
+    Enum.find_value(classes, fn
+      "z-" <> layer -> String.to_integer(layer)
+      _other -> nil
+    end)
   end
 
   defp shell(assigns) do
     ~H"""
     <Layouts.app
-      flash={%{}}
+      flash={@flash}
       current_scope={@current_scope}
       engagement={@engagement}
       active={@active}

@@ -525,7 +525,7 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
   <div class="grid-2">
     <div class="card"><dl class="facts">
       <div><dt>문서</dt><dd class="mono">2026-10-17-13-화면설계서</dd></div>
-      <div><dt>버전</dt><dd>v1.1, 2026-10-19</dd></div>
+      <div><dt>버전</dt><dd>v1.3, 2026-10-28</dd></div>
       <div><dt>대상 범위</dt><dd>MVP 화면 S1-S6, 데스크톱 1024px 이상</dd></div>
       <div><dt>데이터</dt><dd>합성 데이터. 누리정밀 주식회사 FY2025, 시드 20251231</dd></div>
       <div class="wide"><dt>기준 문서</dt><dd class="stack" style="gap:2px">
@@ -720,7 +720,7 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
 
   <h3 class="sub" id="c-state">3.3 공통 상태</h3>
   <div class="parts">
-    <div class="part"><div class="part-head"><b>flash 성공</b><span><code>:info</code>, role=status</span></div><div class="part-body"><div class="alert alert-success flash" role="status"><svg class="ic"><use href="#i-check-circle"/></svg><span>감사 대상을 만들었습니다.</span></div></div><div class="part-foot">화면 오른쪽 위에 뜬다. 누르면 닫힌다 (Phoenix 기본 동작).</div></div>
+    <div class="part"><div class="part-head"><b>flash 성공</b><span><code>:info</code>, role=status</span></div><div class="part-body"><div class="alert alert-success flash" role="status"><svg class="ic"><use href="#i-check-circle"/></svg><span>감사 대상을 만들었습니다.</span></div></div><div class="part-foot">화면 오른쪽, 상단 바 아래(64px)에 뜬다. 상단 바보다 낮은 층이라 사용자 메뉴와 드롭다운을 가리지 않는다. 누르면 닫힌다 (Phoenix 기본 동작).</div></div>
     <div class="part"><div class="part-head"><b>flash 오류</b><span><code>:error</code>, role=alert</span></div><div class="part-body"><div class="alert alert-error flash" role="alert"><svg class="ic"><use href="#i-x-circle"/></svg><span>멤버를 추가할 권한이 없습니다.</span></div></div><div class="part-foot">내부 원인(<code>:forbidden</code> 같은 값)은 문구에 넣지 않는다.</div></div>
     <div class="part"><div class="part-head"><b>연결 끊김</b><span>LiveView 소켓 재연결</span></div><div class="part-body"><div class="alert alert-error flash" role="alert"><svg class="ic"><use href="#i-exclamation-circle"/></svg><div class="stack" style="gap:2px"><b class="sm">인터넷 연결을 찾을 수 없습니다</b><span class="row-nw gap-1-5 xs muted"><svg class="ic ic-xs spin"><use href="#i-arrow-path"/></svg>다시 연결하는 중</span></div></div><div class="alert alert-error flash" role="alert"><svg class="ic"><use href="#i-exclamation-circle"/></svg><div class="stack" style="gap:2px"><b class="sm">서버에 문제가 생겼습니다</b><span class="row-nw gap-1-5 xs muted"><svg class="ic ic-xs spin"><use href="#i-arrow-path"/></svg>다시 연결하는 중</span></div></div></div><div class="part-foot">지금은 영어(We can't find the internet, Something went wrong!, Attempting to reconnect). C-02.</div></div>
     <div class="part"><div class="part-head"><b>404</b><span>없는 주소, 비멤버</span></div><div class="part-body"><div class="card"><div class="empty"><svg class="ic"><use href="#i-magnifying-glass"/></svg><b class="sm">페이지를 찾을 수 없습니다</b><span>없는 주소이거나 내가 멤버가 아닌 감사 대상입니다.</span><a class="btn btn-sm" href="#s1">감사 대상 목록으로</a></div></div></div><div class="part-foot">지금은 "Not Found" 한 줄이다. C-03.</div></div>
@@ -1610,6 +1610,7 @@ html.mk-off .frame .mk, html.mk-off .part .mk { display: none; }
 <section class="doc-sec" id="changelog" aria-labelledby="cl-t">
   <h2 class="sec-title" id="cl-t">Changelog</h2>
   <ul class="bullets">
+    <li>2026-10-28 v1.3: 3.3 공통 상태의 flash 위치를 상단 바 아래로 고쳤다. 상단 바보다 낮은 층이라 사용자 메뉴와 드롭다운을 가리지 않는다. 문서 정보의 버전 표기를 Changelog와 맞췄다 (v1.1에 머물러 있었다).</li>
     <li>2026-10-19 v1.2: 구현 상태 갱신 (S1 열 2개, S2 통계와 실행 목록과 행 행동, S3, S4). C-07 해결. S2 룰 열 기준을 S4와 맞췄다.</li>
     <li>2026-10-19 v1.1: 시안의 데이터, 마크업 오류를 고친 결과를 부록 C에 반영.</li>
     <li>2026-10-17 v1: 최초 작성. S1-S6 기본 화면, 상태 변형, 좁은 화면(S5), 이벤트 표, 부록 A 문구, B 감사 이벤트, C 미결 사항 C-01-C-13.</li>
