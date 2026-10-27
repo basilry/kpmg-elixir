@@ -36,6 +36,7 @@
 | [2026-10-25-2-배포-준비](devlog/2026-10-25-2-배포-준비.md) | 배포 준비: release 와 Dockerfile, 부팅 시드 Task, 운영 메일 Logger 와 안내, render.yaml, 로컬 prod release 확인 |
 | [2026-10-25-3-Render-첫-배포와-외부-확인](devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md) | Render 첫 배포: 빌드와 부팅 로그, 가려진 Blueprint 값을 결과로 확인, 외부 HTTP 와 S1-S6 읽기 확인, `plug_crypto` 보안 권고 |
 | [2026-10-25-4-커스텀-도메인과-check_origin](devlog/2026-10-25-4-커스텀-도메인과-check_origin.md) | 커스텀 도메인 점검 (DNS, CAA, 인증서, www 리다이렉트, WebSocket 403), `check_origin: :conn` 과 대안 비교, 중복 PR 교훈, 10-27 재확인 |
+| [2026-10-27-1-데모-자동-로그인](devlog/2026-10-27-1-데모-자동-로그인.md) | 메인화면 데모 자동 로그인: `/` 에서만, 로그아웃하면 멈춤, `prod.exs` 기본값과 환경 변수, 대안과 위험, 변이 테스트 |
 
 ## planning - 기획
 
@@ -46,7 +47,7 @@
 | [2026-10-20-8-배포-대상-검토](planning/2026-10-20-8-배포-대상-검토.md) | 무료 배포 대상 8곳 비교 (Vercel, Render, Fly.io, Neon 등), Render + Neon 제안 (10/25 결정) |
 | [2026-10-20-9-요구사항-명세서](planning/2026-10-20-9-요구사항-명세서.md) | 기능 요구사항 (REQ 8개 영역), 비기능 요구사항 (NFR), 추적표, 미결 사항 (초안, 기준 f5f7f78) |
 | [2026-10-20-10-기능-정의서](planning/2026-10-20-10-기능-정의서.md) | 화면 S1-S6, 인증, 시스템 기능 (FN), 입력 계약, 기능과 감사 이벤트, 권한 대조표 (초안, 기준 f5f7f78) |
-| [2026-10-25-1-배포-가이드-Render-Neon](planning/2026-10-25-1-배포-가이드-Render-Neon.md) | Render Free + Neon Free 구성, 환경 변수, 사용자 단계, 로컬 release 확인 결과, 첫 배포 결과, 플랜 변경과 재배포 결과, 커스텀 도메인과 LiveView 출처 확인, 제약과 대안 (최신, 배포 완료) |
+| [2026-10-25-1-배포-가이드-Render-Neon](planning/2026-10-25-1-배포-가이드-Render-Neon.md) | Render Free + Neon Free 구성, 환경 변수, 사용자 단계, 로컬 release 확인 결과, 첫 배포 결과, 플랜 변경과 재배포 결과, 커스텀 도메인과 LiveView 출처 확인, 메인화면 자동 로그인, 제약과 대안 (최신, 배포 완료) |
 
 ## architecture - 설계
 

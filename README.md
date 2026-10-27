@@ -198,6 +198,7 @@ TICKMARK_DEMO_PASSWORD='12자 이상의 비밀번호' mix ecto.reset   # 개발 
 | `ANTHROPIC_API_KEY` | 있으면 실제 Claude API로 트리아지한다. `config/runtime.exs`에서만 읽고 테스트 환경에서는 읽지 않는다 | 없음 (Fake 클라이언트) |
 | `ANTHROPIC_MODEL` | 트리아지 모델 ID | `claude-opus-5-5` |
 | `TICKMARK_DEMO_PASSWORD` | 시드를 돌릴 때 데모 계정 두 개에 줄 비밀번호 (12자 이상) | 없음 (메일 로그인 링크만) |
+| `TICKMARK_DEMO_AUTO_LOGIN` | `true`나 `1`이면 메인화면(`/`)에서 데모 작성자로 자동 로그인한다. 로그아웃하면 그 브라우저에서는 멈춘다 | 꺼짐 (운영은 켬) |
 | `TICKMARK_IMPORT_DIR` | 업로드하거나 생성한 GL 파일을 두는 디렉터리 | 시스템 임시 디렉터리 아래 `tickmark_imports` |
 | `PORT` | HTTP 포트 | `4000` |
 
@@ -231,7 +232,7 @@ mix ecto.reset         # 개발 DB 초기화
 | `rel/overlays/bin/start` | 컨테이너 시작 명령. 마이그레이션을 돌린 뒤 서버를 띄운다 |
 | `lib/tickmark/demo.ex` | 데모 시드. `mix setup`과 운영 첫 부팅이 같은 코드를 쓴다 |
 
-무료 플랜은 셸과 one-off job이 없다. 그래서 컨테이너가 뜰 때마다 마이그레이션을 돌리고, `TICKMARK_SEED_ON_BOOT=true`면 서버가 뜬 뒤 `Tickmark.Demo`가 데모 데이터를 만든다. 데모 계정이 이미 있으면 아무것도 하지 않는다. 운영은 메일을 보내지 않으므로 (Swoosh Logger 어댑터, 수신자만 로그에 남는다) 데모 계정의 비밀번호로 로그인한다.
+무료 플랜은 셸과 one-off job이 없다. 그래서 컨테이너가 뜰 때마다 마이그레이션을 돌리고, `TICKMARK_SEED_ON_BOOT=true`면 서버가 뜬 뒤 `Tickmark.Demo`가 데모 데이터를 만든다. 데모 계정이 이미 있으면 아무것도 하지 않는다. 운영은 메일을 보내지 않는다 (Swoosh Logger 어댑터, 수신자만 로그에 남는다). 메인화면(`/`)에 들어가면 데모 작성자로 자동 로그인하고, 검토자는 로그아웃한 뒤 데모 비밀번호로 로그인한다. 방문자가 남긴 결론과 감사 로그는 다음 방문자에게도 보인다.
 
 운영 환경 변수:
 
@@ -241,6 +242,7 @@ mix ecto.reset         # 개발 DB 초기화
 | `SECRET_KEY_BASE` | 세션과 쿠키 서명 키. `mix phx.gen.secret`으로 만든다 | Render 대시보드 |
 | `TICKMARK_DEMO_PASSWORD` | 데모 계정 두 개의 비밀번호 (12자 이상). 부팅 시드가 쓴다 | Render 대시보드 |
 | `TICKMARK_SEED_ON_BOOT` | `true`면 부팅 때 데모 데이터를 만든다 | `render.yaml` |
+| `TICKMARK_DEMO_AUTO_LOGIN` | 메인화면 자동 로그인. 운영은 `config/prod.exs`에서 켜고, `false`면 끈다 | 넣지 않음 (기본 켬) |
 | `DATABASE_SSL` | `false`면 DB TLS를 끈다. 로컬 DB로 release를 돌려 볼 때만 쓴다 | 넣지 않음 (기본 켬) |
 | `PHX_HOST` | 외부 호스트 이름. 없으면 Render가 넣는 `RENDER_EXTERNAL_HOSTNAME`을 쓴다 | 넣지 않음 |
 | `ANTHROPIC_API_KEY` | 없으면 Fake 클라이언트로 트리아지한다 | 넣지 않음 |

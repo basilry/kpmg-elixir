@@ -42,6 +42,7 @@
 - [x] 첫 배포 로그와 외부 접속 확인, 5.4 완료 표기 (https://tickmark-e0ki.onrender.com, [devlog](docs/devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md))
 - [x] `plug_crypto` 2.2.0 -> 2.2.1 (EEF-CVE-2026-105963, MEDIUM), `mix precommit` 뒤 재배포 (PR #5, 9629df7 배포 확인, [가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.3절)
 - [ ] LiveView 출처 확인을 요청 호스트 기준으로 (`check_origin: :conn`, `fix/liveview-check-origin`). 병합 뒤 www Origin 으로 101 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.4절)
+- [ ] 메인화면 데모 자동 로그인 (`feature/demo-auto-login`, PR #8 다음에 병합). 배포 뒤 시크릿 창에서 `/` 가 `/engagements` 로 가는지 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.5절, [devlog](docs/devlog/2026-10-27-1-데모-자동-로그인.md))
 - [x] README 초안 (WBS 6.1 당김. M6 에 데모 GIF 와 최종 상태 반영)
 
 ## 사용자 결정 대기
@@ -76,3 +77,4 @@
 - 2026-10-25: PR #4, #5 병합과 9629df7 재배포 확인 (`plug_crypto` 할 일 완료), 플랜 변경 (Free -> 0.5c-512mb) 반영, 플랜 유지 여부 결정 항목 추가
 - 2026-10-25: d4c3733 재배포 확인, 커스텀 도메인 인증서 확인 항목과 LiveView 출처 확인 수정 할 일 추가
 - 2026-10-27: 커스텀 도메인 재확인 (www 인증서 발급, LiveView 403 그대로), PR #7 닫기와 PR #8 병합을 사용자 항목으로
+- 2026-10-27: 메인화면 데모 자동 로그인 항목 추가 (작성자로 로그인, 로그아웃하면 멈춤, 운영만 켬)
