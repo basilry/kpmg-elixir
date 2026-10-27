@@ -58,12 +58,14 @@ defmodule TickmarkWeb.CoreComponents do
     assigns = assign_new(assigns, :id, fn -> "flash-#{assigns.kind}" end)
 
     ~H"""
+    <%!-- Starts 1rem below the h-12 top bar and stays under its z-40 layer,
+         so the user menu and its dropdown are never covered. --%>
     <div
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end z-50"
+      class="toast toast-top toast-end top-16 z-30"
       {@rest}
     >
       <div class={[

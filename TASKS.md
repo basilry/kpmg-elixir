@@ -43,7 +43,7 @@
 - [x] `plug_crypto` 2.2.0 -> 2.2.1 (EEF-CVE-2026-105963, MEDIUM), `mix precommit` 뒤 재배포 (PR #5, 9629df7 배포 확인, [가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.3절)
 - [x] LiveView 출처 확인을 요청 호스트 기준으로 (`check_origin: :conn`, PR #8 1ab32f7). ca96402 배포 뒤 www 101 과 브라우저 연결 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.4절)
 - [x] 메인화면 데모 자동 로그인 (PR #9 ca96402). 배포 뒤 onrender, www 의 `/` 가 `/engagements` 로 가고, www 에서 로그아웃 뒤 `/` 가 홈에 머무는 것 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.5절, [구현 devlog](docs/devlog/2026-10-27-1-데모-자동-로그인.md), [확인 devlog](docs/devlog/2026-10-27-2-병합-뒤-배포-확인.md))
-- [ ] 자동 로그인 안내가 오른쪽 위 사용자 메뉴를 덮음. 안내 위치를 옮길지 결정 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 6장)
+- [x] 자동 로그인 안내가 오른쪽 위 사용자 메뉴를 덮음. 안내를 상단 바 아래 (`top-16`), 상단 바보다 낮은 층 (`z-30`) 으로 옮김 (`fix/flash-position`, [가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 6장, [devlog](docs/devlog/2026-10-28-1-안내-위치와-사용자-메뉴.md))
 - [x] README 초안 (WBS 6.1 당김. M6 에 데모 GIF 와 최종 상태 반영)
 
 ## 사용자 결정 대기
@@ -80,3 +80,4 @@
 - 2026-10-27: 커스텀 도메인 재확인 (www 인증서 발급, LiveView 403 그대로), PR #7 닫기와 PR #8 병합을 사용자 항목으로
 - 2026-10-27: 메인화면 데모 자동 로그인 항목 추가 (작성자로 로그인, 로그아웃하면 멈춤, 운영만 켬)
 - 2026-10-27: PR #8, #9 병합 (메인 세션, PR #7 닫음) 과 ca96402 배포 뒤 확인. LiveView 출처와 자동 로그인 항목 완료, 안내가 메뉴를 덮는 항목 추가, 커스텀 도메인 결정 줄을 주소 선택으로
+- 2026-10-28: 안내가 메뉴를 덮는 항목 완료 (flash 를 상단 바 아래, 상단 바보다 낮은 층으로. `fix/flash-position`)
