@@ -49,7 +49,7 @@
 - 배포 대상: 10/25 Render Free + Neon Free 로 결정 (5.1 완료). 같은 날 17:53 사용자가 Render 인스턴스를 0.5c-512mb (유료) 로 바꿈
 - 사용자 단계 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 4장): 10/25 모두 완료 (PR #3 병합, Neon, `mix phx.gen.secret`, Render Blueprint 값 세 개)
 - 플랜 유지 여부: 0.5c-512mb 를 유지하면 `render.yaml` 의 `plan: free` 를 맞추거나 Blueprint Auto Sync 를 끈다. Free 로 돌아가면 그대로 둔다 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.3절)
-- 커스텀 도메인: `www.tickmark.6esk.com` 은 인증서가 아직 없어 열리지 않는다. Render 대시보드 Custom Domains 에서 상태 확인. 나오기 전에는 지원서에 onrender 주소를 쓴다 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.4절)
+- 커스텀 도메인: `www.tickmark.6esk.com` 은 10-27 기준 인증서가 있고 200 이지만 LiveView 가 403 이다. PR #8 병합 (사용자) 과 배포 뒤 101 을 확인하기 전에는 지원서에 onrender 주소를 쓴다. 같은 문제의 PR #7 은 닫는다 (사용자) ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.4절)
 - 남은 사용자 일: 지원서에 URL, 데모 계정 기재 (6.4). 첫 접속 지연 안내는 Free 로 돌아갈 때만 적는다
 
 ## 다음 라운드 (M5-M6)
@@ -75,3 +75,4 @@
 - 2026-10-25: Render 첫 배포와 외부 접속 확인 (5.4 완료), `plug_crypto` 갱신 할 일 추가
 - 2026-10-25: PR #4, #5 병합과 9629df7 재배포 확인 (`plug_crypto` 할 일 완료), 플랜 변경 (Free -> 0.5c-512mb) 반영, 플랜 유지 여부 결정 항목 추가
 - 2026-10-25: d4c3733 재배포 확인, 커스텀 도메인 인증서 확인 항목과 LiveView 출처 확인 수정 할 일 추가
+- 2026-10-27: 커스텀 도메인 재확인 (www 인증서 발급, LiveView 403 그대로), PR #7 닫기와 PR #8 병합을 사용자 항목으로
