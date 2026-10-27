@@ -41,8 +41,9 @@
 - [x] 배포 준비 (5.4): release, Dockerfile, 부팅 시드 `Tickmark.Demo`, 운영 메일 안내, `render.yaml`, 로컬 prod release 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md), [devlog](docs/devlog/2026-10-25-2-배포-준비.md))
 - [x] 첫 배포 로그와 외부 접속 확인, 5.4 완료 표기 (https://tickmark-e0ki.onrender.com, [devlog](docs/devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md))
 - [x] `plug_crypto` 2.2.0 -> 2.2.1 (EEF-CVE-2026-105963, MEDIUM), `mix precommit` 뒤 재배포 (PR #5, 9629df7 배포 확인, [가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.3절)
-- [ ] LiveView 출처 확인을 요청 호스트 기준으로 (`check_origin: :conn`, `fix/liveview-check-origin`). 병합 뒤 www Origin 으로 101 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.4절)
-- [ ] 메인화면 데모 자동 로그인 (`feature/demo-auto-login`, PR #8 다음에 병합). 배포 뒤 시크릿 창에서 `/` 가 `/engagements` 로 가는지 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.5절, [devlog](docs/devlog/2026-10-27-1-데모-자동-로그인.md))
+- [x] LiveView 출처 확인을 요청 호스트 기준으로 (`check_origin: :conn`, PR #8 1ab32f7). ca96402 배포 뒤 www 101 과 브라우저 연결 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.4절)
+- [x] 메인화면 데모 자동 로그인 (PR #9 ca96402). 배포 뒤 onrender, www 의 `/` 가 `/engagements` 로 가고, www 에서 로그아웃 뒤 `/` 가 홈에 머무는 것 확인 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.5절, [구현 devlog](docs/devlog/2026-10-27-1-데모-자동-로그인.md), [확인 devlog](docs/devlog/2026-10-27-2-병합-뒤-배포-확인.md))
+- [ ] 자동 로그인 안내가 오른쪽 위 사용자 메뉴를 덮음. 안내 위치를 옮길지 결정 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 6장)
 - [x] README 초안 (WBS 6.1 당김. M6 에 데모 GIF 와 최종 상태 반영)
 
 ## 사용자 결정 대기
@@ -50,7 +51,7 @@
 - 배포 대상: 10/25 Render Free + Neon Free 로 결정 (5.1 완료). 같은 날 17:53 사용자가 Render 인스턴스를 0.5c-512mb (유료) 로 바꿈
 - 사용자 단계 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 4장): 10/25 모두 완료 (PR #3 병합, Neon, `mix phx.gen.secret`, Render Blueprint 값 세 개)
 - 플랜 유지 여부: 0.5c-512mb 를 유지하면 `render.yaml` 의 `plan: free` 를 맞추거나 Blueprint Auto Sync 를 끈다. Free 로 돌아가면 그대로 둔다 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.3절)
-- 커스텀 도메인: `www.tickmark.6esk.com` 은 10-27 기준 인증서가 있고 200 이지만 LiveView 가 403 이다. PR #8 병합 (사용자) 과 배포 뒤 101 을 확인하기 전에는 지원서에 onrender 주소를 쓴다. 같은 문제의 PR #7 은 닫는다 (사용자) ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.4절)
+- 커스텀 도메인: 10-27 PR #8 병합과 배포 뒤 `www.tickmark.6esk.com` 의 LiveView 가 동작한다 (101 확인). 지원서에 www 와 onrender 중 어느 주소를 쓸지 정한다 ([가이드](docs/planning/2026-10-25-1-배포-가이드-Render-Neon.md) 5.4절)
 - 남은 사용자 일: 지원서에 URL, 데모 계정 기재 (6.4). 첫 접속 지연 안내는 Free 로 돌아갈 때만 적는다
 
 ## 다음 라운드 (M5-M6)
@@ -78,3 +79,4 @@
 - 2026-10-25: d4c3733 재배포 확인, 커스텀 도메인 인증서 확인 항목과 LiveView 출처 확인 수정 할 일 추가
 - 2026-10-27: 커스텀 도메인 재확인 (www 인증서 발급, LiveView 403 그대로), PR #7 닫기와 PR #8 병합을 사용자 항목으로
 - 2026-10-27: 메인화면 데모 자동 로그인 항목 추가 (작성자로 로그인, 로그아웃하면 멈춤, 운영만 켬)
+- 2026-10-27: PR #8, #9 병합 (메인 세션, PR #7 닫음) 과 ca96402 배포 뒤 확인. LiveView 출처와 자동 로그인 항목 완료, 안내가 메뉴를 덮는 항목 추가, 커스텀 도메인 결정 줄을 주소 선택으로

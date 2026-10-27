@@ -3,7 +3,7 @@
 - 작성일: 2026-10-25
 - 작성자: 메인 세션
 - 관련: [배포 대상 검토](2026-10-20-8-배포-대상-검토.md) (결정: A), [WBS와 마일스톤](2026-10-17-8-WBS와-마일스톤.md) 5.1, 5.4, [배포 준비 devlog](../devlog/2026-10-25-2-배포-준비.md)
-- 상태: 배포 완료 (2026-10-25 첫 배포 `main` ce33571, 지금 d4c3733). 주소 https://tickmark-e0ki.onrender.com. 17:53 사용자가 인스턴스를 Free 에서 0.5c-512mb (유료) 로 바꿨다. 커스텀 도메인 `www.tickmark.6esk.com` 은 10-27 재확인 때 인증서가 있고 200 으로 열리지만, 그 주소의 LiveView 는 403 이다. 코드로 고쳤다 (PR #8, 병합 뒤 확인). 10-27 에 메인화면 (`/`) 에 들어가면 데모 작성자로 자동 로그인하게 했다 (`feature/demo-auto-login`, PR #8 다음에 병합, 5.5절). 결과는 5.2-5.5절, 기록은 [첫 배포 devlog](../devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md)
+- 상태: 배포 완료 (2026-10-25 첫 배포 `main` ce33571, 지금 ca96402). 주소 https://tickmark-e0ki.onrender.com 과 https://www.tickmark.6esk.com. 10-25 17:53 사용자가 인스턴스를 Free 에서 0.5c-512mb (유료) 로 바꿨다. www 의 LiveView 403 은 `check_origin: :conn` (PR #8) 으로 고쳤고, 10-27 ca96402 배포 뒤 www 에서 101 과 화면 연결을 확인했다 (5.4절). 같은 배포로 메인화면 (`/`) 에 들어가면 데모 작성자로 자동 로그인한다 (PR #9, 5.5절). 결과는 5.2-5.5절, 기록은 [첫 배포 devlog](../devlog/2026-10-25-3-Render-첫-배포와-외부-확인.md)
 
 ## 1. 구성
 
@@ -143,6 +143,9 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 | `www.tickmark.6esk.com` | TLS 핸드셰이크 실패 (SSL alert 40). 이 이름의 인증서가 아직 없는 것으로 보인다 (확인 필요). http 로 열면 Render 앞단 (`Server: cloudflare`) 이 같은 호스트의 https 로 301 |
 | LiveView 출처 (d4c3733) | onrender 주소의 `/live/websocket` 에 Origin 헤더만 바꿔 WebSocket 업그레이드를 보냄. Origin `https://tickmark-e0ki.onrender.com` 101, `https://www.tickmark.6esk.com` 403 (18:20 재확인). www 인증서가 나와도 그 주소의 LiveView 화면은 연결되지 않는 상태였다 |
 | 10-27 재확인 (23:22) | `www.tickmark.6esk.com` 인증서 있음 (Google Trust Services WE1, notBefore 2026-10-25 08:23:59 GMT, 17:23 KST). 18:20 점검 직전에 발급됐지만 그때는 아직 쓰이지 않았던 것으로 보인다 (확인 필요). www `/` 200. 배포는 그대로 d4c3733 이고 Origin www 403, onrender 101 |
+| 10-27 재배포 (ca96402) | 메인 세션이 PR #7 을 닫고 (#8 을 가리키는 댓글) PR #8 (1ab32f7), PR #9 (ca96402) 를 병합했다. #8 의 배포는 #9 의 배포가 시작되며 취소됐고 ca96402 가 Auto-Deploy 2분 5초로 Live. 새 devlog 주소가 23:45:24 에 200 이 되어 새 빌드가 뜬 것을 알았다. 부팅 로그는 이번에 보지 않았다 |
+| LiveView 출처 (ca96402, 23:45) | 각 주소에 그 주소의 Origin 으로 업그레이드를 보냄. www 101, onrender 101. 다른 사이트 Origin (`https://evil.example.com`) 과 http Origin 을 www 로 보내면 403. onrender 주소에 www Origin 을 보내면 이제 403 이다. `:conn` 은 Origin 을 요청 호스트와 비교하므로 맞는 동작이다 |
+| 브라우저 www | `/` 가 `/engagements` 로 가고 `liveSocket.isConnected()` 가 true, 콘솔 오류 0. 이 주소의 LiveView 화면이 처음 동작했다 |
 
 - **원인**: Phoenix 소켓의 기본 출처 확인 (`check_origin: true`) 은 Origin 의 호스트를 endpoint `url` 호스트와만 비교한다. `url` 호스트는 `PHX_HOST` 가 없으면 `RENDER_EXTERNAL_HOSTNAME` (onrender 주소) 다. 일반 HTTP 요청은 이 확인을 거치지 않아 다른 도메인에서도 200 이 나온다.
 - **수정**: `config/prod.exs` 에 `check_origin: :conn`. Origin 의 스킴, 호스트, 포트가 요청 자체와 같을 때만 소켓을 연다. `runtime.exs` 의 `url` 호스트는 그대로 두고 주석만 고쳤다.
@@ -150,8 +153,8 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 - **보안**: 출처 확인은 다른 사이트의 페이지가 사용자의 쿠키로 소켓을 여는 것 (cross-site WebSocket hijacking) 을 막는다. 그런 페이지에서 브라우저는 그 사이트를 Origin 으로, 우리 주소를 Host 로 보내므로 `:conn` 에서도 거부된다. 둘을 같게 만들려면 공격자 도메인이 우리 서버를 가리켜야 하는데, 그때 브라우저는 우리 도메인의 세션 쿠키를 보내지 않는다.
 - **프록시 뒤 스킴과 포트**: Render 는 TLS 를 앞단에서 끝내고 앱에는 http 로 보낸다. 그대로면 요청은 http, 80 이고 Origin 은 https, 443 이라 `:conn` 이 모두 거부한다. `force_ssl` 의 `rewrite_on: [:x_forwarded_proto]` 가 스킴과 포트를 https, 443 으로 고치고, Phoenix endpoint 는 `Plug.SSL` 을 소켓 처리 (`socket_dispatch`) 보다 먼저 둔다. 그래서 소켓은 고쳐진 값을 본다.
 - **테스트**: `test/tickmark_web/socket_origin_test.exs` (4개). `config/prod.exs` 를 `Config.Reader` 로 읽어 값이 `:conn` 인지 본다. 운영의 `rewrite_on` 으로 프록시 요청을 흉내 내 두 주소는 통과, 다른 사이트, 접미사 위장 (`www.tickmark.6esk.com.evil.example`), http Origin 은 403 인지 본다. 기본값 `true` 가 url 호스트가 아닌 도메인을 거부하는 것도 남겼다. `prod.exs` 에서 `rewrite_on` 을 비우면 2개, `check_origin` 을 지우면 1개가 실패하는 것을 확인했다.
-- **병합 뒤 확인**: 같은 업그레이드 요청에서 Origin `https://www.tickmark.6esk.com` 이 101 인지, onrender 주소가 계속 101 인지 본다. www 인증서는 10-27 에 확인했으므로 브라우저로 www 를 열어 LiveView 가 붙는지도 본다.
-- **기록**: DNS, CAA, 인증서 점검과 대안 비교는 [devlog](../devlog/2026-10-25-4-커스텀-도메인과-check_origin.md). 같은 문제를 환경 변수 목록으로 푼 PR #7 은 이 수정과 배타적이라 닫는다.
+- **병합 뒤 확인 (10-27 완료)**: 위 표의 ca96402 행. 확인 방법이 바뀐다. 수정 전에는 onrender 주소 하나에 Origin 만 바꿔 보냈지만, `:conn` 에서는 Origin 이 요청 호스트와 같아야 하므로 www 는 www 주소로 보낸다.
+- **기록**: DNS, CAA, 인증서 점검과 대안 비교는 [devlog](../devlog/2026-10-25-4-커스텀-도메인과-check_origin.md). 같은 문제를 환경 변수 목록으로 푼 PR #7 은 이 수정과 배타적이라 10-27 에 닫았다.
 - **학습 포인트**: 소켓 연결은 라우터를 거치지 않는다. endpoint 의 `socket` 선언을 `plug :socket_dispatch` 가 라우터보다 먼저 처리하므로, 라우터 파이프라인 대신 endpoint 설정과 소켓 옵션 (`check_origin`, `connect_info`) 이 이 요청을 다룬다. `check_origin` 값은 런타임에 endpoint 설정에서 읽어 처음 한 번 캐시한다.
 
 ### 5.5 메인화면 자동 로그인 (2026-10-27)
@@ -174,10 +177,17 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 | 오른쪽 위 메뉴의 로그아웃, 다시 `/` | 홈 화면 그대로 |
 | `demo_auto_login_test.exs` | 6개 통과. 변이 5개 (로그아웃 표시 제거, 표시 확인 제거, 설정 확인 제거, 변수 해석 느슨하게, 운영 기본값 끔) 가 각각 해당 테스트 하나에서 실패 |
 
-병합 뒤 확인 (메인 세션, PR #8 다음):
+배포 뒤 확인 (ca96402, 10-27 23:46 KST, 메인 세션):
 
-- 시크릿 창에서 onrender 주소와 www 주소의 `/` 가 `/engagements` 로 가고 LiveView 가 붙는다 (5.4절의 101 확인과 함께).
-- 로그아웃 뒤 `/` 가 홈 화면에 머문다.
+| 항목 | 결과 |
+|---|---|
+| curl, 쿠키 없이 `/` (onrender, www) | 두 주소 모두 리다이렉트 2번 (`/` -> `/` -> `/engagements`) 뒤 200. 본문에 자동 로그인 안내, `kim.writer@example.com`, 누리정밀이 있다. 받은 쿠키로 `/` 를 다시 부르면 302 `/engagements` |
+| 브라우저 www `/` | `/engagements`, 안내 메시지 "데모 작성자 계정(kim.writer@example.com)으로 자동 로그인했습니다...", LiveView 연결, 콘솔 오류 0 |
+| www 로그아웃 뒤 | 오른쪽 위 메뉴의 로그아웃으로 홈과 "로그아웃했습니다." 안내. `/` 를 다시 열어도 홈 (`#home-login`). 홈은 LiveView 가 없는 컨트롤러 화면이라 소켓 연결이 없는 것이 맞다 |
+| 브라우저 onrender `/` | `/engagements`, LiveView 연결. 안내 메시지는 없었다. 이 브라우저에 앞선 점검의 onrender 세션이 남아 "이미 로그인함" 행을 탄 것으로 보인다 (확인 필요). 안내는 위 curl 에서 확인했다 |
+| 안내 메시지 위치 | 안내 (flash, `toast-top toast-end`) 가 오른쪽 위 사용자 메뉴를 덮는다. 브라우저 패널 (폭 619px) 에서 첫 클릭이 메뉴 대신 안내를 닫았고, 닫은 뒤에는 메뉴가 열렸다. 6장 행으로 남김 |
+
+점검으로 생긴 세션 토큰은 쿠키 없는 curl `GET /` 세 번 (onrender 2, www 1) 의 행 3개다. 브라우저 www 세션은 로그아웃으로 지웠다.
 
 ## 6. 알려진 제약과 대응
 
@@ -190,10 +200,11 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 | 포트를 못 찾는다는 배포 실패 | 서비스가 안 뜬다 | 10/25 첫 배포에서 `::` 바인딩으로 포트 10000 을 찾았다. 앞으로 실패하면 `runtime.exs` 의 `ip` 를 `{0, 0, 0, 0}` 으로 바꾼다 |
 | Free 의 CPU 0.15, 메모리 지표 없음 | 무거운 작업이 느리다. 메모리 여유를 볼 수 없다 | 시드 전체가 약 14초라 데모에는 충분했다. 0.5c-512mb 는 CPU 0.5 이고 Metrics 에서 메모리를 본다 (약 190 MB, 5.3절) |
 | `render.yaml` 의 `plan: free` 와 대시보드 플랜이 다름 | `render.yaml` 을 바꾼 push 가 동기화되면 Free 로 돌아간다 | `render.yaml` 을 고칠 때 `plan` 을 맞추거나 Auto Sync 를 끈다 (5.3절) |
-| 커스텀 도메인 `www.tickmark.6esk.com` 의 LiveView 403 | 10-27 기준 인증서는 있고 화면은 200 으로 그려지지만, LiveView 가 붙지 않아 화면이 동작하지 않는다. `tickmark.6esk.com` 은 www 로 301 | `check_origin: :conn` 으로 고쳤다 (5.4절, PR #8). 병합과 배포 뒤 101 을 확인하기 전에는 지원서와 안내에 onrender 주소를 쓴다 |
+| 커스텀 도메인 `www.tickmark.6esk.com` 의 LiveView 403 (해결) | 10-27 ca96402 배포 전까지 www 화면이 그려지기만 하고 동작하지 않았다. `tickmark.6esk.com` 은 www 로 301 | `check_origin: :conn` (5.4절, PR #8). 10-27 23:45 배포 뒤 www Origin 101, 브라우저에서 LiveView 연결 확인. 이제 두 주소 모두 쓸 수 있다 |
 | 공개 데모 자동 로그인: 방문자 모두가 작성자 | 방문자가 남긴 결론, 업로드, 테스트 실행이 Neon 과 append-only 감사 로그에 영구히 남고 다음 방문자에게 보인다 | 합성 데이터라 받아들인다. 어지러워지면 아래 "데모 데이터를 처음 상태로" 행대로 다시 만든다. 끄려면 Render 에 `TICKMARK_DEMO_AUTO_LOGIN=false` 를 넣고 다시 배포한다 (5.5절) |
 | 쿠키 없는 `GET /` 마다 세션 토큰 | 봇, 링크 미리보기, 상태 확인 요청도 `users_tokens` 에 행을 하나씩 남긴다. 토큰은 14일 뒤 무효가 되지만 지우는 job 은 없다 | 행이 작아 데모 기간에는 둔다. Render 상태 확인이 `/` 를 부르는지는 확인 필요 (`render.yaml` 에 `healthCheckPath` 없음). 늘어나면 만료 토큰 정리 job 을 더한다 |
 | 자동 로그인 직후 sudo 모드 | 로그인 뒤 10분 동안 설정 화면이 열려 방문자가 작성자 비밀번호를 바꿀 수 있다. 바꾸면 작성자의 세션이 모두 끊긴다. 이메일 변경은 확인 메일이 없어 끝나지 않는다 | 자동 로그인은 비밀번호를 쓰지 않아 다음 방문자는 그대로 들어온다. 지원서의 작성자 비밀번호만 안 맞게 된다. 검토자는 영향 없다 |
+| 자동 로그인 안내가 사용자 메뉴를 덮음 | 안내가 오른쪽 위에 떠서 로그아웃 메뉴를 가린다. 안내 문구가 로그아웃하라고 하는데 첫 클릭은 안내를 닫는다. 폭 619px 에서 확인했고 넓은 화면에서도 겹치는지는 확인 필요 | 안내를 닫은 뒤 메뉴를 연다. 고치려면 안내를 아래쪽에 띄우거나 메뉴 아래로 내린다 (코드 변경, 이번에는 하지 않음) |
 | 검토자는 로그아웃 뒤에만 | 자동 로그인은 작성자만 한다 | 안내 메시지와 지원서에 적는다. 두 역할을 함께 보려면 다른 브라우저 (시크릿 창 포함) 에서 로그아웃하고 검토자로 로그인한다 |
 | 데모 데이터를 처음 상태로 | - | Neon 에서 DB 를 지우고 다시 만든 뒤 Render 에서 다시 배포한다. 부팅 때 마이그레이션과 시드가 다시 돈다 |
 
@@ -205,3 +216,4 @@ Blueprint 로 서비스 `tickmark` (Free, Singapore, Docker) 를 만들고 `main
 - 2026-10-25: d4c3733 재배포와 커스텀 도메인 확인 (5.4절). www 인증서 없음, www Origin 의 LiveView 403 원인과 `check_origin: :conn` 수정, 테스트, 병합 뒤 확인 항목. 상태 줄, 2장 `config/prod.exs` 행, 6장 커스텀 도메인 행
 - 2026-10-27: 커스텀 도메인 재확인 (5.4절). www 인증서 발급 확인, www 200, d4c3733 의 Origin www 403 그대로. PR #7 의 점검 기록을 devlog 2026-10-25-4 로 옮기고 링크. 상태 줄, 6장 커스텀 도메인 행
 - 2026-10-27: 메인화면 자동 로그인 (5.5절, `feature/demo-auto-login`). 2장 `demo.ex`, `runtime.exs`, `prod.exs` 행과 화면 코드 행, 3장 `TICKMARK_DEMO_AUTO_LOGIN` 행, 4장 6, 7단계 (작성자는 자동 로그인, 비밀번호는 검토자만), 6장 행 네 개, 상태 줄
+- 2026-10-27: PR #7 닫기, PR #8, #9 병합과 ca96402 배포 뒤 확인. 5.4절 행 세 개 (재배포, www 101, 브라우저 www) 와 확인 방법, 5.5절 배포 뒤 확인 표. 6장 커스텀 도메인 행을 해결로, 안내가 메뉴를 덮는 행 추가. 상태 줄
